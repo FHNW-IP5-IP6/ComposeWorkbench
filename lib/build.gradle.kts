@@ -1,4 +1,5 @@
 
+import org.gradle.api.tasks.testing.logging.TestLogEvent
 import org.jetbrains.compose.compose
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
@@ -21,4 +22,11 @@ tasks.withType<KotlinCompile> {
 
 tasks.test {
     useJUnitPlatform()
+    testLogging {
+        exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+        events.add(TestLogEvent.PASSED)
+        events.add(TestLogEvent.FAILED)
+        events.add(TestLogEvent.SKIPPED)
+        showStandardStreams = true
+    }
 }
