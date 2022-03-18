@@ -10,14 +10,8 @@ plugins {
 group = "ch.fhnw"
 version = "1.0.0"
 
-kotlin {
-    sourceSets {
-        named("main") {
-            dependencies {
-                implementation(compose.desktop.currentOs)
-            }
-        }
-    }
+dependencies {
+    implementation(compose.desktop.currentOs)
 }
 
 tasks.withType<KotlinCompile> {

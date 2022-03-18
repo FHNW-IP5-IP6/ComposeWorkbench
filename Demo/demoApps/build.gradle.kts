@@ -10,16 +10,11 @@ plugins {
 group = "ch.fhnw"
 version = "1.0.0"
 
-kotlin {
-    sourceSets {
-        named("main") {
-            dependencies {
-                implementation(compose.desktop.currentOs)
-                implementation(project(":demo:editor"))
-                implementation(project(":demo:explorer"))
-            }
-        }
-    }
+dependencies {
+    implementation(compose.desktop.currentOs)
+    implementation(project(":demo:editor"))
+    implementation(project(":demo:explorer"))
+    implementation(project(":lib"))
 }
 
 tasks.withType<KotlinCompile> {

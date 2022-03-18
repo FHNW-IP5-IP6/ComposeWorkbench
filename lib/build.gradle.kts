@@ -1,5 +1,5 @@
+
 import org.jetbrains.compose.compose
-import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
@@ -10,16 +10,15 @@ plugins {
 group = "ch.fhnw"
 version = "1.0.0"
 
-kotlin {
-    sourceSets {
-        named("main") {
-            dependencies {
-                implementation(compose.desktop.currentOs)
-            }
-        }
-    }
+dependencies {
+    testImplementation(kotlin("test"))
+    implementation(compose.desktop.currentOs)
 }
 
 tasks.withType<KotlinCompile> {
     kotlinOptions.jvmTarget = "11"
+}
+
+tasks.test {
+    useJUnitPlatform()
 }
