@@ -1,41 +1,45 @@
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.window.Window
+import androidx.compose.ui.window.WindowState
 import model.WorkbenchModel
+import model.state.WorkbenchEditableState
 import model.state.WorkbenchEditorState
 import model.state.WorkbenchExplorerState
 import model.state.WorkbenchWindowState
 import view.WorkbenchMainUI
 
-object Workbench { //TODO: Should this be a class
+class Workbench {
+
+    private val model: WorkbenchModel = WorkbenchModel()
 
     fun registerExplorer(
         title: String,
         content: @Composable () -> Unit,
     ){
         val explorer = WorkbenchExplorerState(title, content)
-        WorkbenchModel.explorers.add(explorer)
-        WorkbenchModel.selectedExplorer = explorer
+
+        //TODO: move to controller
+        model.explorers.add(explorer)
+        model.selectedExplorer = explorer
     }
 
     fun <T:Any, M:Any> registerEditor(
         title: String,
         type: WorkbenchEditorType,
         initModel: (T) -> M,
+        onClose: (M) -> Unit = {},
         content: @Composable (M) -> Unit,
     ){
-        WorkbenchModel.editors.put(type , WorkbenchEditorState<T, M>(title, type, initModel ,content))
+        model.editors.put(type , WorkbenchEditorState<T, M>(title, type, initModel, onClose, content))
     }
 
     fun <T, M> openEditor(type: WorkbenchEditorType, data: T) {
-        var editor = WorkbenchModel.editors[type] as WorkbenchEditorState<T, M>
+        var editor = model.editors[type] as WorkbenchEditorState<T, M>
         if(editor != null){
-            WorkbenchModel.windows.add(
-                WorkbenchWindowState(
-                    editor.title,
-                ){
-                    editor.content.invoke(editor.initModel(data))
-                }
+            val contentHolder = WorkbenchEditableState<T, M>(editor, data)
+            model.windows.add(
+                WorkbenchWindowState(title = editor.title, windowState = WindowState(), contentHolder)
             )
         }
     }
@@ -46,7 +50,11 @@ object Workbench { //TODO: Should this be a class
             onCloseRequest = onCloseRequest,
             title = "Workbench",
         ) {
-            WorkbenchMainUI(WorkbenchModel)
+            WorkbenchMainUI(model)
         }
+    }
+
+    internal fun getModel(): WorkbenchModel {
+        return model
     }
 }

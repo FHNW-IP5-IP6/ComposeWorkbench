@@ -1,9 +1,10 @@
 package model.state
 
-import androidx.compose.runtime.Composable
+import androidx.compose.ui.window.WindowState
 
 internal class WorkbenchWindowState (
     val title: String,
-    val content: @Composable () -> Unit,
+    val windowState: WindowState,
+    val contentHolder: ContentHolder,
 ) {
 }

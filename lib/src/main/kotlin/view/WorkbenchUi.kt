@@ -6,9 +6,11 @@ import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.window.Window
+import controller.ExplorerController
+import controller.WindowsController
 import model.WorkbenchModel
 
-
+//TODO: Split Ui into editor and explorer ui
 @Composable
 internal fun WorkbenchMainUI(model: WorkbenchModel) {
     showWindows(model)
@@ -31,7 +33,7 @@ private fun Bar() {
 private fun TabSpace(model: WorkbenchModel){
     with(model){
         Column {
-            TabRow(selectedTabIndex = getIndex(selectedExplorer)) {
+            TabRow(selectedTabIndex = ExplorerController(model).getIndex(selectedExplorer)) {
                 explorers.forEach { explorer ->
                     Tab(
                         text = { Text(explorer.title) },
@@ -47,13 +49,15 @@ private fun TabSpace(model: WorkbenchModel){
 
 @Composable
 internal fun showWindows(model: WorkbenchModel){
+    //TODO: change this to recompose changed windows only
     with(model){
         windows.forEach {
             Window(
-                onCloseRequest = { windows.remove(it) },
+                onCloseRequest = { WindowsController(model).remove(it) },
                 title = it.title,
+                state = it.windowState,
             ) {
-                it.content.invoke()
+                it.contentHolder.content()
             }
         }
     }

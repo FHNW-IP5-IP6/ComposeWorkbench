@@ -6,7 +6,7 @@ import model.state.WorkbenchEditorState
 import model.state.WorkbenchExplorerState
 import model.state.WorkbenchWindowState
 
-internal object WorkbenchModel {
+internal class WorkbenchModel {
 
     val windows by mutableStateOf<MutableList<WorkbenchWindowState>>(mutableStateListOf())
 
@@ -16,9 +16,4 @@ internal object WorkbenchModel {
     )
 
     var selectedExplorer: WorkbenchExplorerState? by mutableStateOf(null)
-
-    fun getIndex(explorer: WorkbenchExplorerState?): Int {
-        val index = explorers.indexOf(explorer)
-        return index.coerceAtLeast(0)
-    }
 }

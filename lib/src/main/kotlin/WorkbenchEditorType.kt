@@ -1,4 +1,6 @@
+
+//TODO: Is this really needed?
 interface WorkbenchEditorType {
-    fun identifier(): String //
     //fun dataType odr isValid(Any)
+    fun identifier(): String //
 }
