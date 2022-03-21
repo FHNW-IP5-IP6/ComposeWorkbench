@@ -1,10 +1,8 @@
 package view
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.window.Window
 import controller.ExplorerController
 import controller.WindowsController
@@ -13,7 +11,7 @@ import model.WorkbenchModel
 //TODO: Split Ui into editor and explorer ui
 @Composable
 internal fun WorkbenchMainUI(model: WorkbenchModel) {
-    showWindows(model)
+    WindowSpace(model)
     MaterialTheme {
         Scaffold(
             topBar = { Bar() },
@@ -28,7 +26,6 @@ private fun Bar() {
     TopAppBar(title = { Text("Workbench Top Bar") })
 }
 
-@OptIn(ExperimentalComposeUiApi::class, ExperimentalFoundationApi::class)
 @Composable
 private fun TabSpace(model: WorkbenchModel){
     with(model){
@@ -48,8 +45,7 @@ private fun TabSpace(model: WorkbenchModel){
 }
 
 @Composable
-internal fun showWindows(model: WorkbenchModel){
-    //TODO: change this to recompose changed windows only
+internal fun WindowSpace(model: WorkbenchModel){
     with(model){
         windows.forEach {
             Window(

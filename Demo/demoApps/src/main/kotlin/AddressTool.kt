@@ -12,7 +12,7 @@ fun main() {
 
     workbench.registerExplorer("Address List") {
         AddressExplorerUi(AddressExplorerModel()) {
-            workbench.openEditor<Address, AddressEditorModel>(type, it)
+            workbench.requestEditor<Address, AddressEditorModel>(type, it)
         }
     }
 

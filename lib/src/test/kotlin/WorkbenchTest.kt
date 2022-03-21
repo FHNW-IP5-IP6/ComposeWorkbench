@@ -29,7 +29,7 @@ internal class WorkbenchTest{
     fun openEditor() {
         val type = getType("TestType")
         addEditor("Test", type)
-        sut.openEditor<String, String>(type, "String")
+        sut.requestEditor<String, String>(type, "String")
         assertEquals(1, sut.getModel().windows.size)
     }
 
