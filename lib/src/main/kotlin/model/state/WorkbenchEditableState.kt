@@ -1,9 +1,11 @@
 package model.state
 
 import androidx.compose.runtime.Composable
+import model.ContentHolder
+import model.data.WorkbenchEditor
 
 internal class WorkbenchEditableState<T,M>(
-    private val editor: WorkbenchEditorState<T, M>,
+    private val editor: WorkbenchEditor<T, M>,
     private val data: T,
 ): ContentHolder {
     private val model: M = editor.initModel(data)

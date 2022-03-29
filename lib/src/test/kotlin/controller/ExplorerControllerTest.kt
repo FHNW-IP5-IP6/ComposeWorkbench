@@ -1,7 +1,7 @@
 package controller
 
 import model.WorkbenchModel
-import model.state.WorkbenchExplorerState
+import model.data.WorkbenchExplorer
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
@@ -24,14 +24,14 @@ internal class ExplorerControllerTest{
 
     @Test
     fun getIndexTestNoExplorers() {
-        val explorer1 = WorkbenchExplorerState("") {}
+        val explorer1 = WorkbenchExplorer("") {}
         assertEquals(0, sut.getIndex(explorer1))
     }
 
     @Test
     fun getIndexOneExplorerNotInList() {
-        val explorer1 = WorkbenchExplorerState("") {}
-        val explorer2 = WorkbenchExplorerState("") {}
+        val explorer1 = WorkbenchExplorer("") {}
+        val explorer2 = WorkbenchExplorer("") {}
         model.explorers.add(explorer1)
 
         assertEquals(0, sut.getIndex(explorer2))
@@ -39,8 +39,8 @@ internal class ExplorerControllerTest{
 
     @Test
     fun getIndexExplorerInList() {
-        val explorer1 = WorkbenchExplorerState("") {}
-        val explorer2 = WorkbenchExplorerState("") {}
+        val explorer1 = WorkbenchExplorer("") {}
+        val explorer2 = WorkbenchExplorer("") {}
         model.explorers.add(explorer1)
         model.explorers.add(explorer2)
 

@@ -1,9 +1,9 @@
-package model.state
+package model.data
 
 import WorkbenchEditorType
 import androidx.compose.runtime.Composable
 
-internal class WorkbenchEditorState<T, M>(
+internal class WorkbenchEditor<T, M>(
     val title: String,
     val type: WorkbenchEditorType,
     val initModel: (T) -> M,

@@ -1,8 +1,9 @@
-package model.state
+package model.data
 
 import androidx.compose.runtime.Composable
+import model.ContentHolder
 
-internal class WorkbenchExplorerState(
+internal class WorkbenchExplorer(
     val title: String,
     val content: @Composable () -> Unit,
 ): ContentHolder {

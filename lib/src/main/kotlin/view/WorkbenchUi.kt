@@ -22,6 +22,11 @@ internal fun WorkbenchMainUI(model: WorkbenchModel) {
 }
 
 @Composable
+private fun LeftDrawerSpace(model: WorkbenchModel){
+
+}
+
+@Composable
 private fun Bar() {
     TopAppBar(title = { Text("Workbench Top Bar") })
 }
