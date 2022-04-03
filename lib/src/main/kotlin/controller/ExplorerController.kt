@@ -9,4 +9,16 @@ internal class ExplorerController(val model: WorkbenchModel) {
         val index = model.explorers.indexOf(explorer)
         return index.coerceAtLeast(0)
     }
+
+    fun explorerSelectorPressed(explorer: WorkbenchExplorer) {
+        if(model.selectedExplorer == explorer){
+            model.selectedExplorer = null
+        }else{
+            model.selectedExplorer = explorer
+        }
+    }
+
+    fun isExplorerSelected(explorer: WorkbenchExplorer): Boolean {
+        return model.selectedExplorer != null && model.selectedExplorer == explorer
+    }
 }

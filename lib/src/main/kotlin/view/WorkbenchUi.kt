@@ -8,7 +8,6 @@ import controller.ExplorerController
 import controller.WindowsController
 import model.WorkbenchModel
 
-//TODO: Split Ui into editor and explorer ui
 @Composable
 internal fun WorkbenchMainUI(model: WorkbenchModel) {
     WindowSpace(model)
@@ -16,14 +15,11 @@ internal fun WorkbenchMainUI(model: WorkbenchModel) {
         Scaffold(
             topBar = { Bar() },
         ){
-            TabSpace(model)
+            ExplorerUi(model, ExplorerController(model)){
+                TabSpace(model)
+            }
         }
     }
-}
-
-@Composable
-private fun LeftDrawerSpace(model: WorkbenchModel){
-
 }
 
 @Composable
