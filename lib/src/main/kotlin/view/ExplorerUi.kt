@@ -7,13 +7,12 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.key
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.unit.dp
 import controller.ExplorerController
 import model.WorkbenchModel
 import model.data.ModuleType
 import model.state.DisplayType
-import util.selectedElevation
+import util.selectedButtonColors
 import util.vertical
 
 @Composable
@@ -39,10 +38,10 @@ private fun ExplorerSelectors(model: WorkbenchModel, controller: ExplorerControl
         for (state in model.modules) {
             key(state) {
                 if (state.displayType == DisplayType.RIGHT && state.module.moduleType == ModuleType.EXPLORER) {
+                    val selected = controller.isExplorerSelected(state)
                     Button(
-                        elevation = if (controller.isExplorerSelected(state)) ButtonDefaults.selectedElevation() else ButtonDefaults.elevation(),
-                        colors = ButtonDefaults.outlinedButtonColors(),
-                        modifier = Modifier.vertical().rotate(-90f),
+                        colors = ButtonDefaults.selectedButtonColors(selected),
+                        modifier = Modifier.vertical(),
                         onClick = { controller.explorerSelectorPressed(state) }) {
                         Text(text = state.title)
                     }
