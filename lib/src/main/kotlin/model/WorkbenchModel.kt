@@ -1,19 +1,42 @@
 package model
 
-import WorkbenchEditorType
 import androidx.compose.runtime.*
-import model.data.WorkbenchEditor
-import model.data.WorkbenchExplorer
-import model.state.WorkbenchWindowState
+import model.data.WorkbenchModule
+import model.state.DisplayType
+import model.state.WorkbenchModuleState
 
 internal class WorkbenchModel {
 
-    val windows by mutableStateOf<MutableList<WorkbenchWindowState>>(mutableStateListOf())
+    var appTitle: String = "Compose Workbench";
 
-    val explorers by mutableStateOf<MutableList<WorkbenchExplorer>>(mutableStateListOf())
-    val editors by mutableStateOf<MutableMap<WorkbenchEditorType, WorkbenchEditor<out Any, out Any>>>(
-        mutableStateMapOf()
-    )
+    val modules = mutableStateListOf<WorkbenchModuleState<*>>()
 
-    var selectedExplorer: WorkbenchExplorer? by mutableStateOf(null)
+    val registeredExplorers = mutableMapOf<String, WorkbenchModule<*>>()
+    val registeredEditors = mutableMapOf<String, WorkbenchModule<*>>()
+
+    var selectedExplorer: WorkbenchModuleState<*>? by mutableStateOf(null)
+    var selectedTab: WorkbenchModuleState<*>? by mutableStateOf(null)
+
+
+    fun removeTab(tab: WorkbenchModuleState<*>) {
+        modules.remove(tab)
+        val tabs = modules.filter { it.displayType==DisplayType.TAB}
+        if (tabs.size > 0) {
+            selectedTab = tabs.last()
+        } else {
+            selectedTab = null
+        }
+    }
+
+
+    fun selectedTabIndex(): Int {
+        if (selectedTab == null) return 0
+        val index = modules.filter { it.displayType==DisplayType.TAB}.indexOf(selectedTab)
+        return index.coerceAtLeast(0)
+    }
+
+
+    fun numberOfTabs(): Int {
+        return modules.count { it.displayType == DisplayType.TAB }
+    }
 }

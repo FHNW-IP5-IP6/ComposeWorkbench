@@ -4,27 +4,27 @@ import androidx.compose.ui.window.application
 fun main() {
 
     val workbench: Workbench = Workbench()
-    val type: WorkbenchEditorType = object :WorkbenchEditorType {
-        override fun identifier(): String {
-            return "Address"
+
+    workbench.registerEditor<AddressEditorModel>("AddressEditor") {
+            m -> AddressEditorUi(m)
+    }
+
+    workbench.registerExplorer<AddressExplorerModel>("AddressExplorer"
+    ) { m ->
+        AddressExplorerUi(m) {
+            workbench.requestEditor("AddressEditor", "Address Editor", AddressEditorModel(it), onClose = {mm ->
+                it.firstName = mm.firstName
+                it.lastName = mm.lastName
+                it.city = mm.city
+                it.street = mm.street
+                it.streetNr = mm.streetNr
+                it.country = mm.country
+            })
         }
     }
 
-    workbench.registerExplorer("Address List") {
-        AddressExplorerUi(AddressExplorerModel()) {
-            workbench.requestEditor<Address, AddressEditorModel>(type, it)
-        }
-    }
+    workbench.requestExplorer<AddressExplorerModel>("AddressExplorer", "Address Explorer", AddressExplorerModel())
 
-    workbench.registerEditor<Address, AddressEditorModel>(
-        "Edit Address",
-        type,
-        { AddressEditorModel(it) },
-    ) {
-        AddressEditorUi(it)
-    }
 
-    application {
-        workbench.run( onCloseRequest = ::exitApplication )
-    }
+    workbench.run()
 }

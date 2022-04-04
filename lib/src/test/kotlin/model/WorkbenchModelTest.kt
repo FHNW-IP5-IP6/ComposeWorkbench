@@ -10,9 +10,9 @@ internal class WorkbenchModelTest {
 
     @Test
     fun initialStates() {
-        assertTrue{ sut.windows.isEmpty() }
-        assertTrue{ sut.explorers.isEmpty() }
-        assertTrue{ sut.editors.isEmpty() }
+        assertTrue{ sut.modules.isEmpty() }
+        assertTrue{ sut.registeredExplorers.isEmpty() }
+        assertTrue{ sut.registeredEditors.isEmpty() }
         assertNull(sut.selectedExplorer)
     }
 }

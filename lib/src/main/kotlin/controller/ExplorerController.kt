@@ -1,16 +1,18 @@
 package controller
 
 import model.WorkbenchModel
-import model.data.WorkbenchExplorer
+import model.data.ModuleType
+import model.state.DisplayType
+import model.state.WorkbenchModuleState
 
 internal class ExplorerController(val model: WorkbenchModel) {
 
-    fun getIndex(explorer: WorkbenchExplorer?): Int {
-        val index = model.explorers.indexOf(explorer)
+    fun getIndex(explorer: WorkbenchModuleState<*>?): Int {
+        val index = model.modules.filter { it.displayType==DisplayType.RIGHT && it.module.moduleType==ModuleType.EXPLORER }.indexOf(explorer)
         return index.coerceAtLeast(0)
     }
 
-    fun explorerSelectorPressed(explorer: WorkbenchExplorer) {
+    fun explorerSelectorPressed(explorer: WorkbenchModuleState<*>?) {
         if(model.selectedExplorer == explorer){
             model.selectedExplorer = null
         }else{
@@ -18,7 +20,7 @@ internal class ExplorerController(val model: WorkbenchModel) {
         }
     }
 
-    fun isExplorerSelected(explorer: WorkbenchExplorer): Boolean {
+    fun isExplorerSelected(explorer: WorkbenchModuleState<*>?): Boolean {
         return model.selectedExplorer != null && model.selectedExplorer == explorer
     }
 }

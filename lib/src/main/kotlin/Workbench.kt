@@ -1,92 +1,70 @@
 
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.window.Window
-import androidx.compose.ui.window.WindowState
+import androidx.compose.ui.window.application
 import model.WorkbenchModel
-import model.data.WorkbenchEditor
-import model.data.WorkbenchExplorer
-import model.state.WorkbenchEditableState
-import model.state.WorkbenchWindowState
+import model.data.ModuleType
+import model.data.WorkbenchModule
+import model.state.DisplayType
+import model.state.WorkbenchModuleState
+import view.WindowSpace
 import view.WorkbenchMainUI
 
 class Workbench {
 
     private val model: WorkbenchModel = WorkbenchModel()
 
-    /**
-     * Add an explorer to the Workbench
-     *
-     * TODO: can this be called after run?
-     * @param title: Display title of this explorer TODO: should this be a composable fun
-     * @param content: Composable function that defines the displayed content of this explorer
-     */
-    fun registerExplorer(
-        title: String,
-        content: @Composable () -> Unit,
-    ){
-        val explorer = WorkbenchExplorer(title, content)
-        //TODO: move to controller
-        model.explorers.add(explorer)
-        model.selectedExplorer = explorer
-    }
-
-    /**
-     * Add an editor to the Workbench.
-     *
-     * @param T: Data which will be passed to the editor when it is requested
-     * @param M: Model which the editor uses to manage and display data
-     * @param title: Display title of this editor TODO: should this be a composable fun
-     * @param type: the type of data this editor can be used for
-     * @param initModel: the callback to be invoked when this editor is requested
-     * @param onClose: the callback to be invoked when this editor is closed
-     * @param content: Composable function that defines the displayed content of this explorer
-     */
-    fun <T:Any, M:Any> registerEditor(
-        title: String,
-        type: WorkbenchEditorType,
-        initModel: (T) -> M,
-        onClose: (M) -> Unit = {},
+    fun <M> registerExplorer(
+        type: String,
         content: @Composable (M) -> Unit,
     ){
-        model.editors.put(type , WorkbenchEditor<T, M>(title, type, initModel, onClose, content))
+        val explorer = WorkbenchModule<M>(
+            moduleType = ModuleType.EXPLORER,
+            modelType = type,
+            content = content)
+
+        model.registeredExplorers.put(type, explorer);
     }
 
-    /**
-     * Edit given data with editor of given type
-     *
-     * @param T: Data which is passed to the editor
-     * @param M: Model which the editor uses to manage and display data
-     * @param type: the type of data this editor can be used for
-     * @param data: Data which is passed to the editor
-     */
-    fun <T, M> requestEditor(type: WorkbenchEditorType, data: T) {
-        var editor = model.editors[type] as WorkbenchEditor<T, M>
+
+    fun <M> registerEditor(
+        type: String,
+        content: @Composable (M) -> Unit
+    ){
+        val explorer = WorkbenchModule<M>(
+            moduleType = ModuleType.EDITOR,
+            modelType = type,
+            content = content)
+        model.registeredEditors.put(type, explorer);
+    }
+
+
+    fun <M> requestExplorer(type: String, title: String, m: M) {
+        var explorer = model.registeredExplorers.get(type)
+        if(explorer != null){
+            explorer as WorkbenchModule<M>
+            val state = WorkbenchModuleState(title, m, explorer, model::removeTab, DisplayType.RIGHT)
+            model.modules += state
+            model.selectedExplorer = state
+        }
+    }
+
+
+    fun <M> requestEditor(type: String, title: String, m: M, onClose: (M) -> Unit ={}) {
+        var editor = model.registeredEditors.get(type)
         if(editor != null){
-            val contentHolder = WorkbenchEditableState<T, M>(editor, data)
-            model.windows.add(
-                WorkbenchWindowState(title = editor.title, windowState = WindowState(), contentHolder)
-            )
+            editor as WorkbenchModule<M>
+            val t = WorkbenchModuleState<M>(title, m, editor, model::removeTab, DisplayType.TAB, onClose)
+            model.modules += t
+            model.selectedTab = t
         }
     }
 
-    /**
-     * Run the Workbench
-     *
-     * Has to be called in a valid application context.
-     * ```
-     * application {
-     *      workbench.run( onCloseRequest = ::exitApplication )
-     * }
-     * ```
-     */
-    @Composable
-    fun run(onCloseRequest:  () -> Unit){
-        Window(
-            onCloseRequest = onCloseRequest,
-            title = "Workbench", //TODO: Make configurable
-        ) {
-            WorkbenchMainUI(model)
-        }
+    fun run() = application {
+        // init mainwindow
+        WorkbenchMainUI(model, ::exitApplication)
+
+        // render seperated windows
+        WindowSpace(model)
     }
 
     internal fun getModel(): WorkbenchModel {

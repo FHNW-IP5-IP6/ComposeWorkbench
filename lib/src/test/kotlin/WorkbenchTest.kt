@@ -8,44 +8,36 @@ internal class WorkbenchTest{
     private var sut = Workbench()
 
     @BeforeEach
-    fun setup(){
+    fun initWorkBench() {
         sut = Workbench()
     }
 
     @Test
     fun registerExplorer() {
-        sut.registerExplorer(title = "Test"){}
-        assertEquals(1, sut.getModel().explorers.size)
-        assertEquals("Test", sut.getModel().selectedExplorer!!.title)
+        sut.registerExplorer<String>(type = "String"){}
+        assertEquals(1, sut.getModel().registeredExplorers.size)
     }
 
     @Test
     fun registerEditor() {
-        addEditor("Test", getType("type"))
-        assertEquals(1, sut.getModel().editors.size)
+        sut.registerEditor<String>(type = "String"){}
+        assertEquals(1, sut.getModel().registeredEditors.size)
+    }
+
+    @Test
+    fun openExplorer() {
+        sut.registerExplorer<String>(type = "String"){}
+        val model = "value"
+        sut.requestExplorer<String>("String", "String Explorer", model)
+        assertEquals(1, sut.getModel().modules.size)
     }
 
     @Test
     fun openEditor() {
-        val type = getType("TestType")
-        addEditor("Test", type)
-        sut.requestEditor<String, String>(type, "String")
-        assertEquals(1, sut.getModel().windows.size)
+        sut.registerEditor<String>(type = "String"){}
+        val model = "value"
+        sut.requestEditor<String>("String", "String Editor", model)
+        assertEquals(1, sut.getModel().modules.size)
     }
 
-    private fun addEditor(title: String, type: WorkbenchEditorType){
-        sut.registerEditor<String, String>(
-            title,
-            type,
-            { e: String -> e },
-        ){}
-    }
-
-    private fun getType(type: String): WorkbenchEditorType {
-        return object :WorkbenchEditorType {
-            override fun identifier(): String {
-                return type
-            }
-        }
-    }
 }
