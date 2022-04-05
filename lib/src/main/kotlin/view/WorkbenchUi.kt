@@ -1,5 +1,8 @@
 package view
 
+import androidx.compose.foundation.ContextMenuArea
+import androidx.compose.foundation.ContextMenuItem
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -13,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.window.Window
 import controller.ExplorerController
+import controller.WorkbenchController
 import model.WorkbenchModel
 import model.state.DisplayType
 import model.state.WorkbenchModuleState
@@ -53,7 +57,7 @@ private fun TabSpace(model: WorkbenchModel){
                                     selected = tab == selectedTab,
                                     onClick = { selectedTab = tab }
                                 ) {
-                                    TabWriter(tab)
+                                    TabWriter(tab, WorkbenchController(model))
                                 }
                         }
                     }
@@ -64,18 +68,25 @@ private fun TabSpace(model: WorkbenchModel){
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun TabWriter (tab: WorkbenchModuleState<*>) {
-    Row(horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically)
-    {
-        Text(
-            text = tab.title,
-            overflow = TextOverflow.Ellipsis,
-            maxLines = 1,
-            modifier = Modifier.weight(1f)
+private fun TabWriter (tab: WorkbenchModuleState<*>, controller: WorkbenchController) {
+    ContextMenuArea(items = {
+        listOf(
+            ContextMenuItem("Open in Window") { controller.convertToWindow(tab) },
         )
-        IconButton(onClick = tab::onClose) {
-            Icon(Icons.Filled.Close, "close")
+    }) {
+        Row(horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically)
+        {
+            Text(
+                text = tab.title,
+                overflow = TextOverflow.Ellipsis,
+                maxLines = 1,
+                modifier = Modifier.weight(1f)
+            )
+            IconButton(onClick = tab::onClose) {
+                Icon(Icons.Filled.Close, "close")
+            }
         }
     }
 }
