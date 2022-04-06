@@ -88,12 +88,15 @@ class Workbench {
     /**
      * Run the Workbench
      */
-    fun run() = application {
-        // init mainwindow
-        WorkbenchMainUI(model, ::exitApplication)
+    fun run(onExit: () -> Unit) = application {
+        // init main window
+        WorkbenchMainUI(model) {
+            onExit.invoke()
+            exitApplication()
+        }
 
         // render seperated windows
-        WindowSpace(model)
+            WindowSpace(model)
     }
 
     internal fun getModel(): WorkbenchModel {

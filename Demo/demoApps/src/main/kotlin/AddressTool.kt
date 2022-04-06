@@ -24,5 +24,5 @@ fun main() {
 
     workbench.requestExplorer<AddressExplorerModel>("AddressExplorer", "Address Explorer", AddressExplorerModel())
 
-    workbench.run()
+    workbench.run { println("Exit my Compose Workbench App") }
 }
