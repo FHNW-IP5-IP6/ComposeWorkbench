@@ -12,12 +12,7 @@ fun main() {
     ) { m ->
         AddressExplorerUi(m) {
             workbench.requestEditor("AddressEditor", "Address Editor", AddressEditorModel(it), onClose = {mm ->
-                it.firstName = mm.firstName
-                it.lastName = mm.lastName
-                it.city = mm.city
-                it.street = mm.street
-                it.streetNr = mm.streetNr
-                it.country = mm.country
+                m.addressList[m.addressList.indexOf(it)] = Address(mm.firstName, mm.lastName, mm.street, mm.streetNr, mm.city, mm.country)
             })
         }
     }
