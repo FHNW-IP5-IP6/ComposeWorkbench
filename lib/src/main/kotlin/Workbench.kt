@@ -8,6 +8,7 @@ import model.state.DisplayType
 import model.state.WorkbenchModuleState
 import view.WindowSpace
 import view.WorkbenchMainUI
+import java.awt.event.MouseAdapter
 
 class Workbench {
 
@@ -61,9 +62,8 @@ class Workbench {
         var explorer = model.registeredExplorers.get(type)
         if(explorer != null){
             explorer as WorkbenchModule<M>
-            val state = WorkbenchModuleState(title, m, explorer, model::removeTab, DisplayType.RIGHT)
-            model.modules += state
-            model.selectedExplorer = state
+            val state = WorkbenchModuleState(title, m, explorer, model::removeTab, DisplayType.LEFT)
+            model.addState(state)
         }
     }
 
@@ -80,8 +80,7 @@ class Workbench {
         if(editor != null){
             editor as WorkbenchModule<M>
             val t = WorkbenchModuleState<M>(title, m, editor, model::removeTab, DisplayType.TAB, onClose)
-            model.modules += t
-            model.selectedTab = t
+            model.addState(t)
         }
     }
 
@@ -96,7 +95,7 @@ class Workbench {
         }
 
         // render seperated windows
-            WindowSpace(model)
+        WindowSpace(model)
     }
 
     internal fun getModel(): WorkbenchModel {

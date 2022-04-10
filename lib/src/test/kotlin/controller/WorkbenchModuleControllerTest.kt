@@ -12,15 +12,19 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
-internal class ExplorerControllerTest{
+class WorkbenchModuleControllerTest {
+
+    private val displayType = DisplayType.LEFT
+    private val moduleType = ModuleType.EXPLORER
 
     private var workbench = Workbench()
-    private var sut = ExplorerController(workbench.getModel())
+    private var sut = WorkbenchModuleController(workbench.getModel(), displayType, moduleType, true)
+
 
     @BeforeEach
     fun setup(){
         workbench = Workbench()
-        sut = ExplorerController(workbench.getModel())
+        sut = WorkbenchModuleController(workbench.getModel(), displayType, moduleType, true)
     }
 
     @Test
@@ -48,8 +52,8 @@ internal class ExplorerControllerTest{
         val explorer2 = WorkbenchModuleState<String>(
             "Explorer 2",
             "model",
-            WorkbenchModule(ModuleType.EXPLORER, "String"){},
-            displayType = DisplayType.RIGHT
+            WorkbenchModule(moduleType, "String"){},
+            displayType = displayType
         )
 
         assertEquals(0, sut.getIndex(explorer2))
@@ -79,10 +83,10 @@ internal class ExplorerControllerTest{
         val explorer1 = workbench.getModel().modules.get(0);
         val explorer2 = workbench.getModel().modules.get(1);
 
-        assertFalse { sut.isExplorerSelected(explorer1) }
+        assertFalse { sut.isModuleSelected(explorer1) }
 
-        sut.explorerSelectorPressed(explorer1)
-        assertTrue { sut.isExplorerSelected(explorer1) }
+        sut.moduleSelectorPressed(explorer1)
+        assertTrue { sut.isModuleSelected(explorer1) }
     }
 
     @Test
@@ -95,10 +99,10 @@ internal class ExplorerControllerTest{
         val explorer1 = workbench.getModel().modules.get(0);
         val explorer2 = workbench.getModel().modules.get(1);
 
-        workbench.getModel().selectedExplorer = explorer2
+        workbench.getModel().setSelectedModule(explorer2)
 
-        sut.explorerSelectorPressed(explorer1)
-        assertTrue(sut.isExplorerSelected(explorer1))
+        sut.moduleSelectorPressed(explorer1)
+        assertTrue(sut.isModuleSelected(explorer1))
     }
 
     @Test
@@ -109,8 +113,9 @@ internal class ExplorerControllerTest{
 
         val explorer1 = workbench.getModel().modules.get(0);
 
-        sut.explorerSelectorPressed(explorer1)
-        assertFalse{ sut.isExplorerSelected(explorer1) }
-        assertNull(workbench.getModel().selectedExplorer)
+        sut.moduleSelectorPressed(explorer1)
+        assertFalse{ sut.isModuleSelected(explorer1) }
+        assertNull(sut.getSelectedModule().value)
     }
+
 }

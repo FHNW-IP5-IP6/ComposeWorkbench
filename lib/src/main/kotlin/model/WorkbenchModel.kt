@@ -1,11 +1,18 @@
 package model
 
 import androidx.compose.runtime.*
+import model.data.ModuleType
 import model.data.WorkbenchModule
 import model.state.DisplayType
 import model.state.WorkbenchModuleState
 
 internal class WorkbenchModel {
+
+    private val selectedModules = Array<Array<MutableState<WorkbenchModuleState<*>?>>>(DisplayType.values().size) { i ->
+        Array(
+            ModuleType.values().size
+        ) { j -> mutableStateOf(null) }
+    }
 
     var appTitle: String = "Compose Workbench";
 
@@ -14,29 +21,41 @@ internal class WorkbenchModel {
     val registeredExplorers = mutableMapOf<String, WorkbenchModule<*>>()
     val registeredEditors = mutableMapOf<String, WorkbenchModule<*>>()
 
-    var selectedExplorer: WorkbenchModuleState<*>? by mutableStateOf(null)
-    var selectedTab: WorkbenchModuleState<*>? by mutableStateOf(null)
+    fun getSelectedModule (displayType: DisplayType, moduleType: ModuleType): MutableState<WorkbenchModuleState<*>?> {
+        return selectedModules[displayType.ordinal][moduleType.ordinal]
+    }
 
+    fun setSelectedModule (state: WorkbenchModuleState<*>) {
+        selectedModules[state.displayType.ordinal][state.module.moduleType.ordinal].value = state
+    }
+
+    fun setSelectedModuleNull (displayType: DisplayType, moduleType: ModuleType) {
+        selectedModules[displayType.ordinal][moduleType.ordinal].value = null
+    }
+
+    fun addState(state: WorkbenchModuleState<*>) {
+        modules += state
+        setSelectedModule(state)
+    }
 
     fun removeTab(tab: WorkbenchModuleState<*>) {
+        reselectState(tab)
         modules.remove(tab)
-        val tabs = modules.filter { it.displayType==DisplayType.TAB}
-        if (tabs.size > 0) {
-            selectedTab = tabs.last()
-        } else {
-            selectedTab = null
-        }
     }
 
-
-    fun selectedTabIndex(): Int {
-        if (selectedTab == null) return 0
-        val index = modules.filter { it.displayType==DisplayType.TAB}.indexOf(selectedTab)
-        return index.coerceAtLeast(0)
-    }
-
-
-    fun numberOfTabs(): Int {
-        return modules.count { it.displayType == DisplayType.TAB }
+    private fun reselectState(state: WorkbenchModuleState<*>) {
+            val filteredStates = modules.filter { it.displayType == state.displayType && it.module.moduleType == state.module.moduleType }
+            if (filteredStates.size <= 1) {
+                setSelectedModuleNull(state.displayType, state.module.moduleType)
+            } else {
+                val idx = filteredStates.indexOf(state).coerceAtLeast(0)
+                if (idx == 0) {
+                    setSelectedModule(filteredStates[1])
+                } else if (idx == filteredStates.size-1) {
+                    setSelectedModule(filteredStates[idx - 1])
+                } else {
+                    setSelectedModule(filteredStates[idx + 1])
+                }
+            }
     }
 }

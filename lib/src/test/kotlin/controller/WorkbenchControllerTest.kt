@@ -12,18 +12,20 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 internal class WorkbenchControllerTest{
+    private val displayType = DisplayType.TAB
+    private val moduleType = ModuleType.EDITOR
     private var model = WorkbenchModel()
-    private var sut = WorkbenchController(model)
+    private var sut = WorkbenchModuleController(model, displayType, moduleType)
 
     @BeforeEach
     fun setup(){
-        sut = WorkbenchController(model)
+        sut = WorkbenchModuleController(model, displayType, moduleType)
     }
 
     @Test
     fun removeModule_NoModules() {
-        val module = WorkbenchModule<String>(ModuleType.EDITOR,"type") {}
-        val moduleState = WorkbenchModuleState<String>(title ="title", model = "model", module = module, displayType = DisplayType.TAB){}
+        val module = WorkbenchModule<String>(moduleType,"type") {}
+        val moduleState = WorkbenchModuleState<String>(title ="title", model = "model", module = module, displayType = displayType){}
         sut.removeModuleState(moduleState)
 
         assertTrue { model.modules.isEmpty() }
@@ -31,8 +33,8 @@ internal class WorkbenchControllerTest{
 
     @Test
     fun removeModule_RemoveModule() {
-        val module = WorkbenchModule<String>(ModuleType.EDITOR,"type") {}
-        val moduleState = WorkbenchModuleState<String>(title ="title", model = "model", module = module, displayType = DisplayType.TAB){}
+        val module = WorkbenchModule<String>(moduleType,"type") {}
+        val moduleState = WorkbenchModuleState<String>(title ="title", model = "model", module = module, displayType = displayType){}
         model.modules += moduleState
         assertTrue { model.modules.contains(moduleState) }
 
@@ -42,8 +44,8 @@ internal class WorkbenchControllerTest{
 
     @Test
     fun convertToWindow() {
-        val module = WorkbenchModule<String>(ModuleType.EDITOR,"type") {}
-        val moduleState = WorkbenchModuleState<String>(title ="title", model = "model", module = module, displayType = DisplayType.TAB){}
+        val module = WorkbenchModule<String>(moduleType,"type") {}
+        val moduleState = WorkbenchModuleState<String>(title ="title", model = "model", module = module, displayType = displayType){}
 
         model.modules += moduleState
         assertTrue { model.modules.contains(moduleState) }

@@ -13,6 +13,5 @@ internal class WorkbenchModelTest {
         assertTrue{ sut.modules.isEmpty() }
         assertTrue{ sut.registeredExplorers.isEmpty() }
         assertTrue{ sut.registeredEditors.isEmpty() }
-        assertNull(sut.selectedExplorer)
     }
 }
