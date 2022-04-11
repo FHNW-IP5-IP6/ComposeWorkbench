@@ -8,7 +8,7 @@ import model.state.DisplayType
 import model.state.WorkbenchModuleState
 import view.WindowSpace
 import view.WorkbenchMainUI
-import java.awt.event.MouseAdapter
+
 
 class Workbench {
 
@@ -18,19 +18,19 @@ class Workbench {
      * Add an explorer to the Workbench
      *
      * TODO: can this be called after run?
-     * @param title: Display title of this explorer TODO: should this be a composable fun
+     * @param type: the type of data this explorer can be used for
      * @param content: Composable function that defines the displayed content of this explorer
      */
     fun <M> registerExplorer(
         type: String,
         content: @Composable (M) -> Unit,
     ){
-        val explorer = WorkbenchModule<M>(
+        val explorer = WorkbenchModule(
             moduleType = ModuleType.EXPLORER,
             modelType = type,
             content = content)
 
-        model.registeredExplorers.put(type, explorer);
+        model.registeredExplorers[type] = explorer
     }
 
     /**
@@ -44,11 +44,11 @@ class Workbench {
         type: String,
         content: @Composable (M) -> Unit
     ){
-        val explorer = WorkbenchModule<M>(
+        val explorer = WorkbenchModule(
             moduleType = ModuleType.EDITOR,
             modelType = type,
             content = content)
-        model.registeredEditors.put(type, explorer);
+        model.registeredEditors[type] = explorer
     }
 
     /**
@@ -59,7 +59,7 @@ class Workbench {
      * @param title: Display title of the requested editor
      */
     fun <M> requestExplorer(type: String, title: String, m: M) {
-        var explorer = model.registeredExplorers.get(type)
+        val explorer = model.registeredExplorers[type]
         if(explorer != null){
             explorer as WorkbenchModule<M>
             val state = WorkbenchModuleState(title, m, explorer, model::removeTab, DisplayType.LEFT)
@@ -76,10 +76,10 @@ class Workbench {
      * @param onClose: The callback to be invoked when this editor is closed
      */
     fun <M> requestEditor(type: String, title: String, m: M, onClose: (M) -> Unit ={}) {
-        var editor = model.registeredEditors.get(type)
+        val editor = model.registeredEditors[type]
         if(editor != null){
             editor as WorkbenchModule<M>
-            val t = WorkbenchModuleState<M>(title, m, editor, model::removeTab, DisplayType.TAB, onClose)
+            val t = WorkbenchModuleState(title, m, editor, model::removeTab, DisplayType.TAB, onClose)
             model.addState(t)
         }
     }
