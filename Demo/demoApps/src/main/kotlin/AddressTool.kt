@@ -11,7 +11,7 @@ fun main() {
     workbench.registerExplorer<AddressExplorerModel>("AddressExplorer"
     ) { m ->
         AddressExplorerUi(m) {
-            workbench.requestEditor("AddressEditor", "Address Editor", AddressEditorModel(it) , onClose = {mm ->
+            workbench.requestEditor("AddressEditor", "Address Editor", AddressEditorModel(it) , onSave = {mm ->
                 m.addressList[m.addressList.indexOf(it)] = Address(mm.firstName, mm.lastName, mm.street, mm.streetNr, mm.city, mm.country)
             })
         }

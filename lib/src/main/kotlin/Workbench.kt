@@ -75,11 +75,11 @@ class Workbench {
      * @param title: Display title of the requested editor
      * @param onClose: The callback to be invoked when this editor is closed
      */
-    fun <M> requestEditor(type: String, title: String, m: M, onClose: (M) -> Unit ={}) {
+    fun <M> requestEditor(type: String, title: String, m: M, onClose: (M) -> Unit ={}, onSave: (M) -> Unit ={}) {
         val editor = model.registeredEditors[type]
         if(editor != null){
             editor as WorkbenchModule<M>
-            val t = WorkbenchModuleState(title, m, editor, model::removeTab, DisplayType.TAB, onClose)
+            val t = WorkbenchModuleState(title, m, editor, model::removeTab, DisplayType.TAB, onClose, onSave)
             model.addState(t)
         }
     }

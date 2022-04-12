@@ -1,21 +1,21 @@
 package view
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Scaffold
-import androidx.compose.material.Text
-import androidx.compose.material.TopAppBar
+import androidx.compose.foundation.layout.*
+import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.key
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Window
 import controller.WorkbenchModuleController
 import model.WorkbenchModel
 import model.data.ModuleType
 import model.state.DisplayType
 import model.state.WorkbenchModuleState
+import util.selectedButtonColors
 import view.conponent.Resizable
 import view.conponent.WorkbenchTabRow
 
@@ -28,7 +28,7 @@ internal fun WorkbenchMainUI(model: WorkbenchModel, closeRequest: ()->Unit) {
     ) {
         MaterialTheme {
             Scaffold(
-                topBar = { Bar() },
+                topBar = { Bar(model) },
             ) {
                 val explorerTabController = WorkbenchModuleController(model, DisplayType.LEFT, ModuleType.EXPLORER, true)
                 val editorTabController = WorkbenchModuleController(model, DisplayType.TAB, ModuleType.EDITOR)
@@ -48,8 +48,24 @@ internal fun WorkbenchMainUI(model: WorkbenchModel, closeRequest: ()->Unit) {
 }
 
 @Composable
-private fun Bar() {
-    TopAppBar(title = { Text("Workbench Top Bar") })
+private fun Bar(model: WorkbenchModel) {
+    TopAppBar(content = {
+        Row(
+            modifier = Modifier.fillMaxSize().padding(20.dp, 0.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+            Text("Workbench Top Bar",
+                fontSize = 30.sp,
+                color = Color.White,
+                modifier = Modifier.align(alignment = Alignment.CenterVertically),
+            )
+            Button(
+                onClick = { model.saveAll(ModuleType.EDITOR) },
+                modifier = Modifier.align(alignment = Alignment.CenterVertically),
+                colors = ButtonDefaults.selectedButtonColors(true)
+            ) { Text("Save All") }
+        }
+    })
 }
 
 @Composable

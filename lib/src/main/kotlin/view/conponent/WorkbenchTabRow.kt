@@ -84,11 +84,10 @@ private fun WorkbenchTab(tab: WorkbenchModuleState<*>, controller: WorkbenchModu
     val backgroundColor = colors.backgroundColor(selected).value
     val contentColor = colors.contentColor(selected).value
 
-    var writerModifier: Modifier
-    if (controller.displayType.orientation.toInt() != 0) {
-        writerModifier = Modifier.vertical(controller.displayType.orientation).clickable {onClick()}
+    var writerModifier: Modifier = if (controller.displayType.orientation.toInt() != 0) {
+        Modifier.vertical(controller.displayType.orientation).clickable {onClick()}
     } else{
-        writerModifier = Modifier.clickable {onClick()}
+        Modifier.clickable {onClick()}
     }
 
     writerModifier = writerModifier

@@ -14,7 +14,7 @@ internal class WorkbenchModel {
         ) { j -> mutableStateOf(null) }
     }
 
-    var appTitle: String = "Compose Workbench";
+    var appTitle: String = "Compose Workbench"
 
     val modules = mutableStateListOf<WorkbenchModuleState<*>>()
 
@@ -44,18 +44,29 @@ internal class WorkbenchModel {
     }
 
     private fun reselectState(state: WorkbenchModuleState<*>) {
-            val filteredStates = modules.filter { it.displayType == state.displayType && it.module.moduleType == state.module.moduleType }
-            if (filteredStates.size <= 1) {
-                setSelectedModuleNull(state.displayType, state.module.moduleType)
-            } else {
-                val idx = filteredStates.indexOf(state).coerceAtLeast(0)
-                if (idx == 0) {
+        val filteredStates = modules.filter { it.displayType == state.displayType && it.module.moduleType == state.module.moduleType }
+        if (filteredStates.size <= 1) {
+            setSelectedModuleNull(state.displayType, state.module.moduleType)
+        } else {
+            val idx = filteredStates.indexOf(state).coerceAtLeast(0)
+            when (idx) {
+                0 -> {
                     setSelectedModule(filteredStates[1])
-                } else if (idx == filteredStates.size-1) {
+                }
+                filteredStates.size-1 -> {
                     setSelectedModule(filteredStates[idx - 1])
-                } else {
+                }
+                else -> {
                     setSelectedModule(filteredStates[idx + 1])
                 }
             }
+        }
     }
+
+    fun saveAll (moduleType: ModuleType) {
+        modules.filter { it.module.moduleType == moduleType }.forEach{
+            it.onSave()
+        }
+    }
+
 }
