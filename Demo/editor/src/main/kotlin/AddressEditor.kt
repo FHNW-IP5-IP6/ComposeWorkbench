@@ -16,7 +16,7 @@ import androidx.compose.ui.window.application
 
 fun main() = application {
     Window(onCloseRequest = ::exitApplication) {
-        AddressEditorUi( AddressEditorModel(Address("","","",0, "","")))
+        AddressEditorUi( AddressEditorModel(Address(-1,"","","",0, "","")))
     }
 }
 
@@ -70,6 +70,7 @@ internal fun AddressValueEditField(label:String ,getValue: () -> String, onValue
  * Editor Specific Model.
  */
 class AddressEditorModel(address: Address) {
+    val id = address.id
     var firstName by mutableStateOf(address.firstName)
     var lastName by mutableStateOf(address.lastName)
     var street by mutableStateOf(address.street)
@@ -79,6 +80,7 @@ class AddressEditorModel(address: Address) {
 }
 
 class Address(
+    val id: Int,
     var firstName: String,
     var lastName: String,
     var street: String,
