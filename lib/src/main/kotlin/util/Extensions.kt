@@ -38,6 +38,11 @@ internal fun ButtonDefaults.selectedButtonColors(selected: Boolean) =
 
 internal fun MouseEvent.intOffset(): IntOffset = IntOffset(this.x, this.y)
 
+fun Modifier.conditional(condition: Boolean, modifier: Modifier) : Modifier {
+    if (condition) {return  this.then(modifier) }
+    return this
+}
+
 @Composable
 fun Modifier.onDragEvent(
     pass: PointerEventPass = PointerEventPass.Main,

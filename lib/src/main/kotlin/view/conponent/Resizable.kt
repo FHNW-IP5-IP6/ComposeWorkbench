@@ -15,26 +15,31 @@ import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import controller.WorkbenchModuleController
+import util.conditional
 import util.onDragEvent
 import java.awt.Cursor
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 internal fun Resizable(
+    controller: WorkbenchModuleController,
     state: ResizeState = rememberResizeState(),
     content: @Composable () -> Unit
 ){
+    val enabled = controller.getSelectedModule().value != null
     Row {
-        Box(modifier = Modifier.width(state.value)) {
+
+        Box(modifier = Modifier.conditional(enabled, Modifier.width(state.value))) {
             content()
         }
         Divider(
             color = Color.Gray,
             modifier = Modifier.width(2.dp).fillMaxHeight()
-                .pointerHoverIcon(PointerIcon(Cursor.getPredefinedCursor(Cursor.W_RESIZE_CURSOR)))
-                .onDragEvent(onRelease = {}) { x, _ ->
+                .conditional(enabled, Modifier.pointerHoverIcon(PointerIcon(Cursor.getPredefinedCursor(Cursor.W_RESIZE_CURSOR))))
+                .conditional(enabled, Modifier.onDragEvent(onRelease = {}) { x, _ ->
                     state.resize(x)
-                }
+                })
         )
     }
 }

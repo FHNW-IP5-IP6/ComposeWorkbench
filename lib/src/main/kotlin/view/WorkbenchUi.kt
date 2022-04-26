@@ -35,7 +35,7 @@ internal fun WorkbenchMainUI(model: WorkbenchModel, closeRequest: ()->Unit) {
 
                 Row ( modifier = Modifier.fillMaxWidth()
                 ) {
-                    Resizable {
+                    Resizable (explorerTabController) {
                         TabSpace(explorerTabController)
                     }
                     Box(modifier = Modifier.weight(3f).fillMaxWidth()){
