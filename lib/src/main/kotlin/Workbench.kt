@@ -38,15 +38,18 @@ class Workbench {
      *
      * @param M: Type of the Model which the editor uses to manage and display data
      * @param type: the type of data this editor can be used for
+     * @param loader: callback to load model from id
      * @param content: Composable function that defines the displayed content of this explorer
      */
     fun <M> registerEditor(
         type: String,
+        loader: (Int) -> M,
         content: @Composable (M) -> Unit
     ){
         val explorer = WorkbenchModule(
             moduleType = ModuleType.EDITOR,
             modelType = type,
+            loader = loader,
             content = content)
         model.registeredEditors[type] = explorer
     }
@@ -71,15 +74,17 @@ class Workbench {
      * Edit given Model with editor of given type
      *
      * @param M: Model which the editor uses to manage and display data
+     * @param id: id of the specific data which is to be edited
      * @param type: The type of data which the Editor is used for
      * @param title: Display title of the requested editor
      * @param onClose: The callback to be invoked when this editor is closed
      */
-    fun <M> requestEditor(type: String, title: String, m: M, onClose: (M) -> Unit ={}, onSave: (M) -> Unit ={}) {
+    //TODO: make title a function to display more meaningful information
+    fun <M> requestEditor(type: String, title: String, id: Int, onClose: (M) -> Unit ={}, onSave: (M) -> Unit ={}) {
         val editor = model.registeredEditors[type]
         if(editor != null){
             editor as WorkbenchModule<M>
-            val t = WorkbenchModuleState(title, m, editor, model::removeTab, DisplayType.TAB, onClose, onSave)
+            val t = WorkbenchModuleState(title, editor.loader!!.invoke(id), editor, model::removeTab, DisplayType.TAB, onClose, onSave)
             model.addState(t)
         }
     }

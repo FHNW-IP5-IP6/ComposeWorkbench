@@ -4,14 +4,14 @@ fun main() {
 
     val workbench: Workbench = Workbench()
 
-    workbench.registerEditor<AddressEditorModel>("AddressEditor") {
+    workbench.registerEditor<AddressEditorModel>("AddressEditor", loader = {AddressEditorModel(AddressExplorerModel().addressList[it])}) {
             m -> AddressEditorUi(m)
     }
 
     workbench.registerExplorer<AddressExplorerModel>("AddressExplorer"
     ) { m ->
         AddressExplorerUi(m) {
-            workbench.requestEditor("AddressEditor", "Address Editor", AddressEditorModel(it)) { mm ->
+            workbench.requestEditor<AddressEditorModel>("AddressEditor", "Address Editor", it.id) { mm ->
                 m.updateAddress(Address(mm.id, mm.firstName, mm.lastName, mm.street, mm.streetNr, mm.city, mm.country))
             }
         }

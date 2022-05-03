@@ -20,7 +20,7 @@ internal class WorkbenchTest{
 
     @Test
     fun registerEditor() {
-        sut.registerEditor<String>(type = "String"){}
+        sut.registerEditor<String>(type = "String", loader = {"test"}){}
         assertEquals(1, sut.getModel().registeredEditors.size)
     }
 
@@ -34,9 +34,9 @@ internal class WorkbenchTest{
 
     @Test
     fun openEditor() {
-        sut.registerEditor<String>(type = "String"){}
+        sut.registerEditor<String>(type = "String", loader = {"test"}){}
         val model = "value"
-        sut.requestEditor<String>("String", "String Editor", model)
+        sut.requestEditor<String>("String", "String Editor", 1)
         assertEquals(1, sut.getModel().modules.size)
     }
 
