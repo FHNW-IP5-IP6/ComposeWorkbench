@@ -81,3 +81,5 @@ scenicView.properties
 # NetBeans
 .nb-gradle/
 nbproject/
+
+/src/main/resources/db/
