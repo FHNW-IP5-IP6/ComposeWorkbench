@@ -5,10 +5,14 @@ import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyShortcut
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.MenuBar
 import androidx.compose.ui.window.Window
 import controller.WorkbenchModuleController
 import model.WorkbenchModel
@@ -19,13 +23,21 @@ import util.selectedButtonColors
 import view.conponent.Resizable
 import view.conponent.WorkbenchTabRow
 
-
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 internal fun WorkbenchMainUI(model: WorkbenchModel, closeRequest: ()->Unit) {
     Window(
         onCloseRequest = closeRequest,
         title = model.appTitle
     ) {
+        MenuBar {
+            Menu("View", mnemonic = 'V') {
+                Menu("Split") {
+                    Item("Horizontal", onClick = { println("Horizontal Split for TabSpace") }, shortcut = KeyShortcut(Key.H, ctrl = true))
+                    Item("Vertical", onClick = { println("Vertical Split for TabSpace") }, shortcut = KeyShortcut(Key.V, ctrl = true))
+                }
+            }
+        }
         MaterialTheme {
             Scaffold(
                 topBar = { Bar(model) },
@@ -85,6 +97,7 @@ internal fun WindowSpace(model: WorkbenchModel){
         }
     }
 }
+
 
 @Composable
 private fun WorkbenchWindow (state : WorkbenchModuleState<*>) {
