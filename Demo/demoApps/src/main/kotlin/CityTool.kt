@@ -17,6 +17,6 @@ fun main() {
     }
 
     workbench.requestExplorer("Cities", "Swiss Cities", getSwissCities())
-    workbench.requestExplorer("Cities", "Small Cities", getSmallCities())
+    workbench.requestExplorer("Cities", "Small Cities", getSmallCities(), ExplorerLocation.BOTTOM)
     workbench.run { println("Exit my Compose Workbench App") }
 }

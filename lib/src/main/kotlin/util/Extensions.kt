@@ -2,6 +2,7 @@ package util
 
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.awt.awtEvent
 import androidx.compose.ui.draw.rotate
@@ -11,6 +12,7 @@ import androidx.compose.ui.layout.layout
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import java.awt.Cursor
 import java.awt.event.MouseEvent
 import kotlin.math.absoluteValue
 
@@ -38,13 +40,8 @@ internal fun ButtonDefaults.selectedButtonColors(selected: Boolean) =
 
 internal fun MouseEvent.intOffset(): IntOffset = IntOffset(this.x, this.y)
 
-fun Modifier.conditional(condition: Boolean, modifier: Modifier) : Modifier {
-    if (condition) {return  this.then(modifier) }
-    return this
-}
-
 @Composable
-fun Modifier.onDragEvent(
+internal fun Modifier.onDragEvent(
     pass: PointerEventPass = PointerEventPass.Main,
     onRelease: AwaitPointerEventScope.(event: PointerEvent) -> Unit,
     onEvent: AwaitPointerEventScope.(yMovement: Dp, xMovement: Dp) -> Unit,
@@ -73,3 +70,11 @@ fun Modifier.onDragEvent(
         }
     }
 }
+
+@OptIn(ExperimentalComposeUiApi::class)
+internal fun Modifier.cursorForHorizontalResize(): Modifier =
+    pointerHoverIcon(PointerIcon(Cursor(Cursor.E_RESIZE_CURSOR)))
+
+@OptIn(ExperimentalComposeUiApi::class)
+internal fun Modifier.cursorForVerticalResize(): Modifier =
+    pointerHoverIcon(PointerIcon(Cursor(Cursor.N_RESIZE_CURSOR)))

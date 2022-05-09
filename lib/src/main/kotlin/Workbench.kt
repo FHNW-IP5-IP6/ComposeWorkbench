@@ -6,6 +6,7 @@ import model.data.ModuleType
 import model.data.WorkbenchModule
 import model.state.DisplayType
 import model.state.WorkbenchModuleState
+import model.state.toDisplayType
 import view.WindowSpace
 import view.WorkbenchMainUI
 
@@ -61,11 +62,11 @@ class Workbench {
      * @param type: The type of data which the Explorer is used for
      * @param title: Display title of the requested editor
      */
-    fun <M> requestExplorer(type: String, title: String, m: M) {
+    fun <M> requestExplorer(type: String, title: String, m: M, location: ExplorerLocation = ExplorerLocation.LEFT) {
         val explorer = model.registeredExplorers[type]
         if(explorer != null){
             explorer as WorkbenchModule<M>
-            val state = WorkbenchModuleState(title, m, explorer, model::removeTab, DisplayType.LEFT)
+            val state = WorkbenchModuleState(title, m, explorer, model::removeTab, toDisplayType(location))
             model.addState(state)
         }
     }
