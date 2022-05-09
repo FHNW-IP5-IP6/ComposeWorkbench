@@ -14,6 +14,8 @@ version = "1.0.0"
 dependencies {
     testImplementation(kotlin("test"))
     implementation(compose.desktop.currentOs)
+    @OptIn(org.jetbrains.compose.ExperimentalComposeLibrary::class)
+    implementation (org.jetbrains.compose.ComposePlugin.DesktopDependencies.components.splitPane)
 }
 
 tasks.withType<KotlinCompile> {
