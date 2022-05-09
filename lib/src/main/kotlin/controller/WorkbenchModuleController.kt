@@ -45,7 +45,8 @@ internal class WorkbenchModuleController(val model: WorkbenchModel, val displayT
             module.module,
             this::removeModuleState,
             DisplayType.WINDOW,
-            module.onClose
+            module.onClose,
+            module.onSave
         )
         model.removeTab(module)
         model.addState(window)
