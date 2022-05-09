@@ -8,7 +8,7 @@ internal class WorkbenchModuleState <M> (
     val model: M,
     val module: WorkbenchModule<M>,
     val close: (WorkbenchModuleState<*>) -> Unit = {},
-    val displayType: DisplayType,
+    var displayType: DisplayType,
     val onClose: (M) -> Unit = {},
     val onSave: (M) -> Unit = {},
     )

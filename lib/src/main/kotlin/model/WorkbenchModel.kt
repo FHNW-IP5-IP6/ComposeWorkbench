@@ -4,6 +4,7 @@ import androidx.compose.runtime.*
 import model.data.ModuleType
 import model.data.WorkbenchModule
 import model.state.DisplayType
+import model.state.SplitViewMode
 import model.state.WorkbenchModuleState
 
 internal class WorkbenchModel {
@@ -20,6 +21,8 @@ internal class WorkbenchModel {
 
     val registeredExplorers = mutableMapOf<String, WorkbenchModule<*>>()
     val registeredEditors = mutableMapOf<String, WorkbenchModule<*>>()
+
+    var splitViewMode by mutableStateOf(SplitViewMode.UNSPLIT)
 
     fun getSelectedModule (displayType: DisplayType, moduleType: ModuleType): MutableState<WorkbenchModuleState<*>?> {
         return selectedModules[displayType.ordinal][moduleType.ordinal]
@@ -69,4 +72,31 @@ internal class WorkbenchModel {
         }
     }
 
+    fun changeSplitViewMode (mode: SplitViewMode) {
+
+        if (mode == splitViewMode) return
+
+        splitViewMode = mode;
+
+        if (mode == SplitViewMode.UNSPLIT)
+        {
+            modules.filter { it.displayType == DisplayType.TAB2 }.forEach { it.displayType = DisplayType.TAB1 }
+            setSelectedModuleNull(DisplayType.TAB2, ModuleType.EDITOR)
+            return
+        }
+
+        var m1 = getSelectedModule(DisplayType.TAB1, ModuleType.EDITOR).value
+        var m2 = getSelectedModule(DisplayType.TAB2, ModuleType.EDITOR).value
+
+        if (m1 != null && m2 == null) {
+            reselectState(m1)
+            m1!!.displayType = DisplayType.TAB2
+            setSelectedModule(m1)
+        }
+        if (m1 == null && m2 != null) {
+            reselectState(m2)
+            m2!!.displayType = DisplayType.TAB1
+            setSelectedModule(m2)
+        }
+    }
 }

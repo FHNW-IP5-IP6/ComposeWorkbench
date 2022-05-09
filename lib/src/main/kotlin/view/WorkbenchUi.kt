@@ -20,7 +20,9 @@ import controller.WorkbenchModuleController
 import model.WorkbenchModel
 import model.data.ModuleType
 import model.state.DisplayType
+import model.state.SplitViewMode
 import model.state.WorkbenchModuleState
+import org.jetbrains.compose.splitpane.ExperimentalSplitPaneApi
 import org.jetbrains.compose.splitpane.HorizontalSplitPane
 import org.jetbrains.compose.splitpane.VerticalSplitPane
 import org.jetbrains.compose.splitpane.rememberSplitPaneState
@@ -38,9 +40,10 @@ internal fun WorkbenchMainUI(model: WorkbenchModel, closeRequest: ()->Unit) {
     ) {
         MenuBar {
             Menu("View", mnemonic = 'V') {
-                Menu("Split") {
-                    Item("Horizontal", onClick = { println("Horizontal Split for TabSpace") }, shortcut = KeyShortcut(Key.H, ctrl = true))
-                    Item("Vertical", onClick = { println("Vertical Split for TabSpace") }, shortcut = KeyShortcut(Key.V, ctrl = true))
+                Menu("Split TabSpace") {
+                    Item("Horizontal", onClick = { model.changeSplitViewMode(SplitViewMode.HORIZONTAL) }, shortcut = KeyShortcut(Key.H, ctrl = true))
+                    Item("Vertical", onClick = { model.changeSplitViewMode(SplitViewMode.VERTICAL) }, shortcut = KeyShortcut(Key.V, ctrl = true))
+                    Item("Unsplit", onClick = { model.changeSplitViewMode(SplitViewMode.UNSPLIT) }, shortcut = KeyShortcut(Key.U, ctrl = true))
                 }
             }
         }
@@ -50,7 +53,6 @@ internal fun WorkbenchMainUI(model: WorkbenchModel, closeRequest: ()->Unit) {
             ) {
                 val leftExplorerController = WorkbenchModuleController(model, DisplayType.LEFT, ModuleType.EXPLORER, true)
                 val bottomExplorerController = WorkbenchModuleController(model, DisplayType.BOTTOM, ModuleType.EXPLORER, true)
-                val editorTabController = WorkbenchModuleController(model, DisplayType.TAB, ModuleType.EDITOR)
 
                 VerticalSplitPane(splitPaneState = rememberSplitPaneState(initialPositionPercentage = 0.7f)) {
                     first {
@@ -59,7 +61,7 @@ internal fun WorkbenchMainUI(model: WorkbenchModel, closeRequest: ()->Unit) {
                                 TabSpace(leftExplorerController)
                             }
                             second() {
-                                TabSpace(editorTabController)
+                                TabSpaceEditor(model)
                             }
                             splitter {
                                 visiblePart {
@@ -115,6 +117,57 @@ private fun TabSpace(controller: WorkbenchModuleController){
         WorkbenchTabRow(controller)
     }else{
         Box{} //empty box for split pane to work
+    }
+}
+
+
+@OptIn(ExperimentalSplitPaneApi::class)
+@Composable
+private fun TabSpaceEditor(model: WorkbenchModel){
+    val editorTabController1 = WorkbenchModuleController(model, DisplayType.TAB1, ModuleType.EDITOR)
+    val editorTabController2 = WorkbenchModuleController(model, DisplayType.TAB2, ModuleType.EDITOR)
+    var splitRatio: Float = .5f
+    if (editorTabController1.getModulesFiltered().isEmpty()) splitRatio = 0f
+    if (editorTabController2.getModulesFiltered().isEmpty()) splitRatio = 1f
+
+    if (model.splitViewMode == SplitViewMode.VERTICAL) {
+        VerticalSplitPane(splitPaneState = rememberSplitPaneState(initialPositionPercentage = splitRatio)) {
+            first {
+                TabSpace(editorTabController1)
+            }
+            second {
+                TabSpace(editorTabController2)
+            }
+            splitter {
+                visiblePart {
+                    Box(modifier = Modifier.height(2.dp).fillMaxWidth().background(SolidColor(Color.Gray), alpha = 0.50f))
+                }
+                handle {
+                    Box(modifier = Modifier.markAsHandle().cursorForVerticalResize().height(9.dp).fillMaxWidth())
+                }
+            }
+        }
+    } else if (model.splitViewMode == SplitViewMode.HORIZONTAL) {
+        HorizontalSplitPane(splitPaneState = rememberSplitPaneState(initialPositionPercentage = splitRatio)) {
+            first {
+                TabSpace(editorTabController1)
+            }
+            second {
+                TabSpace(editorTabController2)
+            }
+            splitter {
+                visiblePart {
+                    Box(modifier = Modifier.width(2.dp).fillMaxHeight().background(SolidColor(Color.Gray), alpha = 0.50f))
+                }
+                handle {
+                    Box(modifier = Modifier.markAsHandle().cursorForHorizontalResize().width(9.dp).fillMaxHeight())
+                }
+            }
+        }
+    }
+    else
+    {
+        TabSpace(editorTabController1)
     }
 }
 

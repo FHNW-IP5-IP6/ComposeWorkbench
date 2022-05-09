@@ -85,7 +85,7 @@ class Workbench {
         val editor = model.registeredEditors[type]
         if(editor != null){
             editor as WorkbenchModule<M>
-            val t = WorkbenchModuleState(title, editor.loader!!.invoke(id), editor, model::removeTab, DisplayType.TAB, onClose, onSave)
+            val t = WorkbenchModuleState(title, editor.loader!!.invoke(id), editor, model::removeTab, DisplayType.TAB1, onClose, onSave)
             model.addState(t)
         }
     }
