@@ -6,6 +6,7 @@ import model.data.WorkbenchModule
 import model.state.DisplayType
 import model.state.SplitViewMode
 import model.state.WorkbenchModuleState
+import org.jetbrains.compose.splitpane.SplitPaneState
 
 internal class WorkbenchModel {
 
@@ -23,6 +24,9 @@ internal class WorkbenchModel {
     val registeredEditors = mutableMapOf<String, WorkbenchModule<*>>()
 
     var splitViewMode by mutableStateOf(SplitViewMode.UNSPLIT)
+
+    var bottomSplitState by mutableStateOf(SplitPaneState(moveEnabled = true, initialPositionPercentage = 0.7f))
+    var leftSplitState by  mutableStateOf(SplitPaneState(moveEnabled = true, initialPositionPercentage = 0.25f))
 
     fun getSelectedModule (displayType: DisplayType, moduleType: ModuleType): MutableState<WorkbenchModuleState<*>?> {
         return selectedModules[displayType.ordinal][moduleType.ordinal]

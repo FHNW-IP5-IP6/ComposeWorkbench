@@ -3,7 +3,6 @@ package view.conponent
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Icon
@@ -34,10 +33,14 @@ internal fun WorkbenchTabRow(controller: WorkbenchModuleController) {
 }
 
 @Composable
+internal fun WorkbenchTabBody(controller: WorkbenchModuleController) {
+    controller.getSelectedModule().value?.content()
+}
+
+@Composable
 private fun HorizontalWorkbenchTabRow(controller: WorkbenchModuleController) {
     val tabScrollState = rememberScrollState()
-
-    Column() {
+    Column(modifier = Modifier) {
         Row(modifier = Modifier.horizontalScroll(tabScrollState)) {
             WorkbenchTabs(controller)
         }
@@ -45,7 +48,6 @@ private fun HorizontalWorkbenchTabRow(controller: WorkbenchModuleController) {
             modifier = Modifier.align(Alignment.CenterHorizontally),
             adapter = rememberScrollbarAdapter(tabScrollState)
         )
-        controller.getSelectedModule().value?.content()
     }
 }
 
@@ -53,7 +55,7 @@ private fun HorizontalWorkbenchTabRow(controller: WorkbenchModuleController) {
 private fun VerticalWorkbenchTabRow(controller: WorkbenchModuleController) {
     val tabScrollState = rememberScrollState()
 
-    Row(modifier = Modifier.fillMaxHeight()) {
+    Row(modifier = Modifier) {
         Column(modifier = Modifier.verticalScroll(tabScrollState)) {
             WorkbenchTabs(controller)
         }
@@ -61,8 +63,6 @@ private fun VerticalWorkbenchTabRow(controller: WorkbenchModuleController) {
             modifier = Modifier.align(Alignment.CenterVertically),
             adapter = rememberScrollbarAdapter(tabScrollState)
         )
-        //TODO: Make scrollable
-        controller.getSelectedModule().value?.content()
     }
 }
 

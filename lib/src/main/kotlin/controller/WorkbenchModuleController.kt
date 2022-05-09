@@ -1,11 +1,11 @@
 package controller
 
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
 import model.WorkbenchModel
 import model.data.ModuleType
 import model.state.DisplayType
 import model.state.WorkbenchModuleState
+import org.jetbrains.compose.splitpane.SplitPaneState
 
 internal class WorkbenchModuleController(val model: WorkbenchModel, val displayType: DisplayType, val moduleType: ModuleType, val deselectable: Boolean = false) {
 
@@ -25,8 +25,16 @@ internal class WorkbenchModuleController(val model: WorkbenchModel, val displayT
     fun moduleSelectorPressed(module: WorkbenchModuleState<*>?) {
         if(deselectable && getSelectedModule().value == module){
             model.setSelectedModuleNull(displayType, moduleType)
+            when(displayType) {
+                DisplayType.LEFT -> model.leftSplitState = SplitPaneState(moveEnabled = false, initialPositionPercentage = 0f)
+                DisplayType.BOTTOM -> model.bottomSplitState = SplitPaneState(moveEnabled = false, initialPositionPercentage = 1f)
+            }
         }else{
             model.setSelectedModule(module!!)
+            when(displayType) {
+                DisplayType.LEFT -> model.leftSplitState = SplitPaneState(moveEnabled = true, initialPositionPercentage = 0.25f)
+                DisplayType.BOTTOM -> model.bottomSplitState = SplitPaneState(moveEnabled = true, initialPositionPercentage = 0.7f)
+            }
         }
     }
 
