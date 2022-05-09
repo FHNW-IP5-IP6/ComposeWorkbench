@@ -9,12 +9,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-<<<<<<< HEAD
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyShortcut
-=======
 import androidx.compose.ui.graphics.SolidColor
->>>>>>> 710910cd1240b46ec43de73031e8ae9ec130f561
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.MenuBar
@@ -32,12 +29,7 @@ import util.cursorForVerticalResize
 import util.selectedButtonColors
 import view.conponent.WorkbenchTabRow
 
-<<<<<<< HEAD
 @OptIn(ExperimentalComposeUiApi::class)
-=======
-
-
->>>>>>> 710910cd1240b46ec43de73031e8ae9ec130f561
 @Composable
 internal fun WorkbenchMainUI(model: WorkbenchModel, closeRequest: ()->Unit) {
     Window(
