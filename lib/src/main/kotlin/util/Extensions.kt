@@ -78,3 +78,7 @@ internal fun Modifier.cursorForHorizontalResize(): Modifier =
 @OptIn(ExperimentalComposeUiApi::class)
 internal fun Modifier.cursorForVerticalResize(): Modifier =
     pointerHoverIcon(PointerIcon(Cursor(Cursor.N_RESIZE_CURSOR)))
+
+@OptIn(ExperimentalComposeUiApi::class)
+internal fun Modifier.cursorForClickable(): Modifier =
+    pointerHoverIcon(PointerIcon(Cursor(Cursor.HAND_CURSOR)))

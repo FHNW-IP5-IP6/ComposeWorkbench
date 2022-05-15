@@ -9,6 +9,7 @@ import model.state.WorkbenchModuleState
 import model.state.toDisplayType
 import view.WindowSpace
 import view.WorkbenchMainUI
+import view.conponent.DefaultExplorerOverview
 
 
 class Workbench {
@@ -32,6 +33,21 @@ class Workbench {
             content = content)
 
         model.registeredExplorers[type] = explorer
+    }
+
+    /**
+     * Add an explorer to the Workbench
+     *
+     * TODO: can this be called after run?
+     * @param type: the type of data this explorer can be used for
+     * @param content: Composable function that defines the displayed content of this explorer
+     */
+    fun <M: Any> registerDefaultExplorer(
+        type: String,
+        title: String,
+        defaultModel: () -> M,
+    ){
+        model.registeredDefaultExplorers[title] = Pair(type, defaultModel)
     }
 
     /**
@@ -94,6 +110,7 @@ class Workbench {
      * Run the Workbench
      */
     fun run(onExit: () -> Unit) = application {
+
         // init main window
         WorkbenchMainUI(model) {
             onExit.invoke()

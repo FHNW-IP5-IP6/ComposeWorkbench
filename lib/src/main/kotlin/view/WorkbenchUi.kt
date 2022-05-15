@@ -40,6 +40,10 @@ internal fun WorkbenchMainUI(model: WorkbenchModel, closeRequest: ()->Unit) {
         title = model.appTitle
     ) {
         MenuBar {
+            Menu("File", mnemonic = 'F') {
+                Item("Save All", onClick = { model.saveAll(ModuleType.EDITOR) }, shortcut = KeyShortcut(Key.S, ctrl = true, alt = true))
+                Item("Show Default Explorers", onClick = {model.showDefaultExplorersOverview()})
+            }
             Menu("View", mnemonic = 'V') {
                 Menu("Split TabSpace") {
                     Item("Horizontal", onClick = { model.changeSplitViewMode(SplitViewMode.HORIZONTAL) }, shortcut = KeyShortcut(Key.H, ctrl = true))

@@ -16,7 +16,12 @@ fun main() {
         }
     }
 
-    workbench.requestExplorer("Cities", "Swiss Cities", getSwissCities())
-    workbench.requestExplorer("Cities", "Small Cities", getSmallCities(), ExplorerLocation.BOTTOM)
+    workbench.registerDefaultExplorer("Cities", "Swiss Cities") {
+        getSwissCities()
+    }
+    workbench.registerDefaultExplorer("Cities", "Small Cities") {
+        getSmallCities()
+    }
+
     workbench.run { println("Exit my Compose Workbench App") }
 }

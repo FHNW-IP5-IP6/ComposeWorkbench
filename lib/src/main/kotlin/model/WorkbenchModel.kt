@@ -1,5 +1,6 @@
 package model
 
+import Workbench
 import androidx.compose.runtime.*
 import model.data.ModuleType
 import model.data.WorkbenchModule
@@ -7,6 +8,7 @@ import model.state.DisplayType
 import model.state.SplitViewMode
 import model.state.WorkbenchModuleState
 import org.jetbrains.compose.splitpane.SplitPaneState
+import view.conponent.DefaultExplorerOverview
 
 internal class WorkbenchModel {
 
@@ -21,12 +23,29 @@ internal class WorkbenchModel {
     val modules = mutableStateListOf<WorkbenchModuleState<*>>()
 
     val registeredExplorers = mutableMapOf<String, WorkbenchModule<*>>()
+    val registeredDefaultExplorers = mutableMapOf<String, Pair<String, ()->Any>>()
     val registeredEditors = mutableMapOf<String, WorkbenchModule<*>>()
 
     var splitViewMode by mutableStateOf(SplitViewMode.UNSPLIT)
 
     var bottomSplitState by mutableStateOf(SplitPaneState(moveEnabled = true, initialPositionPercentage = 0.7f))
     var leftSplitState by  mutableStateOf(SplitPaneState(moveEnabled = true, initialPositionPercentage = 0.25f))
+
+    init {
+        showDefaultExplorersOverview()
+    }
+
+    fun createExplorerFromDefault (title: String) {
+        val pair = registeredDefaultExplorers[title] ?: return
+
+        val explorer = registeredExplorers[pair.first] as WorkbenchModule<Any>
+
+        if(explorer != null){
+            val model = pair.second.invoke()
+            val state = WorkbenchModuleState(title, model, explorer, ::removeTab, DisplayType.LEFT)
+            addState(state)
+        }
+    }
 
     fun getSelectedModule (displayType: DisplayType, moduleType: ModuleType): MutableState<WorkbenchModuleState<*>?> {
         return selectedModules[displayType.ordinal][moduleType.ordinal]
@@ -103,4 +122,30 @@ internal class WorkbenchModel {
             setSelectedModule(m2)
         }
     }
+
+    fun showDefaultExplorersOverview() {
+
+        val modelType = "DefaultExplorers";
+
+        val existing = modules.firstOrNull(){it.module.modelType == modelType}
+
+        if (existing != null) {
+            setSelectedModule(existing)
+            return
+        }
+
+        val editor = WorkbenchModule<WorkbenchModel>(
+            moduleType = ModuleType.EDITOR,
+            modelType = modelType,
+            content = {
+                DefaultExplorerOverview(it)
+            }
+        )
+        val t = WorkbenchModuleState(title = "Default Explorers", model = this, module = editor, ::removeTab, DisplayType.TAB1)
+        addState(t)
+    }
+}
+
+class DummyModel {
+
 }
