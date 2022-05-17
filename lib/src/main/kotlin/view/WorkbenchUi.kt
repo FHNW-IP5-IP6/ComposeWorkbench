@@ -1,5 +1,11 @@
 package view
 
+import SPLIT_PAIN_HANDLE_ALPHA
+import SPLIT_PAIN_HANDLE_AREA
+import SPLIT_PAIN_HANDLE_SIZE
+import SPLIT_PAIN_MIN_SIZE
+import TAB_ROW_HEIGHT
+import TAB_ROW_WIDTH
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
@@ -25,15 +31,13 @@ import model.state.WorkbenchModuleState
 import org.jetbrains.compose.splitpane.ExperimentalSplitPaneApi
 import org.jetbrains.compose.splitpane.HorizontalSplitPane
 import org.jetbrains.compose.splitpane.VerticalSplitPane
-import org.jetbrains.compose.splitpane.rememberSplitPaneState
 import util.cursorForHorizontalResize
 import util.cursorForVerticalResize
 import util.selectedButtonColors
-import view.conponent.WorkbenchTabBody
-import view.conponent.WorkbenchTabRow
+import view.conponent.*
 
-@OptIn(ExperimentalComposeUiApi::class, ExperimentalSplitPaneApi::class)
 @Composable
+@OptIn(ExperimentalComposeUiApi::class)
 internal fun WorkbenchMainUI(model: WorkbenchModel, closeRequest: ()->Unit) {
     Window(
         onCloseRequest = closeRequest,
@@ -41,77 +45,121 @@ internal fun WorkbenchMainUI(model: WorkbenchModel, closeRequest: ()->Unit) {
     ) {
         MenuBar {
             Menu("File", mnemonic = 'F') {
-                Item("Save All", onClick = { model.saveAll(ModuleType.EDITOR) }, shortcut = KeyShortcut(Key.S, ctrl = true, alt = true))
-                Item("Show Default Explorers", onClick = {model.showDefaultExplorersOverview()})
+                Item(
+                    "Save All",
+                    onClick = { model.saveAll(ModuleType.EDITOR) },
+                    shortcut = KeyShortcut(Key.S, ctrl = true, alt = true)
+                )
+                Item("Show Default Explorers", onClick = { model.showDefaultExplorersOverview() })
             }
             Menu("View", mnemonic = 'V') {
                 Menu("Split TabSpace") {
-                    Item("Horizontal", onClick = { model.changeSplitViewMode(SplitViewMode.HORIZONTAL) }, shortcut = KeyShortcut(Key.H, ctrl = true))
-                    Item("Vertical", onClick = { model.changeSplitViewMode(SplitViewMode.VERTICAL) }, shortcut = KeyShortcut(Key.V, ctrl = true))
-                    Item("Unsplit", onClick = { model.changeSplitViewMode(SplitViewMode.UNSPLIT) }, shortcut = KeyShortcut(Key.U, ctrl = true))
+                    Item(
+                        "Horizontal",
+                        onClick = { model.changeSplitViewMode(SplitViewMode.HORIZONTAL) },
+                        shortcut = KeyShortcut(Key.H, ctrl = true)
+                    )
+                    Item(
+                        "Vertical",
+                        onClick = { model.changeSplitViewMode(SplitViewMode.VERTICAL) },
+                        shortcut = KeyShortcut(Key.V, ctrl = true)
+                    )
+                    Item(
+                        "Unsplit",
+                        onClick = { model.changeSplitViewMode(SplitViewMode.UNSPLIT) },
+                        shortcut = KeyShortcut(Key.U, ctrl = true)
+                    )
                 }
             }
         }
-        MaterialTheme {
-            Scaffold(
-                topBar = { Bar(model) },
-            ) {
-                val leftExplorerController = WorkbenchModuleController(model, DisplayType.LEFT, ModuleType.EXPLORER, true)
-                val bottomExplorerController = WorkbenchModuleController(model, DisplayType.BOTTOM, ModuleType.EXPLORER, true)
+        Draggable(model) {
+            WorkbenchBody(model)
+        }
+    }
+}
 
-
-                Column {
-                    Row(modifier = Modifier.weight(0.9f)) {
-                        TabRow(leftExplorerController)
+@Composable
+@OptIn(ExperimentalSplitPaneApi::class)
+private fun WorkbenchBody(model: WorkbenchModel) {
+    MaterialTheme {
+        Scaffold(
+            topBar = { Bar(model) },
+        ) {
+            val leftExplorerController =
+                WorkbenchModuleController(model, DisplayType.LEFT, ModuleType.EXPLORER, true)
+            val bottomExplorerController =
+                WorkbenchModuleController(model, DisplayType.BOTTOM, ModuleType.EXPLORER, true)
+            Column {
+                BoxWithConstraints {
+                    Row(modifier = Modifier.height(maxHeight - TAB_ROW_HEIGHT)) {
+                        DropTarget(model = model, moduleReceiver = { leftExplorerController.updateDisplayType(it, DisplayType.LEFT) }) { isActive ->
+                            TabRow(leftExplorerController)
+                        }
                         VerticalSplitPane(splitPaneState = model.bottomSplitState) {
                             first {
-                                HorizontalSplitPane(splitPaneState = model.leftSplitState) {
-                                    first() {
-                                        TabBody(leftExplorerController)
-                                    }
-                                    second() {
-                                        TabSpaceEditor(model)
-                                    }
-                                    splitter {
-                                        visiblePart {
-                                            Box(
-                                                modifier = Modifier.width(2.dp).fillMaxHeight()
-                                                    .background(SolidColor(Color.Gray), alpha = 0.50f)
-                                            )
-                                        }
-                                        handle {
-                                            Box(
-                                                modifier = Modifier.markAsHandle().cursorForHorizontalResize()
-                                                    .width(9.dp)
-                                                    .fillMaxHeight()
-                                            )
-                                        }
-                                    }
-                                }
+                                HorizontalSplitPane(model, leftExplorerController)
                             }
-                            second() {
+                            second(minSize = SPLIT_PAIN_MIN_SIZE) {
                                 TabBody(bottomExplorerController)
                             }
                             splitter {
                                 visiblePart {
                                     Box(
-                                        modifier = Modifier.height(2.dp).fillMaxWidth()
-                                            .background(SolidColor(Color.Gray), alpha = 0.50f)
+                                        modifier = Modifier.height(SPLIT_PAIN_HANDLE_SIZE).fillMaxWidth()
+                                            .background(SolidColor(Color.Gray), alpha = SPLIT_PAIN_HANDLE_ALPHA)
                                     )
                                 }
                                 handle {
                                     Box(
-                                        modifier = Modifier.markAsHandle().cursorForVerticalResize().height(9.dp)
+                                        modifier = Modifier.markAsHandle().cursorForVerticalResize()
+                                            .height(SPLIT_PAIN_HANDLE_AREA)
                                             .fillMaxWidth()
                                     )
                                 }
                             }
                         }
                     }
-                    Box (modifier = Modifier.weight(0.1f, fill = false).fillMaxWidth()){
+                }
+                Box(
+                    modifier = Modifier
+                        .requiredHeight(TAB_ROW_HEIGHT).padding(start = TAB_ROW_WIDTH)
+                        .align(Alignment.End)
+                ) {
+                    DropTarget(model = model, moduleReceiver = { bottomExplorerController.updateDisplayType(it, DisplayType.BOTTOM) }) { isActive ->
                         TabRow(bottomExplorerController)
                     }
                 }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalSplitPaneApi::class)
+@Composable
+private fun HorizontalSplitPane(
+    model: WorkbenchModel,
+    leftExplorerController: WorkbenchModuleController
+) {
+    HorizontalSplitPane(splitPaneState = model.leftSplitState) {
+        first() {
+            TabBody(leftExplorerController)
+        }
+        second() {
+            EditorTabSpace(model)
+        }
+        splitter {
+            visiblePart {
+                Box(
+                    modifier = Modifier.width(SPLIT_PAIN_HANDLE_SIZE).fillMaxHeight()
+                        .background(SolidColor(Color.Gray), alpha = SPLIT_PAIN_HANDLE_ALPHA)
+                )
+            }
+            handle {
+                Box(
+                    modifier = Modifier.markAsHandle().cursorForHorizontalResize()
+                        .width(SPLIT_PAIN_HANDLE_AREA)
+                        .fillMaxHeight()
+                )
             }
         }
     }
@@ -142,77 +190,11 @@ private fun Bar(model: WorkbenchModel) {
 private fun TabRow(controller: WorkbenchModuleController){
     if (controller.getModulesFiltered().isNotEmpty()) {
         WorkbenchTabRow(controller)
-    }else{
-        Box{} //empty box for split pane to work
-    }
-}
-
-@Composable
-private fun TabSpace(controller: WorkbenchModuleController){
-    if (controller.getModulesFiltered().isNotEmpty()) {
-        Column {
-            WorkbenchTabRow(controller)
-            WorkbenchTabBody(controller)
-        }
-    }else{
-        Box{} //empty box for split pane to work
-    }
-}
-
-
-@OptIn(ExperimentalSplitPaneApi::class)
-@Composable
-private fun TabSpaceEditor(model: WorkbenchModel){
-    val editorTabController1 = WorkbenchModuleController(model, DisplayType.TAB1, ModuleType.EDITOR)
-    val editorTabController2 = WorkbenchModuleController(model, DisplayType.TAB2, ModuleType.EDITOR)
-    var splitRatio: Float = .5f
-    if (editorTabController1.getModulesFiltered().isEmpty()) splitRatio = 0f
-    if (editorTabController2.getModulesFiltered().isEmpty()) splitRatio = 1f
-
-    if (model.splitViewMode == SplitViewMode.VERTICAL) {
-        VerticalSplitPane(splitPaneState = rememberSplitPaneState(initialPositionPercentage = splitRatio)) {
-            first {
-                TabSpace(editorTabController1)
-            }
-            second {
-                TabSpace(editorTabController2)
-            }
-            splitter {
-                visiblePart {
-                    Box(modifier = Modifier.height(2.dp).fillMaxWidth().background(SolidColor(Color.Gray), alpha = 0.50f))
-                }
-                handle {
-                    Box(modifier = Modifier.markAsHandle().cursorForVerticalResize().height(9.dp).fillMaxWidth())
-                }
-            }
-        }
-    } else if (model.splitViewMode == SplitViewMode.HORIZONTAL) {
-        HorizontalSplitPane(splitPaneState = rememberSplitPaneState(initialPositionPercentage = splitRatio)) {
-            first {
-                TabSpace(editorTabController1)
-            }
-            second {
-                TabSpace(editorTabController2)
-            }
-            splitter {
-                visiblePart {
-                    Box(modifier = Modifier.width(2.dp).fillMaxHeight().background(SolidColor(Color.Gray), alpha = 0.50f))
-                }
-                handle {
-                    Box(modifier = Modifier.markAsHandle().cursorForHorizontalResize().width(9.dp).fillMaxHeight())
-                }
-            }
-        }
-    }
-    else
-    {
-        TabSpace(editorTabController1)
     }
 }
 
 @Composable
 private fun TabBody(controller: WorkbenchModuleController){
-    println(controller.getSelectedModule())
     if (controller.getSelectedModule().value != null) {
         WorkbenchTabBody(controller)
     }else{
@@ -230,7 +212,6 @@ internal fun WindowSpace(model: WorkbenchModel){
         }
     }
 }
-
 
 @Composable
 private fun WorkbenchWindow (state : WorkbenchModuleState<*>) {

@@ -22,4 +22,5 @@ internal class WorkbenchModuleState <M> (
 
     @Composable
     fun content() = module.content(model)
+
 }

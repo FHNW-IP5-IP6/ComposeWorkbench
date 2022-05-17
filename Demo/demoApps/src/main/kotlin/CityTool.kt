@@ -23,5 +23,9 @@ fun main() {
         getSmallCities()
     }
 
+    workbench.requestExplorer("Cities", "Swiss Cities", getBigCities(), ExplorerLocation.LEFT)
+    workbench.requestExplorer("Cities", "Small Cities", getBigCities(), ExplorerLocation.LEFT)
+    workbench.requestExplorer("Cities", "Big Cities", getBigCities(), ExplorerLocation.BOTTOM)
+    workbench.requestExplorer("Cities", "German Cities", getGermanCities(), ExplorerLocation.BOTTOM)
     workbench.run { println("Exit my Compose Workbench App") }
 }

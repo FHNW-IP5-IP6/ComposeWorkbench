@@ -40,7 +40,7 @@ internal fun WorkbenchTabBody(controller: WorkbenchModuleController) {
 @Composable
 private fun HorizontalWorkbenchTabRow(controller: WorkbenchModuleController) {
     val tabScrollState = rememberScrollState()
-    Column(modifier = Modifier) {
+    Column {
         Row(modifier = Modifier.horizontalScroll(tabScrollState)) {
             WorkbenchTabs(controller)
         }
@@ -55,7 +55,7 @@ private fun HorizontalWorkbenchTabRow(controller: WorkbenchModuleController) {
 private fun VerticalWorkbenchTabRow(controller: WorkbenchModuleController) {
     val tabScrollState = rememberScrollState()
 
-    Row(modifier = Modifier) {
+    Row {
         Column(modifier = Modifier.verticalScroll(tabScrollState)) {
             WorkbenchTabs(controller)
         }
@@ -107,25 +107,27 @@ private fun WorkbenchTab(tab: WorkbenchModuleState<*>, controller: WorkbenchModu
             }
         }
 
-    ContextMenuArea(items = {
-        listOf(
-            ContextMenuItem("Open in Window") { controller.convertToWindow(tab) },
-        )
-    }) {
-        Row(
-            modifier = writerModifier,
-            verticalAlignment = Alignment.CenterVertically
-        )
-        {
-            Text(
-                text = tab.title,
-                color = contentColor,
-                overflow = TextOverflow.Visible,
-                maxLines = 1,
-                modifier = Modifier.padding(15.dp, 0.dp)
+    DragTarget(model = controller.model, module = tab){
+        ContextMenuArea(items = {
+            listOf(
+                ContextMenuItem("Open in Window") { controller.convertToWindow(tab) },
             )
-            IconButton(onClick = tab::onClose) {
-                Icon(Icons.Filled.Close, "close", tint = contentColor)
+        }) {
+            Row(
+                modifier = writerModifier,
+                verticalAlignment = Alignment.CenterVertically
+            )
+            {
+                Text(
+                    text = tab.title,
+                    color = contentColor,
+                    overflow = TextOverflow.Visible,
+                    maxLines = 1,
+                    modifier = Modifier.padding(15.dp, 0.dp)
+                )
+                IconButton(onClick = tab::onClose) {
+                    Icon(Icons.Filled.Close, "close", tint = contentColor)
+                }
             }
         }
     }

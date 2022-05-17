@@ -9,7 +9,6 @@ import model.state.WorkbenchModuleState
 import model.state.toDisplayType
 import view.WindowSpace
 import view.WorkbenchMainUI
-import view.conponent.DefaultExplorerOverview
 
 
 class Workbench {
@@ -35,6 +34,7 @@ class Workbench {
         model.registeredExplorers[type] = explorer
     }
 
+    //TODO: Documentation. What is the difference between this and register explorer? How do they work together
     /**
      * Add an explorer to the Workbench
      *

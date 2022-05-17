@@ -12,7 +12,7 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 internal class WorkbenchControllerTest{
-    private val displayType = DisplayType.TAB
+    private val displayType = DisplayType.TAB1
     private val moduleType = ModuleType.EDITOR
     private var model = WorkbenchModel()
     private var sut = WorkbenchModuleController(model, displayType, moduleType)

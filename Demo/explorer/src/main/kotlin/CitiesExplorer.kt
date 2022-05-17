@@ -41,9 +41,23 @@ fun getSmallCities(): CitiesState {
     return CitiesState(dbRead(), dbRead)
 }
 
+fun getBigCities(): CitiesState {
+    val dbRead = { transaction((DbSettings.citiesDb)) {
+        City.find { population greater 10000000 }.toList()
+    }}
+    return CitiesState(dbRead(), dbRead)
+}
+
 fun getSwissCities(): CitiesState {
     val dbRead = { transaction(DbSettings.citiesDb) {
         City.find { countryCode eq "CH" }.toList()
+    }}
+    return CitiesState(dbRead(), dbRead)
+}
+
+fun getGermanCities(): CitiesState {
+    val dbRead = { transaction(DbSettings.citiesDb) {
+        City.find { countryCode eq "DE" }.toList()
     }}
     return CitiesState(dbRead(), dbRead)
 }
