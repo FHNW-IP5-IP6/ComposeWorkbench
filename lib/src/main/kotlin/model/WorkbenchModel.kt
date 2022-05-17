@@ -24,7 +24,7 @@ internal class WorkbenchModel {
     val modules = mutableStateListOf<WorkbenchModuleState<*>>()
 
     val registeredExplorers = mutableMapOf<String, WorkbenchModule<*>>()
-    val registeredDefaultExplorers = mutableMapOf<String, Pair<String, ()->Any>>()
+    val registeredDefaultExplorers = mutableMapOf<String, Pair<String, Any>>()
     val registeredEditors = mutableMapOf<String, WorkbenchModule<*>>()
 
     var splitViewMode by mutableStateOf(SplitViewMode.UNSPLIT)
@@ -43,7 +43,7 @@ internal class WorkbenchModel {
         val explorer = registeredExplorers[pair.first] as WorkbenchModule<Any>
 
         if(explorer != null){
-            val model = pair.second.invoke()
+            val model = pair.second
             val state = WorkbenchModuleState(title, model, explorer, ::removeTab, DisplayType.LEFT)
             addState(state)
         }

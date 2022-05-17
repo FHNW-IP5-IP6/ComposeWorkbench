@@ -34,21 +34,6 @@ class Workbench {
         model.registeredExplorers[type] = explorer
     }
 
-    //TODO: Documentation. What is the difference between this and register explorer? How do they work together
-    /**
-     * Add an explorer to the Workbench
-     *
-     * TODO: can this be called after run?
-     * @param type: the type of data this explorer can be used for
-     * @param content: Composable function that defines the displayed content of this explorer
-     */
-    fun <M: Any> registerDefaultExplorer(
-        type: String,
-        title: String,
-        defaultModel: () -> M,
-    ){
-        model.registeredDefaultExplorers[title] = Pair(type, defaultModel)
-    }
 
     /**
      * Add an editor to the Workbench.
@@ -77,13 +62,21 @@ class Workbench {
      * @param M: Model which the explorer uses to manage and display data
      * @param type: The type of data which the Explorer is used for
      * @param title: Display title of the requested editor
+     * @param default: if Explorer with its Model is runable as Default explorer
+     * @param location: The Drawer Location where the Explorer will be displayed
+     * @param shown: if the Explorer is shown on the Startup of the Workbench
      */
-    fun <M> requestExplorer(type: String, title: String, m: M, location: ExplorerLocation = ExplorerLocation.LEFT) {
+    fun <M: Any> requestExplorer(type: String, title: String, m: M, default: Boolean = false, location: ExplorerLocation = ExplorerLocation.LEFT, shown: Boolean = true) {
         val explorer = model.registeredExplorers[type]
         if(explorer != null){
             explorer as WorkbenchModule<M>
-            val state = WorkbenchModuleState(title, m, explorer, model::removeTab, toDisplayType(location))
-            model.addState(state)
+            if (shown) {
+                val state = WorkbenchModuleState(title, m, explorer, model::removeTab, toDisplayType(location))
+                model.addState(state)
+            }
+            if (default) {
+                model.registeredDefaultExplorers[title] = Pair(type, m)
+            }
         }
     }
 

@@ -17,7 +17,7 @@ fun main() {
         }
     }
 
-    workbench.registerDefaultExplorer("AddressExplorer", "Address Explorer") { AddressExplorerModel() }
+    workbench.requestExplorer("AddressExplorer", "Address Explorer", AddressExplorerModel(),true)
 
     workbench.run { println("Exit my Compose Workbench App") }
 }

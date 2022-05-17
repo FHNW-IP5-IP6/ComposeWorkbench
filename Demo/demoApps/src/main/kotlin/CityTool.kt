@@ -16,16 +16,9 @@ fun main() {
         }
     }
 
-    workbench.registerDefaultExplorer("Cities", "Swiss Cities") {
-        getSwissCities()
-    }
-    workbench.registerDefaultExplorer("Cities", "Small Cities") {
-        getSmallCities()
-    }
-
-    workbench.requestExplorer("Cities", "Swiss Cities", getBigCities(), ExplorerLocation.LEFT)
-    workbench.requestExplorer("Cities", "Small Cities", getBigCities(), ExplorerLocation.LEFT)
-    workbench.requestExplorer("Cities", "Big Cities", getBigCities(), ExplorerLocation.BOTTOM)
-    workbench.requestExplorer("Cities", "German Cities", getGermanCities(), ExplorerLocation.BOTTOM)
+    workbench.requestExplorer("Cities", "Swiss Cities", getSwissCities(), true, ExplorerLocation.LEFT)
+    workbench.requestExplorer("Cities", "Small Cities", getSmallCities(), true, ExplorerLocation.LEFT)
+    workbench.requestExplorer("Cities", "Big Cities", getBigCities(), false, ExplorerLocation.BOTTOM)
+    workbench.requestExplorer("Cities", "German Cities", getGermanCities(), true, ExplorerLocation.BOTTOM, false)
     workbench.run { println("Exit my Compose Workbench App") }
 }
