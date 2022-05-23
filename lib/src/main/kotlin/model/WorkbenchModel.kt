@@ -3,10 +3,7 @@ package model
 import androidx.compose.runtime.*
 import model.data.ModuleType
 import model.data.WorkbenchModule
-import model.state.DisplayType
-import model.state.DragState
-import model.state.SplitViewMode
-import model.state.WorkbenchModuleState
+import model.state.*
 import org.jetbrains.compose.splitpane.ExperimentalSplitPaneApi
 import org.jetbrains.compose.splitpane.SplitPaneState
 import view.conponent.DefaultExplorerOverview
@@ -14,17 +11,17 @@ import view.conponent.DefaultExplorerOverview
 @OptIn(ExperimentalSplitPaneApi::class)
 internal class WorkbenchModel {
 
-    private val selectedModules = Array<Array<MutableState<WorkbenchModuleState<*>?>>>(DisplayType.values().size) { i ->
+    private val selectedModules = Array<Array<MutableState<WorkbenchModuleState<*>?>>>(DisplayType.values().size) {
         Array(
             ModuleType.values().size
-        ) { j -> mutableStateOf(null) }
+        ) { mutableStateOf(null) }
     }
 
     var appTitle: String = "Compose Workbench"
     val modules = mutableStateListOf<WorkbenchModuleState<*>>()
 
     val registeredExplorers = mutableMapOf<String, WorkbenchModule<*>>()
-    val registeredDefaultExplorers = mutableMapOf<String, Pair<String, Any>>()
+    val registeredDefaultExplorers = mutableMapOf<Int, WorkbenchDefaultState<*>>()
     val registeredEditors = mutableMapOf<String, WorkbenchModule<*>>()
 
     var splitViewMode by mutableStateOf(SplitViewMode.UNSPLIT)
@@ -33,20 +30,21 @@ internal class WorkbenchModel {
     var leftSplitState by  mutableStateOf(SplitPaneState(moveEnabled = true, initialPositionPercentage = 0.25f))
 
     var dragState by mutableStateOf( DragState() )
+    private var uniqueKey = 0
 
     init {
         showDefaultExplorersOverview()
     }
 
-    fun createExplorerFromDefault (title: String) {
-        val pair = registeredDefaultExplorers[title] ?: return
-        val explorer = registeredExplorers[pair.first] as WorkbenchModule<Any>
+    fun getNextKey():Int = uniqueKey++
 
-        if(explorer != null){
-            val model = pair.second
-            val state = WorkbenchModuleState(title, model, explorer, ::removeTab, DisplayType.LEFT)
-            addState(state)
-        }
+    @Suppress("UNCHECKED_CAST")
+    fun createExplorerFromDefault (id: Int) {
+        val defaultState = if(registeredDefaultExplorers[id] != null) registeredDefaultExplorers[id]!!as WorkbenchDefaultState<Any> else return
+        val explorer = registeredExplorers[defaultState.type] as WorkbenchModule<Any>
+
+        val state = WorkbenchModuleState(id, defaultState.title, defaultState.model, explorer, ::removeTab, DisplayType.LEFT)
+        addState(state)
     }
 
     fun getSelectedModule (displayType: DisplayType, moduleType: ModuleType): MutableState<WorkbenchModuleState<*>?> {
@@ -138,7 +136,7 @@ internal class WorkbenchModel {
                 DefaultExplorerOverview(it)
             }
         )
-        val t = WorkbenchModuleState(title = "Default Explorers", model = this, module = editor, ::removeTab, DisplayType.TAB1)
+        val t = WorkbenchModuleState(id = getNextKey(), title = { "Default Explorers" }, model = this, module = editor, ::removeTab, DisplayType.TAB1)
         addState(t)
     }
 

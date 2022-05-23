@@ -1,9 +1,11 @@
 package view.conponent
 
 import androidx.compose.foundation.*
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
@@ -16,6 +18,7 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import controller.WorkbenchModuleController
@@ -23,15 +26,25 @@ import model.state.WorkbenchModuleState
 import util.selectedButtonColors
 import util.vertical
 
+/**
+ * Component which shows Tab headers for all modules in the given controller
+ *
+ * @param isActive: if true, this tab row will be highlighted as selected
+ */
 @Composable
-internal fun WorkbenchTabRow(controller: WorkbenchModuleController) {
-    if (controller.displayType.orientation.toInt() != 0) {
-        VerticalWorkbenchTabRow(controller)
-    } else {
-        HorizontalWorkbenchTabRow(controller)
+internal fun WorkbenchTabRow(controller: WorkbenchModuleController, isActive: Boolean = false) {
+    Box(modifier = Modifier.then(if (isActive) Modifier.border(width = 2.dp, color = Color(0f,0f,1f,0.2f), shape = RoundedCornerShape(5.dp)) else Modifier)) {
+        if (controller.displayType.orientation.toInt() != 0) {
+            VerticalWorkbenchTabRow(controller)
+        } else {
+            HorizontalWorkbenchTabRow(controller)
+        }
     }
 }
 
+/**
+ * Component which shows the currently selected Module of the given controller
+ */
 @Composable
 internal fun WorkbenchTabBody(controller: WorkbenchModuleController) {
     controller.getSelectedModule().value?.content()
@@ -119,7 +132,7 @@ private fun WorkbenchTab(tab: WorkbenchModuleState<*>, controller: WorkbenchModu
             )
             {
                 Text(
-                    text = tab.title,
+                    text = tab.getTitle(),
                     color = contentColor,
                     overflow = TextOverflow.Visible,
                     maxLines = 1,

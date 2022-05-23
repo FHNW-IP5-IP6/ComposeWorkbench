@@ -5,6 +5,7 @@ import model.WorkbenchModel
 import model.data.ModuleType
 import model.data.WorkbenchModule
 import model.state.DisplayType
+import model.state.WorkbenchDefaultState
 import model.state.WorkbenchModuleState
 import model.state.toDisplayType
 import view.WindowSpace
@@ -16,9 +17,10 @@ class Workbench {
     private val model: WorkbenchModel = WorkbenchModel()
 
     /**
-     * Add an explorer to the Workbench
+     * Add an explorer for a given Type to the Workbench
      *
      * TODO: can this be called after run?
+     * @param M: Type of the Model which the explorer uses to manage and display data
      * @param type: the type of data this explorer can be used for
      * @param content: Composable function that defines the displayed content of this explorer
      */
@@ -36,7 +38,7 @@ class Workbench {
 
 
     /**
-     * Add an editor to the Workbench.
+     * Add an editor for a given Type to the Workbench
      *
      * @param M: Type of the Model which the editor uses to manage and display data
      * @param type: the type of data this editor can be used for
@@ -48,34 +50,36 @@ class Workbench {
         loader: (Int) -> M,
         content: @Composable (M) -> Unit
     ){
-        val explorer = WorkbenchModule(
+        val editor = WorkbenchModule(
             moduleType = ModuleType.EDITOR,
             modelType = type,
             loader = loader,
             content = content)
-        model.registeredEditors[type] = explorer
+        model.registeredEditors[type] = editor
     }
 
     /**
-     * Explore given Model with explorer of type
+     * Explore given Model with explorer of given type
      *
      * @param M: Model which the explorer uses to manage and display data
      * @param type: The type of data which the Explorer is used for
      * @param title: Display title of the requested editor
-     * @param default: if Explorer with its Model is runable as Default explorer
+     * @param default: if Explorer with its Model is runnable as Default explorer
      * @param location: The Drawer Location where the Explorer will be displayed
      * @param shown: if the Explorer is shown on the Startup of the Workbench
      */
-    fun <M: Any> requestExplorer(type: String, title: String, m: M, default: Boolean = false, location: ExplorerLocation = ExplorerLocation.LEFT, shown: Boolean = true) {
+    @Suppress("UNCHECKED_CAST")
+    fun <M: Any> requestExplorer(type: String, title: (M) -> String, m: M, default: Boolean = false, location: ExplorerLocation = ExplorerLocation.LEFT, shown: Boolean = true) {
         val explorer = model.registeredExplorers[type]
         if(explorer != null){
             explorer as WorkbenchModule<M>
+            val id = model.getNextKey()
             if (shown) {
-                val state = WorkbenchModuleState(title, m, explorer, model::removeTab, toDisplayType(location))
+                val state = WorkbenchModuleState(id, title, m, explorer, model::removeTab, toDisplayType(location))
                 model.addState(state)
             }
             if (default) {
-                model.registeredDefaultExplorers[title] = Pair(type, m)
+                model.registeredDefaultExplorers[id] = WorkbenchDefaultState(type, m, title)
             }
         }
     }
@@ -89,12 +93,12 @@ class Workbench {
      * @param title: Display title of the requested editor
      * @param onClose: The callback to be invoked when this editor is closed
      */
-    //TODO: make title a function to display more meaningful information
-    fun <M> requestEditor(type: String, title: String, id: Int, onClose: (M) -> Unit ={}, onSave: (M) -> Unit ={}) {
+    @Suppress("UNCHECKED_CAST")
+    fun <M> requestEditor(type: String, title: (M) -> String, id: Int, onClose: (M) -> Unit ={}, onSave: (M) -> Unit ={}) {
         val editor = model.registeredEditors[type]
         if(editor != null){
             editor as WorkbenchModule<M>
-            val t = WorkbenchModuleState(title, editor.loader!!.invoke(id), editor, model::removeTab, DisplayType.TAB1, onClose, onSave)
+            val t = WorkbenchModuleState(model.getNextKey() ,title, editor.loader!!.invoke(id), editor, model::removeTab, DisplayType.TAB1, onClose, onSave)
             model.addState(t)
         }
     }
@@ -103,7 +107,6 @@ class Workbench {
      * Run the Workbench
      */
     fun run(onExit: () -> Unit) = application {
-
         // init main window
         WorkbenchMainUI(model) {
             onExit.invoke()

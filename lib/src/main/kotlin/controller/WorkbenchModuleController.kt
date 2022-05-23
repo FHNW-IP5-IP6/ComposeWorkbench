@@ -38,15 +38,7 @@ internal class WorkbenchModuleController(val model: WorkbenchModel, val displayT
     }
 
     fun <M> convertToWindow(module: WorkbenchModuleState<M>) {
-        val window = WorkbenchModuleState(
-            module.title,
-            module.model,
-            module.module,
-            this::removeModuleState,
-            DisplayType.WINDOW,
-            module.onClose,
-            module.onSave
-        )
+        val window = WorkbenchModuleState(module, this::removeModuleState, DisplayType.WINDOW)
         model.removeTab(module)
         model.addState(window)
     }

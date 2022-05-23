@@ -72,7 +72,7 @@ internal fun WorkbenchMainUI(model: WorkbenchModel, closeRequest: ()->Unit) {
                 }
             }
         }
-        Draggable(model) {
+        DragAndDropContainer(model) {
             WorkbenchBody(model)
         }
     }
@@ -92,8 +92,8 @@ private fun WorkbenchBody(model: WorkbenchModel) {
             Column {
                 BoxWithConstraints {
                     Row(modifier = Modifier.height(maxHeight - TAB_ROW_HEIGHT)) {
-                        DropTarget(model = model, moduleReceiver = { leftExplorerController.updateDisplayType(it, DisplayType.LEFT) }) { isActive ->
-                            TabRow(leftExplorerController)
+                        DropTarget(acceptedType = ModuleType.EXPLORER, model = model, moduleReceiver = { leftExplorerController.updateDisplayType(it, DisplayType.LEFT) }) { isActive ->
+                            TabRow(leftExplorerController, isActive)
                         }
                         VerticalSplitPane(splitPaneState = model.bottomSplitState) {
                             first {
@@ -125,8 +125,8 @@ private fun WorkbenchBody(model: WorkbenchModel) {
                         .requiredHeight(TAB_ROW_HEIGHT).padding(start = TAB_ROW_WIDTH)
                         .align(Alignment.End)
                 ) {
-                    DropTarget(model = model, moduleReceiver = { bottomExplorerController.updateDisplayType(it, DisplayType.BOTTOM) }) { isActive ->
-                        TabRow(bottomExplorerController)
+                    DropTarget(acceptedType = ModuleType.EXPLORER,model = model, moduleReceiver = { bottomExplorerController.updateDisplayType(it, DisplayType.BOTTOM) }) { isActive ->
+                        TabRow(bottomExplorerController, isActive)
                     }
                 }
             }
@@ -187,9 +187,9 @@ private fun Bar(model: WorkbenchModel) {
 }
 
 @Composable
-private fun TabRow(controller: WorkbenchModuleController){
+private fun TabRow(controller: WorkbenchModuleController, isActive: Boolean){
     if (controller.getModulesFiltered().isNotEmpty()) {
-        WorkbenchTabRow(controller)
+        WorkbenchTabRow(controller, isActive)
     }
 }
 
@@ -217,7 +217,7 @@ internal fun WindowSpace(model: WorkbenchModel){
 private fun WorkbenchWindow (state : WorkbenchModuleState<*>) {
     Window(
         onCloseRequest = state::onClose,
-        title = state.title,
+        title = state.getTitle(),
     ) {
         state.content()
     }

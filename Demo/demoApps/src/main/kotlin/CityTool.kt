@@ -9,16 +9,16 @@ fun main() {
     workbench.registerExplorer<CitiesState>("Cities"
     ) { m ->
         CitiesExplorerUi(m) {
-            workbench.requestEditor<CityState>("City", "City Editor", it) { mm ->
+            workbench.requestEditor<CityState>("City", {m -> m.name}, it) { mm ->
                 mm.persist()
                 m.reload()
             }
         }
     }
 
-    workbench.requestExplorer("Cities", "Swiss Cities", getSwissCities(), true, ExplorerLocation.LEFT)
-    workbench.requestExplorer("Cities", "Small Cities", getSmallCities(), true, ExplorerLocation.LEFT)
-    workbench.requestExplorer("Cities", "Big Cities", getBigCities(), false, ExplorerLocation.BOTTOM)
-    workbench.requestExplorer("Cities", "German Cities", getGermanCities(), true, ExplorerLocation.BOTTOM, false)
+    workbench.requestExplorer("Cities", {m -> "Swiss Cities: ${m.state.size}"}, getSwissCities(), true, ExplorerLocation.LEFT)
+    workbench.requestExplorer("Cities", {m -> "Small Cities: ${m.state.size}"}, getSmallCities(), true, ExplorerLocation.LEFT)
+    workbench.requestExplorer("Cities", {m -> "Big Cities: ${m.state.size}"}, getBigCities(), false, ExplorerLocation.BOTTOM)
+    workbench.requestExplorer("Cities", {m -> "German Cities: ${m.state.size}"}, getGermanCities(), true, ExplorerLocation.BOTTOM, false)
     workbench.run { println("Exit my Compose Workbench App") }
 }

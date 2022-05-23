@@ -1,7 +1,12 @@
 package model
 
+import model.data.ModuleType
+import model.data.WorkbenchModule
+import model.state.DisplayType
+import model.state.WorkbenchModuleState
 import org.junit.jupiter.api.Test
-import kotlin.test.assertNull
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 internal class WorkbenchModelTest {
@@ -10,8 +15,28 @@ internal class WorkbenchModelTest {
 
     @Test
     fun initialStates() {
-        assertTrue{ sut.modules.isEmpty() }
+        assertEquals( 1, sut.modules.size )
         assertTrue{ sut.registeredExplorers.isEmpty() }
         assertTrue{ sut.registeredEditors.isEmpty() }
+    }
+
+    @Test
+    fun getNextKey() {
+        assertFalse { sut.getNextKey() == sut.getNextKey() }
+    }
+
+    @Test
+    fun setShowAndHideDrawer() {
+        val module = WorkbenchModule<String>(1, ModuleType.EXPLORER,"type") {}
+        val moduleState = WorkbenchModuleState<String>(title ={"title"}, model = "model", module = module, displayType = DisplayType.LEFT){}
+        sut.modules += moduleState
+
+        sut.setSelectedModule(moduleState)
+        assertTrue { sut.leftSplitState.moveEnabled }
+        assertEquals( 0.25f, sut.leftSplitState.positionPercentage )
+
+        sut.setSelectedModuleNull(DisplayType.LEFT, moduleType = ModuleType.EXPLORER)
+        assertFalse { sut.leftSplitState.moveEnabled }
+        assertEquals( 0f, sut.leftSplitState.positionPercentage )
     }
 }

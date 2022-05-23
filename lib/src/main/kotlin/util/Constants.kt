@@ -8,5 +8,3 @@ internal val SPLIT_PAIN_HANDLE_SIZE = 2.dp
 internal val SPLIT_PAIN_HANDLE_AREA = 9.dp
 internal const val SPLIT_PAIN_HANDLE_ALPHA = 0.50f
 
-internal val DRAG_ANIMATION_WIDTH = 250.dp
-internal val DRAG_ANIMATION_HEIGHT = 180.dp

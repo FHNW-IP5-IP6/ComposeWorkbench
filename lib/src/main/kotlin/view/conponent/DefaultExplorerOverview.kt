@@ -10,9 +10,10 @@ import util.cursorForClickable
 
 @Composable
 internal fun DefaultExplorerOverview(model: WorkbenchModel) {
-    for (explorer in model.registeredDefaultExplorers) {
-        Card (Modifier.cursorForClickable().clickable { model.createExplorerFromDefault(explorer.key) }) {
-            Text(text = "${explorer.key}")
+    for (id in model.registeredDefaultExplorers.keys) {
+
+        Card (Modifier.cursorForClickable().clickable { model.createExplorerFromDefault(id) }) {
+            Text(text = model.registeredDefaultExplorers[id]!!.getTitle())
         }
     }
 }

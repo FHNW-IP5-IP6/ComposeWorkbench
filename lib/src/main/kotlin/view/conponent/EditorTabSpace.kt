@@ -19,7 +19,9 @@ import org.jetbrains.compose.splitpane.rememberSplitPaneState
 import util.cursorForHorizontalResize
 import util.cursorForVerticalResize
 
-
+/**
+ * Component which shows all currently opened Editors
+ */
 @OptIn(ExperimentalSplitPaneApi::class)
 @Composable
 internal fun EditorTabSpace(model: WorkbenchModel){
@@ -29,52 +31,62 @@ internal fun EditorTabSpace(model: WorkbenchModel){
     if (editorTabController1.getModulesFiltered().isEmpty()) splitRatio = 0f
     if (editorTabController2.getModulesFiltered().isEmpty()) splitRatio = 1f
 
-    if (model.splitViewMode == SplitViewMode.VERTICAL) {
-        VerticalSplitPane(splitPaneState = rememberSplitPaneState(initialPositionPercentage = splitRatio)) {
-            first {
-                TabSpace(editorTabController1)
-            }
-            second {
-                TabSpace(editorTabController2)
-            }
-            splitter {
-                visiblePart {
-                    Box(modifier = Modifier.height(2.dp).fillMaxWidth().background(SolidColor(Color.Gray), alpha = 0.50f))
+    when (model.splitViewMode) {
+        SplitViewMode.VERTICAL -> {
+            VerticalSplitPane(splitPaneState = rememberSplitPaneState(initialPositionPercentage = splitRatio)) {
+                first {
+                    DropTarget(moduleReceiver = {editorTabController1.updateDisplayType(it, DisplayType.TAB1)}, model = model, acceptedType = ModuleType.EDITOR){ isActive ->
+                        TabSpace(editorTabController1, isActive)
+                    }
                 }
-                handle {
-                    Box(modifier = Modifier.markAsHandle().cursorForVerticalResize().height(9.dp).fillMaxWidth())
-                }
-            }
-        }
-    } else if (model.splitViewMode == SplitViewMode.HORIZONTAL) {
-        HorizontalSplitPane(splitPaneState = rememberSplitPaneState(initialPositionPercentage = splitRatio)) {
-            first {
-                TabSpace(editorTabController1)
-            }
-            second {
-                TabSpace(editorTabController2)
-            }
-            splitter {
-                visiblePart {
-                    Box(modifier = Modifier.width(2.dp).fillMaxHeight().background(SolidColor(Color.Gray), alpha = 0.50f))
-                }
-                handle {
-                    Box(modifier = Modifier.markAsHandle().cursorForHorizontalResize().width(9.dp).fillMaxHeight())
+                second {
+                    DropTarget(moduleReceiver = {editorTabController2.updateDisplayType(it, DisplayType.TAB2)}, model = model, acceptedType = ModuleType.EDITOR){ isActive ->
+                        TabSpace(editorTabController2, isActive)
+                    }
+                    splitter {
+                        visiblePart {
+                            Box(modifier = Modifier.height(2.dp).fillMaxWidth().background(SolidColor(Color.Gray), alpha = 0.50f))
+                        }
+                        handle {
+                            Box(modifier = Modifier.markAsHandle().cursorForVerticalResize().height(9.dp).fillMaxWidth())
+                        }
+                    }
                 }
             }
         }
-    }
-    else
-    {
-        TabSpace(editorTabController1)
+        SplitViewMode.HORIZONTAL -> {
+            HorizontalSplitPane(splitPaneState = rememberSplitPaneState(initialPositionPercentage = splitRatio)) {
+                first {
+                    DropTarget(moduleReceiver = {editorTabController1.updateDisplayType(it, DisplayType.TAB1)}, model = model, acceptedType = ModuleType.EDITOR) { isActive ->
+                        TabSpace(editorTabController1, isActive)
+                    }
+                }
+                second {
+                    DropTarget(moduleReceiver = {editorTabController2.updateDisplayType(it, DisplayType.TAB2)}, model = model, acceptedType = ModuleType.EDITOR) { isActive ->
+                        TabSpace(editorTabController2, isActive)
+                    }
+                }
+                splitter {
+                    visiblePart {
+                        Box(modifier = Modifier.width(2.dp).fillMaxHeight().background(SolidColor(Color.Gray), alpha = 0.50f))
+                    }
+                    handle {
+                        Box(modifier = Modifier.markAsHandle().cursorForHorizontalResize().width(9.dp).fillMaxHeight())
+                    }
+                }
+            }
+        }
+        else -> {
+            TabSpace(editorTabController1, false)
+        }
     }
 }
 
 @Composable
-private fun TabSpace(controller: WorkbenchModuleController){
+private fun TabSpace(controller: WorkbenchModuleController, isActive: Boolean){
     if (controller.getModulesFiltered().isNotEmpty()) {
         Column {
-            WorkbenchTabRow(controller)
+            WorkbenchTabRow(controller, isActive)
             WorkbenchTabBody(controller)
         }
     }else{

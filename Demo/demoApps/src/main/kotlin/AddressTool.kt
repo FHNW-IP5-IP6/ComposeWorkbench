@@ -11,13 +11,13 @@ fun main() {
     workbench.registerExplorer<AddressExplorerModel>("AddressExplorer"
     ) { m ->
         AddressExplorerUi(m) {
-            workbench.requestEditor<AddressEditorModel>("AddressEditor", "Address Editor", it.id) { mm ->
+            workbench.requestEditor<AddressEditorModel>("AddressEditor", {m -> "${m.firstName} ${m.lastName}"}, it.id) { mm ->
                 m.updateAddress(Address(mm.id, mm.firstName, mm.lastName, mm.street, mm.streetNr, mm.city, mm.country))
             }
         }
     }
 
-    workbench.requestExplorer("AddressExplorer", "Address Explorer", AddressExplorerModel(),true)
+    workbench.requestExplorer("AddressExplorer", { "Address Explorer"}, AddressExplorerModel(),true)
 
     workbench.run { println("Exit my Compose Workbench App") }
 }
