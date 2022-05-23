@@ -1,6 +1,10 @@
 package controller
 
+import TAB_ROW_HEIGHT
+import TAB_ROW_WIDTH
 import androidx.compose.runtime.MutableState
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import model.WorkbenchModel
 import model.data.ModuleType
 import model.state.DisplayType
@@ -10,6 +14,13 @@ internal class WorkbenchModuleController(val model: WorkbenchModel, val displayT
 
     fun getSelectedModule(): MutableState<WorkbenchModuleState<*>?> {
         return model.getSelectedModule(displayType, moduleType)
+    }
+
+    fun getTabRowMinDimension(): Pair<Dp, Dp> {
+        if(getSelectedModule().value != null) {
+            return Pair(TAB_ROW_WIDTH, TAB_ROW_HEIGHT)
+        }
+        return Pair(4.dp, 4.dp)
     }
 
     fun getModulesFiltered(): List<WorkbenchModuleState<*>> {

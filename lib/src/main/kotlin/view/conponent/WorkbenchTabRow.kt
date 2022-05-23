@@ -33,11 +33,14 @@ import util.vertical
  */
 @Composable
 internal fun WorkbenchTabRow(controller: WorkbenchModuleController, isActive: Boolean = false) {
-    Box(modifier = Modifier.then(if (isActive) Modifier.border(width = 2.dp, color = Color(0f,0f,1f,0.2f), shape = RoundedCornerShape(5.dp)) else Modifier)) {
-        if (controller.displayType.orientation.toInt() != 0) {
+    var modifier = Modifier.then(if (isActive) Modifier.border(width = 2.dp, color = Color(0f,0f,1f,0.2f), shape = RoundedCornerShape(5.dp)) else Modifier)
+    if (controller.displayType.orientation.toInt() != 0) {
+        Box(modifier = modifier) {
             VerticalWorkbenchTabRow(controller)
-        } else {
-            HorizontalWorkbenchTabRow(controller)
+        }
+    } else {
+        Box(modifier = modifier) {
+           HorizontalWorkbenchTabRow(controller)
         }
     }
 }
@@ -47,7 +50,9 @@ internal fun WorkbenchTabRow(controller: WorkbenchModuleController, isActive: Bo
  */
 @Composable
 internal fun WorkbenchTabBody(controller: WorkbenchModuleController) {
-    controller.getSelectedModule().value?.content()
+    Box {
+        controller.getSelectedModule().value?.content()
+    }
 }
 
 @Composable
