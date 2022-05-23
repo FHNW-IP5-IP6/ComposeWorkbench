@@ -42,7 +42,6 @@ internal class WorkbenchModel {
     fun createExplorerFromDefault (id: Int) {
         val defaultState = if(registeredDefaultExplorers[id] != null) registeredDefaultExplorers[id]!!as WorkbenchDefaultState<Any> else return
         val explorer = registeredExplorers[defaultState.type] as WorkbenchModule<Any>
-
         val state = WorkbenchModuleState(id, defaultState.title, defaultState.model, explorer, ::removeTab, DisplayType.LEFT)
         addState(state)
     }
@@ -62,6 +61,7 @@ internal class WorkbenchModel {
     }
 
     fun addState(state: WorkbenchModuleState<*>) {
+        if (modules.any{ state.model == it.model }) return
         modules += state
         setSelectedModule(state)
     }
