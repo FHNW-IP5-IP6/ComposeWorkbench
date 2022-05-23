@@ -4,8 +4,6 @@ import SPLIT_PAIN_HANDLE_ALPHA
 import SPLIT_PAIN_HANDLE_AREA
 import SPLIT_PAIN_HANDLE_SIZE
 import SPLIT_PAIN_MIN_SIZE
-import TAB_ROW_HEIGHT
-import TAB_ROW_WIDTH
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
@@ -91,16 +89,16 @@ private fun WorkbenchBody(model: WorkbenchModel) {
                 WorkbenchModuleController(model, DisplayType.BOTTOM, ModuleType.EXPLORER, true)
             Column {
                 BoxWithConstraints {
-                    Row(modifier = Modifier.height(maxHeight - TAB_ROW_HEIGHT)) {
+                    Row(modifier = Modifier.height(maxHeight - bottomExplorerController.getTabRowMinDimension().second)) {
                         DropTarget(acceptedType = ModuleType.EXPLORER, model = model, moduleReceiver = { leftExplorerController.updateDisplayType(it, DisplayType.LEFT) }) { isActive ->
-                            TabRow(leftExplorerController, isActive)
+                            WorkbenchTabRow(leftExplorerController, isActive)
                         }
                         VerticalSplitPane(splitPaneState = model.bottomSplitState) {
                             first {
                                 HorizontalSplitPane(model, leftExplorerController)
                             }
                             second(minSize = SPLIT_PAIN_MIN_SIZE) {
-                                TabBody(bottomExplorerController)
+                                WorkbenchTabBody(bottomExplorerController)
                             }
                             splitter {
                                 visiblePart {
@@ -122,11 +120,11 @@ private fun WorkbenchBody(model: WorkbenchModel) {
                 }
                 Box(
                     modifier = Modifier
-                        .requiredHeight(TAB_ROW_HEIGHT).padding(start = TAB_ROW_WIDTH)
+                        .height(bottomExplorerController.getTabRowMinDimension().second).padding(start = bottomExplorerController.getTabRowMinDimension().first)
                         .align(Alignment.End)
                 ) {
                     DropTarget(acceptedType = ModuleType.EXPLORER,model = model, moduleReceiver = { bottomExplorerController.updateDisplayType(it, DisplayType.BOTTOM) }) { isActive ->
-                        TabRow(bottomExplorerController, isActive)
+                        WorkbenchTabRow(bottomExplorerController, isActive)
                     }
                 }
             }
@@ -142,7 +140,7 @@ private fun HorizontalSplitPane(
 ) {
     HorizontalSplitPane(splitPaneState = model.leftSplitState) {
         first() {
-            TabBody(leftExplorerController)
+            WorkbenchTabBody(leftExplorerController)
         }
         second() {
             EditorTabSpace(model)
@@ -184,22 +182,6 @@ private fun Bar(model: WorkbenchModel) {
             ) { Text("Save All") }
         }
     })
-}
-
-@Composable
-private fun TabRow(controller: WorkbenchModuleController, isActive: Boolean){
-    if (controller.getModulesFiltered().isNotEmpty()) {
-        WorkbenchTabRow(controller, isActive)
-    }
-}
-
-@Composable
-private fun TabBody(controller: WorkbenchModuleController){
-    if (controller.getSelectedModule().value != null) {
-        WorkbenchTabBody(controller)
-    }else{
-        Box{} //empty box for split pane to work
-    }
 }
 
 @Composable

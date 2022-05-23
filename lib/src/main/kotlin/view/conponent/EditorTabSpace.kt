@@ -84,12 +84,8 @@ internal fun EditorTabSpace(model: WorkbenchModel){
 
 @Composable
 private fun TabSpace(controller: WorkbenchModuleController, isActive: Boolean){
-    if (controller.getModulesFiltered().isNotEmpty()) {
-        Column {
-            WorkbenchTabRow(controller, isActive)
-            WorkbenchTabBody(controller)
-        }
-    }else{
-        Box{} //empty box for split pane to work
+    Column {
+        WorkbenchTabRow(controller, isActive)
+        WorkbenchTabBody(controller)
     }
 }

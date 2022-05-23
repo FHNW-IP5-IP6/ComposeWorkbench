@@ -64,9 +64,9 @@ internal fun DropTarget(
         var isCurrentDropTarget by remember { mutableStateOf(false) }
         Box(modifier = modifier.onGloballyPositioned {
                 it.boundsInWindow().let { rect ->
-                    val right = if(rect.right - rect.left <= 1) rect.left + 60f else rect.right
-                    val bottom = if(rect.bottom - rect.top <= 1) rect.top + 60f else rect.bottom
-                    val bounds = Rect(left = rect.left, top = rect.top, right = right, bottom = bottom)
+                    val right = if(rect.right - rect.left <= 10) rect.left + 60f else rect.right
+                    val top = if(rect.bottom - rect.top <= 10) rect.bottom - 60f else rect.top
+                    val bounds = Rect(left = rect.left, top = top, right = right, bottom = rect.bottom)
                     isCurrentDropTarget = bounds.contains(offset)
                 }
             }
