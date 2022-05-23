@@ -24,8 +24,8 @@ internal class WorkbenchControllerTest{
 
     @Test
     fun removeModule_NoModules() {
-        val module = WorkbenchModule<String>(1, moduleType,"type") {}
-        val moduleState = WorkbenchModuleState<String>(title ={"title"}, model = "model", module = module, displayType = displayType){}
+        val module = WorkbenchModule<String>(moduleType,"type") {}
+        val moduleState = WorkbenchModuleState<String>(id = 1, title ={"title"}, model = "model", module = module, displayType = displayType){}
         sut.removeModuleState(moduleState)
 
         assertEquals(1, model.modules.size)
@@ -33,8 +33,8 @@ internal class WorkbenchControllerTest{
 
     @Test
     fun removeModule_RemoveModule() {
-        val module = WorkbenchModule<String>(1, moduleType,"type") {}
-        val moduleState = WorkbenchModuleState<String>(title ={"title"}, model = "model", module = module, displayType = displayType){}
+        val module = WorkbenchModule<String>(moduleType,"type") {}
+        val moduleState = WorkbenchModuleState<String>(id = 1, title ={"title"}, model = "model", module = module, displayType = displayType){}
         model.modules += moduleState
         assertTrue { model.modules.contains(moduleState) }
 
@@ -45,8 +45,8 @@ internal class WorkbenchControllerTest{
 
     @Test
     fun convertToWindow() {
-        val module = WorkbenchModule<String>(1, moduleType,"type") {}
-        val moduleState = WorkbenchModuleState<String>(title ={"title"}, model = "model", module = module, displayType = displayType){}
+        val module = WorkbenchModule<String>(moduleType,"type") {}
+        val moduleState = WorkbenchModuleState<String>(id = 1, title ={"title"}, model = "model", module = module, displayType = displayType){}
 
         model.modules += moduleState
         assertTrue { model.modules.contains(moduleState) }

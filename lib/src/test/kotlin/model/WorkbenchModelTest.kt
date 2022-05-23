@@ -27,8 +27,8 @@ internal class WorkbenchModelTest {
 
     @Test
     fun setShowAndHideDrawer() {
-        val module = WorkbenchModule<String>(1, ModuleType.EXPLORER,"type") {}
-        val moduleState = WorkbenchModuleState<String>(title ={"title"}, model = "model", module = module, displayType = DisplayType.LEFT){}
+        val module = WorkbenchModule<String>(ModuleType.EXPLORER,"type") {}
+        val moduleState = WorkbenchModuleState<String>(id = 1, title ={"title"}, model = "model", module = module, displayType = DisplayType.LEFT){}
         sut.modules += moduleState
 
         sut.setSelectedModule(moduleState)

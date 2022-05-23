@@ -48,9 +48,10 @@ class WorkbenchModuleControllerTest {
         workbench.requestExplorer<String>("String", {"title"}, model)
 
         val explorer2 = WorkbenchModuleState<String>(
-            {"title 2"},
-            "model",
-            WorkbenchModule(1, moduleType, "String"){},
+            id = 1,
+            title ={"title 2"},
+            model = "model",
+            module = WorkbenchModule(moduleType, "String"){},
             displayType = displayType
         )
 
