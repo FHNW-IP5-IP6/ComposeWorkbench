@@ -39,7 +39,7 @@ import model.state.WorkbenchModuleState
  */
 @Composable
 internal fun DragAndDropContainer(model: WorkbenchModel, content: @Composable () -> Unit){
-    DropTarget(reverse = true, modifier = Modifier.fillMaxSize(), model = model, acceptedType =  ModuleType.EXPLORER, moduleReceiver = {
+    DropTarget(reverse = true, modifier = Modifier.fillMaxSize(), model = model, moduleReceiver = {
         val window = WorkbenchModuleState(it, model::removeTab, DisplayType.WINDOW, model.dragState.positionOnScreen)
         model.removeTab(it)
         model.addState(window)
@@ -65,7 +65,7 @@ internal fun DropTarget(
     reverse: Boolean = false,
     modifier: Modifier = Modifier,
     model: WorkbenchModel,
-    acceptedType: ModuleType,
+    acceptedType: ModuleType? = null,
     dropTargetType: DisplayType? = null,
     moduleReceiver: (WorkbenchModuleState<*>) -> Unit,
     content: @Composable (BoxScope.() -> Unit)
@@ -82,7 +82,7 @@ internal fun DropTarget(
                 }
             }
         ) {
-            val isValidTarget = module != null && getModuleType() == acceptedType
+            val isValidTarget = module != null && (acceptedType == null || getModuleType() == acceptedType)
             if (reverse) {
                 isWindow = !isCurrentDropTarget
                 activeDropTarget = null
@@ -161,7 +161,7 @@ private fun DragAnimation(model: WorkbenchModel){
                     resizable = false,
                     undecorated = true,
                     state = WindowState(
-                        size =  DpSize(250.dp, 200.dp),
+                        size =  DpSize(dragAnimationSize.width.dp / 2, dragAnimationSize.height.dp / 2),
                         position = WindowPosition(positionOnScreen.x.dp, positionOnScreen.y.dp)
                     )
                 ) {
