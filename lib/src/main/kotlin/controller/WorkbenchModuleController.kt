@@ -12,12 +12,16 @@ import model.state.WorkbenchModuleState
 
 internal class WorkbenchModuleController(val model: WorkbenchModel, val displayType: DisplayType, val moduleType: ModuleType, val deselectable: Boolean = false) {
 
+    init {
+        if(getModulesFiltered().isEmpty()) model.hideDrawer(displayType)
+    }
+
     fun getSelectedModule(): MutableState<WorkbenchModuleState<*>?> {
         return model.getSelectedModule(displayType, moduleType)
     }
 
     fun getTabRowMinDimension(): Pair<Dp, Dp> {
-        if(getSelectedModule().value != null) {
+        if(getModulesFiltered().isNotEmpty() || isSelectedDragTarget()) {
             return Pair(TAB_ROW_WIDTH, TAB_ROW_HEIGHT)
         }
         return Pair(4.dp, 4.dp)
@@ -52,6 +56,11 @@ internal class WorkbenchModuleController(val model: WorkbenchModel, val displayT
         val window = WorkbenchModuleState(module, this::removeModuleState, DisplayType.WINDOW)
         model.removeTab(module)
         model.addState(window)
+    }
+
+    fun isSelectedDragTarget(): Boolean {
+        val notNull = model.dragState.module != null && model.dragState.activeDropTarget != null
+        return notNull && model.dragState.activeDropTarget!! == displayType && model.dragState.module!!.displayType != displayType
     }
 
     internal fun updateDisplayType(module: WorkbenchModuleState<*>, displayType: DisplayType){

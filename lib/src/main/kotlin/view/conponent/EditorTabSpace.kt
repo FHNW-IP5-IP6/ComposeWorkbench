@@ -27,7 +27,7 @@ import util.cursorForVerticalResize
 internal fun EditorTabSpace(model: WorkbenchModel){
     val editorTabController1 = WorkbenchModuleController(model, DisplayType.TAB1, ModuleType.EDITOR)
     val editorTabController2 = WorkbenchModuleController(model, DisplayType.TAB2, ModuleType.EDITOR)
-    var splitRatio: Float = .5f
+    var splitRatio = .5f
     if (editorTabController1.getModulesFiltered().isEmpty()) splitRatio = 0f
     if (editorTabController2.getModulesFiltered().isEmpty()) splitRatio = 1f
 
@@ -35,13 +35,13 @@ internal fun EditorTabSpace(model: WorkbenchModel){
         SplitViewMode.VERTICAL -> {
             VerticalSplitPane(splitPaneState = rememberSplitPaneState(initialPositionPercentage = splitRatio)) {
                 first {
-                    DropTarget(moduleReceiver = {editorTabController1.updateDisplayType(it, DisplayType.TAB1)}, model = model, acceptedType = ModuleType.EDITOR){ isActive ->
-                        TabSpace(editorTabController1, isActive)
+                    DropTarget(dropTargetType = DisplayType.TAB1, moduleReceiver = {editorTabController1.updateDisplayType(it, DisplayType.TAB1)}, model = model, acceptedType = ModuleType.EDITOR){
+                        TabSpace(editorTabController1)
                     }
                 }
                 second {
-                    DropTarget(moduleReceiver = {editorTabController2.updateDisplayType(it, DisplayType.TAB2)}, model = model, acceptedType = ModuleType.EDITOR){ isActive ->
-                        TabSpace(editorTabController2, isActive)
+                    DropTarget(dropTargetType = DisplayType.TAB2, moduleReceiver = {editorTabController2.updateDisplayType(it, DisplayType.TAB2)}, model = model, acceptedType = ModuleType.EDITOR){
+                        TabSpace(editorTabController2)
                     }
                     splitter {
                         visiblePart {
@@ -57,13 +57,13 @@ internal fun EditorTabSpace(model: WorkbenchModel){
         SplitViewMode.HORIZONTAL -> {
             HorizontalSplitPane(splitPaneState = rememberSplitPaneState(initialPositionPercentage = splitRatio)) {
                 first {
-                    DropTarget(moduleReceiver = {editorTabController1.updateDisplayType(it, DisplayType.TAB1)}, model = model, acceptedType = ModuleType.EDITOR) { isActive ->
-                        TabSpace(editorTabController1, isActive)
+                    DropTarget(dropTargetType = DisplayType.TAB1, moduleReceiver = {editorTabController1.updateDisplayType(it, DisplayType.TAB1)}, model = model, acceptedType = ModuleType.EDITOR) {
+                        TabSpace(editorTabController1)
                     }
                 }
                 second {
-                    DropTarget(moduleReceiver = {editorTabController2.updateDisplayType(it, DisplayType.TAB2)}, model = model, acceptedType = ModuleType.EDITOR) { isActive ->
-                        TabSpace(editorTabController2, isActive)
+                    DropTarget(dropTargetType = DisplayType.TAB2, moduleReceiver = {editorTabController2.updateDisplayType(it, DisplayType.TAB2)}, model = model, acceptedType = ModuleType.EDITOR) {
+                        TabSpace(editorTabController2)
                     }
                 }
                 splitter {
@@ -77,15 +77,15 @@ internal fun EditorTabSpace(model: WorkbenchModel){
             }
         }
         else -> {
-            TabSpace(editorTabController1, false)
+            TabSpace(editorTabController1)
         }
     }
 }
 
 @Composable
-private fun TabSpace(controller: WorkbenchModuleController, isActive: Boolean){
+private fun TabSpace(controller: WorkbenchModuleController){
     Column {
-        WorkbenchTabRow(controller, isActive)
+        WorkbenchTabRow(controller)
         WorkbenchTabBody(controller)
     }
 }

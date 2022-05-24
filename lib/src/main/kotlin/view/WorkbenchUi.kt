@@ -90,8 +90,8 @@ private fun WorkbenchBody(model: WorkbenchModel) {
             Column {
                 BoxWithConstraints {
                     Row(modifier = Modifier.height(maxHeight - bottomExplorerController.getTabRowMinDimension().second)) {
-                        DropTarget(acceptedType = ModuleType.EXPLORER, model = model, moduleReceiver = { leftExplorerController.updateDisplayType(it, DisplayType.LEFT) }) { isActive ->
-                            WorkbenchTabRow(leftExplorerController, isActive)
+                        DropTarget(dropTargetType = DisplayType.LEFT, acceptedType = ModuleType.EXPLORER, model = model, moduleReceiver = { leftExplorerController.updateDisplayType(it, DisplayType.LEFT) }) {
+                            WorkbenchTabRow(leftExplorerController)
                         }
                         VerticalSplitPane(splitPaneState = model.bottomSplitState) {
                             first {
@@ -123,8 +123,8 @@ private fun WorkbenchBody(model: WorkbenchModel) {
                         .height(bottomExplorerController.getTabRowMinDimension().second).padding(start = bottomExplorerController.getTabRowMinDimension().first)
                         .align(Alignment.End)
                 ) {
-                    DropTarget(acceptedType = ModuleType.EXPLORER,model = model, moduleReceiver = { bottomExplorerController.updateDisplayType(it, DisplayType.BOTTOM) }) { isActive ->
-                        WorkbenchTabRow(bottomExplorerController, isActive)
+                    DropTarget(dropTargetType = DisplayType.BOTTOM, acceptedType = ModuleType.EXPLORER,model = model, moduleReceiver = { bottomExplorerController.updateDisplayType(it, DisplayType.BOTTOM) }) {
+                        WorkbenchTabRow(bottomExplorerController)
                     }
                 }
             }

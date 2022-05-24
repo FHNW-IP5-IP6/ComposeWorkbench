@@ -39,7 +39,7 @@ import model.state.WorkbenchModuleState
  */
 @Composable
 internal fun DragAndDropContainer(model: WorkbenchModel, content: @Composable () -> Unit){
-    DropTarget(reverse = true, modifier = Modifier.fillMaxSize(), model, ModuleType.EXPLORER, {
+    DropTarget(reverse = true, modifier = Modifier.fillMaxSize(), model = model, acceptedType =  ModuleType.EXPLORER, moduleReceiver = {
         val window = WorkbenchModuleState(it, model::removeTab, DisplayType.WINDOW, model.dragState.positionOnScreen)
         model.removeTab(it)
         model.addState(window)
@@ -66,8 +66,9 @@ internal fun DropTarget(
     modifier: Modifier = Modifier,
     model: WorkbenchModel,
     acceptedType: ModuleType,
+    dropTargetType: DisplayType? = null,
     moduleReceiver: (WorkbenchModuleState<*>) -> Unit,
-    content: @Composable (BoxScope.(isActive: Boolean) -> Unit)
+    content: @Composable (BoxScope.() -> Unit)
 ){
     with(model.dragState){
         val offset = dragPosition + dragOffset
@@ -82,16 +83,18 @@ internal fun DropTarget(
             }
         ) {
             val isValidTarget = module != null && getModuleType() == acceptedType
-            if (reverse && !isCurrentDropTarget) {
-                isWindow = true
-            } else if (reverse && isCurrentDropTarget) {
-                isWindow = false
+            if (reverse) {
+                isWindow = !isCurrentDropTarget
+                activeDropTarget = null
+            }
+            if (isCurrentDropTarget && isValidTarget){
+                activeDropTarget = dropTargetType
             }
             if ((!reverse && isCurrentDropTarget || reverse && !isCurrentDropTarget) && !model.dragState.isDragging && isValidTarget) {
                 moduleReceiver(module!!)
                 model.dragState = DragState()
             }
-            content(isCurrentDropTarget && isValidTarget)
+            content()
         }
     }
 }
@@ -159,7 +162,7 @@ private fun DragAnimation(model: WorkbenchModel){
                     undecorated = true,
                     state = WindowState(
                         size =  DpSize(250.dp, 200.dp),
-                        position = WindowPosition(positionOnScreen?.x.dp, positionOnScreen?.y.dp)
+                        position = WindowPosition(positionOnScreen.x.dp, positionOnScreen.y.dp)
                     )
                 ) {
                     Box() {

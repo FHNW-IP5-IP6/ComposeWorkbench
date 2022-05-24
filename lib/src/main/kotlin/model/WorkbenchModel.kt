@@ -140,7 +140,7 @@ internal class WorkbenchModel {
         addState(t)
     }
 
-    private fun hideDrawer(displayType: DisplayType) {
+    fun hideDrawer(displayType: DisplayType) {
         when(displayType) {
             DisplayType.LEFT -> leftSplitState = SplitPaneState(moveEnabled = false, initialPositionPercentage = 0f)
             DisplayType.BOTTOM -> bottomSplitState = SplitPaneState(moveEnabled = false, initialPositionPercentage = 1f)

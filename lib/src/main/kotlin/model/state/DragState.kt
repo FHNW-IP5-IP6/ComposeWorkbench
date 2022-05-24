@@ -17,6 +17,7 @@ internal class DragState {
     var module: WorkbenchModuleState<*>? = null
     var isWindow by mutableStateOf(false)
     var positionOnScreen by mutableStateOf(IntOffset.Zero)
+    var activeDropTarget: DisplayType? by mutableStateOf(null)
 
     fun getModuleType(): ModuleType? {
         return module?.module?.moduleType

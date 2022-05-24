@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
@@ -28,18 +27,15 @@ import util.vertical
 
 /**
  * Component which shows Tab headers for all modules in the given controller
- *
- * @param isActive: if true, this tab row will be highlighted as selected
  */
 @Composable
-internal fun WorkbenchTabRow(controller: WorkbenchModuleController, isActive: Boolean = false) {
-    var modifier = Modifier.then(if (isActive) Modifier.border(width = 2.dp, color = Color(0f,0f,1f,0.2f), shape = RoundedCornerShape(5.dp)) else Modifier)
+internal fun WorkbenchTabRow(controller: WorkbenchModuleController) {
     if (controller.displayType.orientation.toInt() != 0) {
-        Box(modifier = modifier) {
+        Box {
             VerticalWorkbenchTabRow(controller)
         }
     } else {
-        Box(modifier = modifier) {
+        Box {
            HorizontalWorkbenchTabRow(controller)
         }
     }
@@ -70,7 +66,7 @@ private fun HorizontalWorkbenchTabRow(controller: WorkbenchModuleController) {
 }
 
 @Composable
-private fun VerticalWorkbenchTabRow(controller: WorkbenchModuleController) {
+private fun VerticalWorkbenchTabRow(controller: WorkbenchModuleController, showDraggedTab: Boolean = false) {
     val tabScrollState = rememberScrollState()
 
     Row {
@@ -89,15 +85,26 @@ private fun WorkbenchTabs(controller: WorkbenchModuleController) {
     for (tab in controller.getModulesFiltered()) {
         WorkbenchTab(
             tab = tab,
-            controller,
+            controller = controller,
             selected = controller.isModuleSelected(tab),
             onClick = { controller.moduleSelectorPressed(tab) })
+    }
+    if(controller.isSelectedDragTarget()){
+        with(controller.model.dragState){
+            WorkbenchTab(
+                tab = module!!,
+                controller = controller,
+                selected = false,
+                onClick = { },
+                isPreview = true
+            )
+        }
     }
 }
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalComposeUiApi::class)
 @Composable
-private fun WorkbenchTab(tab: WorkbenchModuleState<*>, controller: WorkbenchModuleController, selected: Boolean, onClick: ()->Unit) {
+private fun WorkbenchTab(tab: WorkbenchModuleState<*>, controller: WorkbenchModuleController, selected: Boolean, onClick: ()->Unit, isPreview: Boolean = false) {
     val colors = ButtonDefaults.selectedButtonColors(selected)
     val backgroundColor = colors.backgroundColor(selected).value
     val contentColor = colors.contentColor(selected).value
@@ -125,28 +132,42 @@ private fun WorkbenchTab(tab: WorkbenchModuleState<*>, controller: WorkbenchModu
             }
         }
 
-    DragTarget(model = controller.model, module = tab){
-        ContextMenuArea(items = {
-            listOf(
-                ContextMenuItem("Open in Window") { controller.convertToWindow(tab) },
-            )
-        }) {
-            Row(
-                modifier = writerModifier,
-                verticalAlignment = Alignment.CenterVertically
-            )
-            {
-                Text(
-                    text = tab.getTitle(),
-                    color = contentColor,
-                    overflow = TextOverflow.Visible,
-                    maxLines = 1,
-                    modifier = Modifier.padding(15.dp, 0.dp)
+    if(isPreview) {
+        writerModifier = writerModifier.background(color = Color(0f,0f,1f,0.3f))
+        WorkbenchTab(writerModifier, tab, colors.contentColor(selected).value)
+    } else {
+        DragTarget(model = controller.model, module = tab) {
+            ContextMenuArea(items = {
+                listOf(
+                    ContextMenuItem("Open in Window") { controller.convertToWindow(tab) },
                 )
-                IconButton(onClick = tab::onClose) {
-                    Icon(Icons.Filled.Close, "close", tint = contentColor)
-                }
+            }) {
+                WorkbenchTab(writerModifier, tab, contentColor)
             }
+        }
+    }
+}
+
+@Composable
+private fun WorkbenchTab(
+    writerModifier: Modifier,
+    tab: WorkbenchModuleState<*>,
+    contentColor: Color
+) {
+    Row(
+        modifier = writerModifier,
+        verticalAlignment = Alignment.CenterVertically
+    )
+    {
+        Text(
+            text = tab.getTitle(),
+            color = contentColor,
+            overflow = TextOverflow.Visible,
+            maxLines = 1,
+            modifier = Modifier.padding(15.dp, 0.dp)
+        )
+        IconButton(onClick = tab::onClose) {
+            Icon(Icons.Filled.Close, "close", tint = contentColor)
         }
     }
 }
