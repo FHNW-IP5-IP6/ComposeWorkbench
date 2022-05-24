@@ -200,6 +200,7 @@ private fun WorkbenchWindow (state : WorkbenchModuleState<*>) {
     Window(
         onCloseRequest = state::onClose,
         title = state.getTitle(),
+        state = state.getWindowState()
     ) {
         state.content()
     }

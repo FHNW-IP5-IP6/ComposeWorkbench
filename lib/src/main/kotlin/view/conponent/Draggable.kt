@@ -5,15 +5,25 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.*
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.awt.awtEvent
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.consumeAllChanges
+import androidx.compose.ui.input.pointer.onPointerEvent
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.unit.DpSize
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Window
+import androidx.compose.ui.window.WindowPosition
+import androidx.compose.ui.window.WindowState
 import model.WorkbenchModel
 import model.data.ModuleType
 import model.state.DisplayType
@@ -30,7 +40,7 @@ import model.state.WorkbenchModuleState
 @Composable
 internal fun DragAndDropContainer(model: WorkbenchModel, content: @Composable () -> Unit){
     DropTarget(reverse = true, modifier = Modifier.fillMaxSize(), model, ModuleType.EXPLORER, {
-        val window = WorkbenchModuleState(it, model::removeTab, DisplayType.WINDOW)
+        val window = WorkbenchModuleState(it, model::removeTab, DisplayType.WINDOW, model.dragState.positionOnScreen)
         model.removeTab(it)
         model.addState(window)
     })
@@ -72,6 +82,11 @@ internal fun DropTarget(
             }
         ) {
             val isValidTarget = module != null && getModuleType() == acceptedType
+            if (reverse && !isCurrentDropTarget) {
+                isWindow = true
+            } else if (reverse && isCurrentDropTarget) {
+                isWindow = false
+            }
             if ((!reverse && isCurrentDropTarget || reverse && !isCurrentDropTarget) && !model.dragState.isDragging && isValidTarget) {
                 moduleReceiver(module!!)
                 model.dragState = DragState()
@@ -89,6 +104,7 @@ internal fun DropTarget(
  * @param model: Workbench model, as drag state holder
  * @param module: ModuleType which can be dragged
  */
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 internal fun DragTarget(
     modifier: Modifier = Modifier,
@@ -101,6 +117,11 @@ internal fun DragTarget(
     Box(modifier = modifier
         .onGloballyPositioned {
             dragTargetPosition = it.localToWindow(Offset.Zero)
+        }
+        .onPointerEvent(PointerEventType.Move){
+            if(model.dragState.isDragging){
+                model.dragState.positionOnScreen = IntOffset(it.awtEvent.xOnScreen, it.awtEvent.yOnScreen)
+            }
         }
         .pointerInput(key1 = module.id){
             detectDragGestures(onDragStart = {
@@ -127,23 +148,39 @@ internal fun DragTarget(
 @Composable
 private fun DragAnimation(model: WorkbenchModel){
     var dragAnimationSize by remember { mutableStateOf(IntSize.Zero) }
-
     with(model.dragState){
+        val offset = dragPosition + dragOffset
         if (isDragging) {
-            Box(modifier = Modifier
-                .graphicsLayer {
-                    val offset = (dragPosition + dragOffset)
-                    scaleX = 0.5f
-                    scaleY = 0.5f
-                    alpha = if (dragAnimationSize == IntSize.Zero) 0f else .9f
-                    translationX = offset.x.minus(dragAnimationSize.width / 3)
-                    translationY = offset.y.minus(dragAnimationSize.height / 3)
+            if (isWindow){
+                Window(
+                    onCloseRequest = {},
+                    transparent = false,
+                    resizable = false,
+                    undecorated = true,
+                    state = WindowState(
+                        size =  DpSize(250.dp, 200.dp),
+                        position = WindowPosition(positionOnScreen?.x.dp, positionOnScreen?.y.dp)
+                    )
+                ) {
+                    Box() {
+                        module?.content()
+                    }
                 }
-                .onGloballyPositioned {
-                    dragAnimationSize = it.size
+            } else {
+                Box(modifier = Modifier
+                    .graphicsLayer {
+                        scaleX = 0.5f
+                        scaleY = 0.5f
+                        alpha = if (dragAnimationSize == IntSize.Zero) 0f else .9f
+                        translationX = offset.x.minus(dragAnimationSize.width / 3)
+                        translationY = offset.y.minus(dragAnimationSize.height / 3)
+                    }
+                    .onGloballyPositioned {
+                        dragAnimationSize = it.size
+                    }
+                ) {
+                    module?.content()
                 }
-            ) {
-                module?.content()
             }
         }
     }

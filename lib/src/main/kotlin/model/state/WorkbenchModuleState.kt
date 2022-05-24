@@ -1,6 +1,10 @@
 package model.state
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.WindowPosition
+import androidx.compose.ui.window.WindowState
 import model.data.WorkbenchModule
 
 internal class WorkbenchModuleState <M> (
@@ -10,17 +14,19 @@ internal class WorkbenchModuleState <M> (
     val module: WorkbenchModule<M>,
     val close: (WorkbenchModuleState<*>) -> Unit = {},
     var displayType: DisplayType,
+    val position: IntOffset? = null,
     val onClose: (M) -> Unit = {},
     val onSave: (M) -> Unit = {},
     )
 {
-    constructor(state: WorkbenchModuleState<M>, close: (WorkbenchModuleState<*>) -> Unit = {}, displayType: DisplayType) : this(
+    constructor(state: WorkbenchModuleState<M>, close: (WorkbenchModuleState<*>) -> Unit = {}, displayType: DisplayType, position: IntOffset? = null) : this(
         state.id,
         state.title,
         state.model,
         state.module,
         close,
         displayType,
+        position,
         state.onClose,
         state.onSave
     )
@@ -32,6 +38,11 @@ internal class WorkbenchModuleState <M> (
 
     fun getTitle() : String {
         return title(model)
+    }
+
+    fun getWindowState(): WindowState {
+        if(position == null) return WindowState()
+        return WindowState(position = WindowPosition(position.x.dp, position.y.dp))
     }
 
     fun onSave() = onSave(model)
