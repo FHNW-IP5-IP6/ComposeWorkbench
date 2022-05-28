@@ -1,4 +1,4 @@
-package model.state
+package model.data
 
 import ExplorerLocation
 

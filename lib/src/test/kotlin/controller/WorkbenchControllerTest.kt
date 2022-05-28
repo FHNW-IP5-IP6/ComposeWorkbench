@@ -1,9 +1,9 @@
 package controller
 
 import model.WorkbenchModel
+import model.data.DisplayType
 import model.data.ModuleType
 import model.data.WorkbenchModule
-import model.state.DisplayType
 import model.state.WorkbenchModuleState
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -52,11 +52,10 @@ internal class WorkbenchControllerTest{
         assertTrue { model.modules.contains(moduleState) }
 
         sut.convertToWindow(moduleState)
-        assertFalse { model.modules.isEmpty() }
-        assertFalse { model.modules.contains(moduleState) }
-        assertEquals(2, model.modules.size)
-        assertEquals(module, model.modules[1].module)
+        assertTrue { model.modules.contains(moduleState) }
         assertEquals(DisplayType.WINDOW, model.modules[1].displayType)
+        assertEquals(DisplayType.WINDOW, moduleState.displayType)
+        assertEquals(1, model.windows.size)
     }
 
 }

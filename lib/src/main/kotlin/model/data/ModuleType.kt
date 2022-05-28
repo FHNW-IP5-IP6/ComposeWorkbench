@@ -1,5 +1,5 @@
 package model.data
 
-enum class ModuleType {
+internal enum class ModuleType {
     EXPLORER, EDITOR
 }

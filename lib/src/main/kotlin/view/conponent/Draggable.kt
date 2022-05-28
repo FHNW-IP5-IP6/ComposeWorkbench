@@ -25,9 +25,11 @@ import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowPosition
 import androidx.compose.ui.window.WindowState
 import model.WorkbenchModel
+import model.data.DisplayType
 import model.data.ModuleType
-import model.state.DisplayType
 import model.state.DragState
+import model.state.DragState.getWindowPosition
+import model.state.WindowStateAware
 import model.state.WorkbenchModuleState
 
 /**
@@ -39,14 +41,12 @@ import model.state.WorkbenchModuleState
  */
 @Composable
 internal fun DragAndDropContainer(model: WorkbenchModel, content: @Composable () -> Unit){
-    DropTarget(reverse = true, modifier = Modifier.fillMaxSize(), model = model, moduleReceiver = {
-        val window = WorkbenchModuleState(it, model::removeTab, DisplayType.WINDOW, model.dragState.positionOnScreen)
-        model.removeTab(it)
-        model.addState(window)
+    DropTarget(model = model, reverse = true, modifier = Modifier.fillMaxSize(), dropTargetType = DisplayType.WINDOW, moduleReceiver = {
+        model.windows += WindowStateAware(position = getWindowPosition(), moduleState = it.toWindow())
     })
     {
         content()
-        DragAnimation(model)
+        DragAnimation()
     }
 }
 
@@ -62,15 +62,15 @@ internal fun DragAndDropContainer(model: WorkbenchModel, content: @Composable ()
  */
 @Composable
 internal fun DropTarget(
+    model: WorkbenchModel,
     reverse: Boolean = false,
     modifier: Modifier = Modifier,
-    model: WorkbenchModel,
     acceptedType: ModuleType? = null,
-    dropTargetType: DisplayType? = null,
+    dropTargetType: DisplayType,
     moduleReceiver: (WorkbenchModuleState<*>) -> Unit,
     content: @Composable (BoxScope.() -> Unit)
 ){
-    with(model.dragState){
+    with(DragState){
         val offset = dragPosition + dragOffset
         var isCurrentDropTarget by remember { mutableStateOf(false) }
         Box(modifier = modifier.onGloballyPositioned {
@@ -85,14 +85,13 @@ internal fun DropTarget(
             val isValidTarget = module != null && (acceptedType == null || getModuleType() == acceptedType)
             if (reverse) {
                 isWindow = !isCurrentDropTarget
-                activeDropTarget = null
+                model.clearPreview() //in the reverse part there is no need for a preview
+            } else if (isCurrentDropTarget && isValidTarget && module!!.displayType != dropTargetType){
+                model.updatePreviewModule(WorkbenchModuleState(id = model.getNextKey(), state = module!!, displayType = dropTargetType!!))
             }
-            if (isCurrentDropTarget && isValidTarget){
-                activeDropTarget = dropTargetType
-            }
-            if ((!reverse && isCurrentDropTarget || reverse && !isCurrentDropTarget) && !model.dragState.isDragging && isValidTarget) {
+            if ((!reverse && isCurrentDropTarget || reverse && !isCurrentDropTarget) && !isDragging && isValidTarget) {
                 moduleReceiver(module!!)
-                model.dragState = DragState()
+                reset()
             }
             content()
         }
@@ -111,47 +110,47 @@ internal fun DropTarget(
 @Composable
 internal fun DragTarget(
     modifier: Modifier = Modifier,
-    model: WorkbenchModel,
     module: WorkbenchModuleState<*>,
     content: @Composable BoxScope.() -> Unit
 ){
-    var dragTargetPosition by remember { mutableStateOf(Offset.Zero) }
+    with(DragState) {
+        var dragTargetPosition by remember { mutableStateOf(Offset.Zero) }
 
-    Box(modifier = modifier
-        .onGloballyPositioned {
-            dragTargetPosition = it.localToWindow(Offset.Zero)
-        }
-        .onPointerEvent(PointerEventType.Move){
-            if(model.dragState.isDragging){
-                model.dragState.positionOnScreen = IntOffset(it.awtEvent.xOnScreen, it.awtEvent.yOnScreen)
+        Box(modifier = modifier
+            .onGloballyPositioned {
+                dragTargetPosition = it.localToWindow(Offset.Zero)
             }
+            .onPointerEvent(PointerEventType.Move) {
+                if (isDragging) {
+                    positionOnScreen = IntOffset(it.awtEvent.xOnScreen, it.awtEvent.yOnScreen)
+                }
+            }
+            .pointerInput(key1 = module.id) {
+                detectDragGestures(onDragStart = {
+                    reset()
+                    isDragging = true
+                    dragPosition = dragTargetPosition + it
+                    DragState.module = module
+                }, onDrag = { change, dragAmount ->
+                    change.consumeAllChanges()
+                    dragOffset += Offset(dragAmount.x, dragAmount.y)
+                }, onDragEnd = {
+                    isDragging = false
+                    dragOffset = Offset.Zero
+                    dragPosition = Offset.Zero
+                }, onDragCancel = {
+                    reset()
+                })
+            }) {
+            content()
         }
-        .pointerInput(key1 = module.id){
-            detectDragGestures(onDragStart = {
-                model.dragState = DragState()
-                model.dragState.isDragging = true
-                model.dragState.dragOffset = Offset.Zero
-                model.dragState.dragPosition = dragTargetPosition + it
-                model.dragState.module = module
-            }, onDrag = { change, dragAmount ->
-                change.consumeAllChanges()
-                model.dragState.dragOffset += Offset(dragAmount.x, dragAmount.y)
-            }, onDragEnd = {
-                model.dragState.isDragging = false
-                model.dragState.dragOffset = Offset.Zero
-                model.dragState.dragPosition = Offset.Zero
-            }, onDragCancel = {
-                model.dragState = DragState()
-            })
-        }){
-        content()
     }
 }
 
 @Composable
-private fun DragAnimation(model: WorkbenchModel){
+private fun DragAnimation(){
     var dragAnimationSize by remember { mutableStateOf(IntSize.Zero) }
-    with(model.dragState){
+    with(DragState){
         val offset = dragPosition + dragOffset
         if (isDragging) {
             if (isWindow){

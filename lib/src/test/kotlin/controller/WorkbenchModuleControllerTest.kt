@@ -1,9 +1,9 @@
 package controller
 
 import Workbench
+import model.data.DisplayType
 import model.data.ModuleType
 import model.data.WorkbenchModule
-import model.state.DisplayType
 import model.state.WorkbenchModuleState
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -67,8 +67,8 @@ class WorkbenchModuleControllerTest {
         val explorer1 = workbench.getModel().modules[1]
         val explorer2 = workbench.getModel().modules[2]
 
-        assertEquals(0, sut.getIndex(explorer1))
-        assertEquals(1, sut.getIndex(explorer2))
+        assertEquals(1, sut.getIndex(explorer1))
+        assertEquals(0, sut.getIndex(explorer2))
     }
 
     @Test

@@ -1,24 +1,29 @@
 package model
 
 import androidx.compose.runtime.*
+import model.data.DisplayType
 import model.data.ModuleType
+import model.data.SplitViewMode
 import model.data.WorkbenchModule
-import model.state.*
+import model.state.WindowStateAware
+import model.state.WorkbenchDefaultState
+import model.state.WorkbenchModuleState
 import org.jetbrains.compose.splitpane.ExperimentalSplitPaneApi
 import org.jetbrains.compose.splitpane.SplitPaneState
 import view.conponent.DefaultExplorerOverview
 
 @OptIn(ExperimentalSplitPaneApi::class)
-internal class WorkbenchModel {
-
+internal class WorkbenchModel(val appTitle: String = "") {
     private val selectedModules = Array<Array<MutableState<WorkbenchModuleState<*>?>>>(DisplayType.values().size) {
         Array(
             ModuleType.values().size
         ) { mutableStateOf(null) }
     }
 
-    var appTitle: String = "Compose Workbench"
     val modules = mutableStateListOf<WorkbenchModuleState<*>>()
+    val windows = mutableStateListOf<WindowStateAware>()
+    var previewModule: WorkbenchModuleState<*>? by mutableStateOf(null)
+    private set
 
     val registeredExplorers = mutableMapOf<String, WorkbenchModule<*>>()
     val registeredDefaultExplorers = mutableMapOf<Int, WorkbenchDefaultState<*>>()
@@ -29,7 +34,6 @@ internal class WorkbenchModel {
     var bottomSplitState by mutableStateOf(SplitPaneState(moveEnabled = true, initialPositionPercentage = 0.7f))
     var leftSplitState by  mutableStateOf(SplitPaneState(moveEnabled = true, initialPositionPercentage = 0.25f))
 
-    var dragState by mutableStateOf( DragState() )
     private var uniqueKey = 0
 
     init {
@@ -55,13 +59,26 @@ internal class WorkbenchModel {
         showDrawer(state.displayType)
     }
 
+    fun updatePreviewModule (state: WorkbenchModuleState<*>) {
+        if(previewModule?.id != state.id){
+            modules.remove(previewModule)
+            previewModule = state
+            modules += state
+        }
+    }
+
+    fun clearPreview() {
+        modules.remove(previewModule)
+        previewModule = null
+    }
+
     fun setSelectedModuleNull (displayType: DisplayType, moduleType: ModuleType) {
         selectedModules[displayType.ordinal][moduleType.ordinal].value = null
         hideDrawer(displayType)
     }
 
     fun addState(state: WorkbenchModuleState<*>) {
-        if (modules.any{ state.model == it.model }) return
+        if (modules.any{ state.model == it.model && !it.isPreview }) return
         modules += state
         setSelectedModule(state)
     }
@@ -71,20 +88,18 @@ internal class WorkbenchModel {
         modules.remove(tab)
     }
 
-    private fun reselectState(state: WorkbenchModuleState<*>) {
-        val filteredStates = modules.filter { it.displayType == state.displayType && it.module.moduleType == state.module.moduleType }
+    fun reselectState(state: WorkbenchModuleState<*>) {
+        val selected = getSelectedModule(state.displayType, state.module.moduleType)
+        val filteredStates = modules.filter { it.displayType == state.displayType && it.module.moduleType == state.module.moduleType }.reversed()
         if (filteredStates.size <= 1) {
             setSelectedModuleNull(state.displayType, state.module.moduleType)
-        } else {
-            when (val idx = filteredStates.indexOf(state).coerceAtLeast(0)) {
+        } else if(selected.value == null || selected.value!!.id == state.id){
+            when (val idx = filteredStates.indexOfFirst { it.id == state.id}.coerceAtLeast(0)) {
                 0 -> {
                     setSelectedModule(filteredStates[1])
                 }
-                filteredStates.size-1 -> {
-                    setSelectedModule(filteredStates[idx - 1])
-                }
                 else -> {
-                    setSelectedModule(filteredStates[idx + 1])
+                    setSelectedModule(filteredStates[idx - 1])
                 }
             }
         }

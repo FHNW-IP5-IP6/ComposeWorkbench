@@ -2,19 +2,19 @@
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.window.application
 import model.WorkbenchModel
+import model.data.DisplayType
 import model.data.ModuleType
 import model.data.WorkbenchModule
-import model.state.DisplayType
+import model.data.toDisplayType
 import model.state.WorkbenchDefaultState
 import model.state.WorkbenchModuleState
-import model.state.toDisplayType
 import view.WindowSpace
 import view.WorkbenchMainUI
 
 
-class Workbench {
+class Workbench(appTitle: String = "") {
 
-    private val model: WorkbenchModel = WorkbenchModel()
+    private val model: WorkbenchModel = WorkbenchModel(appTitle)
 
     /**
      * Add an explorer for a given Type to the Workbench

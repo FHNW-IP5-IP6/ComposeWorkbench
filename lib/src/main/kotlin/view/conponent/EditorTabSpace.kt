@@ -1,17 +1,19 @@
 package view.conponent
 
+import SPLIT_PAIN_HANDLE_ALPHA
+import SPLIT_PAIN_HANDLE_AREA
+import SPLIT_PAIN_HANDLE_SIZE
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.unit.dp
 import controller.WorkbenchModuleController
 import model.WorkbenchModel
+import model.data.DisplayType
 import model.data.ModuleType
-import model.state.DisplayType
-import model.state.SplitViewMode
+import model.data.SplitViewMode
 import org.jetbrains.compose.splitpane.ExperimentalSplitPaneApi
 import org.jetbrains.compose.splitpane.HorizontalSplitPane
 import org.jetbrains.compose.splitpane.VerticalSplitPane
@@ -35,21 +37,31 @@ internal fun EditorTabSpace(model: WorkbenchModel){
         SplitViewMode.VERTICAL -> {
             VerticalSplitPane(splitPaneState = rememberSplitPaneState(initialPositionPercentage = splitRatio)) {
                 first {
-                    DropTarget(dropTargetType = DisplayType.TAB1, moduleReceiver = {editorTabController1.updateDisplayType(it, DisplayType.TAB1)}, model = model, acceptedType = ModuleType.EDITOR){
+                    DropTarget(
+                        model = model,
+                        dropTargetType = DisplayType.TAB1,
+                        moduleReceiver = {editorTabController1.updateDisplayType(it, DisplayType.TAB1)},
+                        acceptedType = ModuleType.EDITOR
+                    ){
                         TabSpace(editorTabController1)
                     }
                 }
                 second {
-                    DropTarget(dropTargetType = DisplayType.TAB2, moduleReceiver = {editorTabController2.updateDisplayType(it, DisplayType.TAB2)}, model = model, acceptedType = ModuleType.EDITOR){
+                    DropTarget(
+                        model = model,
+                        dropTargetType = DisplayType.TAB2,
+                        moduleReceiver = { editorTabController2.updateDisplayType(it, DisplayType.TAB2) },
+                        acceptedType = ModuleType.EDITOR
+                    ) {
                         TabSpace(editorTabController2)
                     }
-                    splitter {
-                        visiblePart {
-                            Box(modifier = Modifier.height(2.dp).fillMaxWidth().background(SolidColor(Color.Gray), alpha = 0.50f))
-                        }
-                        handle {
-                            Box(modifier = Modifier.markAsHandle().cursorForVerticalResize().height(9.dp).fillMaxWidth())
-                        }
+                }
+                splitter {
+                    visiblePart {
+                        Box(modifier = Modifier.height(SPLIT_PAIN_HANDLE_SIZE).fillMaxWidth().background(SolidColor(Color.Gray), alpha = SPLIT_PAIN_HANDLE_ALPHA))
+                    }
+                    handle {
+                        Box(modifier = Modifier.markAsHandle().cursorForVerticalResize().height(SPLIT_PAIN_HANDLE_AREA).fillMaxWidth())
                     }
                 }
             }
@@ -57,21 +69,31 @@ internal fun EditorTabSpace(model: WorkbenchModel){
         SplitViewMode.HORIZONTAL -> {
             HorizontalSplitPane(splitPaneState = rememberSplitPaneState(initialPositionPercentage = splitRatio)) {
                 first {
-                    DropTarget(dropTargetType = DisplayType.TAB1, moduleReceiver = {editorTabController1.updateDisplayType(it, DisplayType.TAB1)}, model = model, acceptedType = ModuleType.EDITOR) {
+                    DropTarget(
+                        model = model,
+                        dropTargetType = DisplayType.TAB1,
+                        moduleReceiver = {editorTabController1.updateDisplayType(it, DisplayType.TAB1)},
+                        acceptedType = ModuleType.EDITOR
+                    ) {
                         TabSpace(editorTabController1)
                     }
                 }
                 second {
-                    DropTarget(dropTargetType = DisplayType.TAB2, moduleReceiver = {editorTabController2.updateDisplayType(it, DisplayType.TAB2)}, model = model, acceptedType = ModuleType.EDITOR) {
+                    DropTarget(
+                        model = model,
+                        dropTargetType = DisplayType.TAB2,
+                        moduleReceiver = {editorTabController2.updateDisplayType(it, DisplayType.TAB2)},
+                        acceptedType = ModuleType.EDITOR
+                    ) {
                         TabSpace(editorTabController2)
                     }
                 }
                 splitter {
                     visiblePart {
-                        Box(modifier = Modifier.width(2.dp).fillMaxHeight().background(SolidColor(Color.Gray), alpha = 0.50f))
+                        Box(modifier = Modifier.width(SPLIT_PAIN_HANDLE_SIZE).fillMaxHeight().background(SolidColor(Color.Gray), alpha = SPLIT_PAIN_HANDLE_ALPHA))
                     }
                     handle {
-                        Box(modifier = Modifier.markAsHandle().cursorForHorizontalResize().width(9.dp).fillMaxHeight())
+                        Box(modifier = Modifier.markAsHandle().cursorForHorizontalResize().width(SPLIT_PAIN_HANDLE_AREA).fillMaxHeight())
                     }
                 }
             }

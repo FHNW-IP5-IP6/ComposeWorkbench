@@ -2,7 +2,7 @@
 
 fun main() {
 
-    val workbench: Workbench = Workbench()
+    val workbench: Workbench = Workbench("Address App")
 
     workbench.registerEditor<AddressEditorModel>("AddressEditor", loader = {AddressEditorModel(AddressExplorerModel().addressList[it])}) {
             m -> AddressEditorUi(m)

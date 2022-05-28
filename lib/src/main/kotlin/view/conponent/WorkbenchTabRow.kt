@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.*
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
@@ -12,6 +13,7 @@ import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -53,58 +55,55 @@ internal fun WorkbenchTabBody(controller: WorkbenchModuleController) {
 
 @Composable
 private fun HorizontalWorkbenchTabRow(controller: WorkbenchModuleController) {
-    val tabScrollState = rememberScrollState()
+    val scrollState = rememberLazyListState()
+    ScrollToSelected(controller, scrollState)
     Column {
-        Row(modifier = Modifier.horizontalScroll(tabScrollState)) {
+        LazyRow(state = scrollState) {
             WorkbenchTabs(controller)
         }
         HorizontalScrollbar(
             modifier = Modifier.align(Alignment.CenterHorizontally),
-            adapter = rememberScrollbarAdapter(tabScrollState)
+            adapter = rememberScrollbarAdapter(scrollState)
         )
     }
 }
 
 @Composable
-private fun VerticalWorkbenchTabRow(controller: WorkbenchModuleController, showDraggedTab: Boolean = false) {
-    val tabScrollState = rememberScrollState()
-
+private fun VerticalWorkbenchTabRow(controller: WorkbenchModuleController) {
+    val scrollState = rememberLazyListState()
+    ScrollToSelected(controller, scrollState)
     Row {
-        Column(modifier = Modifier.verticalScroll(tabScrollState)) {
+        LazyColumn(state = scrollState) {
             WorkbenchTabs(controller)
         }
         VerticalScrollbar(
             modifier = Modifier.align(Alignment.CenterVertically),
-            adapter = rememberScrollbarAdapter(tabScrollState)
+            adapter = rememberScrollbarAdapter(scrollState)
         )
     }
 }
 
 @Composable
-private fun WorkbenchTabs(controller: WorkbenchModuleController) {
-    for (tab in controller.getModulesFiltered()) {
-        WorkbenchTab(
-            tab = tab,
-            controller = controller,
-            selected = controller.isModuleSelected(tab),
-            onClick = { controller.moduleSelectorPressed(tab) })
+private fun ScrollToSelected(controller: WorkbenchModuleController, state: LazyListState){
+    LaunchedEffect(controller.getModulesFiltered().size) {
+        state.scrollToItem(controller.getScrollToIndex())
     }
-    if(controller.isSelectedDragTarget()){
-        with(controller.model.dragState){
-            WorkbenchTab(
-                tab = module!!,
-                controller = controller,
-                selected = false,
-                onClick = { },
-                isPreview = true
-            )
-        }
+}
+
+private fun LazyListScope.WorkbenchTabs(controller: WorkbenchModuleController) {
+    items(controller.getModulesFiltered()){ item ->
+        WorkbenchTab(
+            tab = item,
+            controller = controller,
+            selected = controller.isModuleSelected(item),
+            onClick = { controller.moduleSelectorPressed(item) },
+        )
     }
 }
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalComposeUiApi::class)
 @Composable
-private fun WorkbenchTab(tab: WorkbenchModuleState<*>, controller: WorkbenchModuleController, selected: Boolean, onClick: ()->Unit, isPreview: Boolean = false) {
+private fun WorkbenchTab(tab: WorkbenchModuleState<*>, controller: WorkbenchModuleController, selected: Boolean, onClick: ()->Unit) {
     val colors = ButtonDefaults.selectedButtonColors(selected)
     val backgroundColor = colors.backgroundColor(selected).value
     val contentColor = colors.contentColor(selected).value
@@ -132,11 +131,11 @@ private fun WorkbenchTab(tab: WorkbenchModuleState<*>, controller: WorkbenchModu
             }
         }
 
-    if(isPreview) {
+    if(tab.isPreview) {
         writerModifier = writerModifier.background(color = Color(0f,0f,1f,0.3f))
         WorkbenchTab(writerModifier, tab, colors.contentColor(selected).value)
     } else {
-        DragTarget(model = controller.model, module = tab) {
+        DragTarget(module = tab) {
             ContextMenuArea(items = {
                 listOf(
                     ContextMenuItem("Open in Window") { controller.convertToWindow(tab) },

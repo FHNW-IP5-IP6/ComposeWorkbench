@@ -22,10 +22,9 @@ import androidx.compose.ui.window.MenuBar
 import androidx.compose.ui.window.Window
 import controller.WorkbenchModuleController
 import model.WorkbenchModel
+import model.data.DisplayType
 import model.data.ModuleType
-import model.state.DisplayType
-import model.state.SplitViewMode
-import model.state.WorkbenchModuleState
+import model.data.SplitViewMode
 import org.jetbrains.compose.splitpane.ExperimentalSplitPaneApi
 import org.jetbrains.compose.splitpane.HorizontalSplitPane
 import org.jetbrains.compose.splitpane.VerticalSplitPane
@@ -90,7 +89,7 @@ private fun WorkbenchBody(model: WorkbenchModel) {
             Column {
                 BoxWithConstraints {
                     Row(modifier = Modifier.height(maxHeight - bottomExplorerController.getTabRowMinDimension().second)) {
-                        DropTarget(dropTargetType = DisplayType.LEFT, acceptedType = ModuleType.EXPLORER, model = model, moduleReceiver = { leftExplorerController.updateDisplayType(it, DisplayType.LEFT) }) {
+                        DropTarget(model = model, dropTargetType = DisplayType.LEFT, acceptedType = ModuleType.EXPLORER, moduleReceiver = { leftExplorerController.updateDisplayType(it, DisplayType.LEFT) }) {
                             WorkbenchTabRow(leftExplorerController)
                         }
                         VerticalSplitPane(splitPaneState = model.bottomSplitState) {
@@ -123,7 +122,7 @@ private fun WorkbenchBody(model: WorkbenchModel) {
                         .height(bottomExplorerController.getTabRowMinDimension().second).padding(start = bottomExplorerController.getTabRowMinDimension().first)
                         .align(Alignment.End)
                 ) {
-                    DropTarget(dropTargetType = DisplayType.BOTTOM, acceptedType = ModuleType.EXPLORER,model = model, moduleReceiver = { bottomExplorerController.updateDisplayType(it, DisplayType.BOTTOM) }) {
+                    DropTarget(model = model, dropTargetType = DisplayType.BOTTOM, acceptedType = ModuleType.EXPLORER, moduleReceiver = { bottomExplorerController.updateDisplayType(it, DisplayType.BOTTOM) }) {
                         WorkbenchTabRow(bottomExplorerController)
                     }
                 }
@@ -170,7 +169,7 @@ private fun Bar(model: WorkbenchModel) {
             modifier = Modifier.fillMaxSize().padding(20.dp, 0.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             ) {
-            Text("Workbench Top Bar",
+            Text(model.appTitle,
                 fontSize = 30.sp,
                 color = Color.White,
                 modifier = Modifier.align(alignment = Alignment.CenterVertically),
@@ -186,22 +185,18 @@ private fun Bar(model: WorkbenchModel) {
 
 @Composable
 internal fun WindowSpace(model: WorkbenchModel){
-    for (window in model.modules) {
-        key(window) {
-            if (window.displayType == DisplayType.WINDOW) {
-                WorkbenchWindow(window)
+    key(model.windows) {
+        for (state in model.windows) {
+            Window(
+                onCloseRequest = {
+                    //TODO: bring back the module on close??
+                    state.moduleState.onClose()
+                    model.windows.remove(state) },
+                title = state.moduleState.getTitle(),
+                state = state.windowState
+            ) {
+                state.moduleState.content()
             }
         }
-    }
-}
-
-@Composable
-private fun WorkbenchWindow (state : WorkbenchModuleState<*>) {
-    Window(
-        onCloseRequest = state::onClose,
-        title = state.getTitle(),
-        state = state.getWindowState()
-    ) {
-        state.content()
     }
 }

@@ -1,6 +1,6 @@
 fun main() {
 
-    val workbench: Workbench = Workbench()
+    val workbench: Workbench = Workbench("Cities App")
 
     workbench.registerEditor<CityState>("City", loader = {getCity(it)}) {
             m -> CityEditorUi(m)
