@@ -6,10 +6,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.*
-import androidx.compose.material.ButtonDefaults
-import androidx.compose.material.Icon
-import androidx.compose.material.IconButton
-import androidx.compose.material.Text
+import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.runtime.Composable
@@ -104,9 +101,8 @@ private fun LazyListScope.WorkbenchTabs(controller: WorkbenchModuleController) {
 @OptIn(ExperimentalFoundationApi::class, ExperimentalComposeUiApi::class)
 @Composable
 private fun WorkbenchTab(tab: WorkbenchModuleState<*>, controller: WorkbenchModuleController, selected: Boolean, onClick: ()->Unit) {
-    val colors = ButtonDefaults.selectedButtonColors(selected)
-    val backgroundColor = colors.backgroundColor(selected).value
-    val contentColor = colors.contentColor(selected).value
+    val backgroundColor = if (selected) MaterialTheme.colors.background else MaterialTheme.colors.surface
+    val contentColor = if (selected) MaterialTheme.colors.primary else MaterialTheme.colors.onSurface
 
     var writerModifier: Modifier = if (controller.displayType.orientation.toInt() != 0) {
         Modifier.vertical(controller.displayType.orientation).clickable {onClick()}
@@ -133,7 +129,7 @@ private fun WorkbenchTab(tab: WorkbenchModuleState<*>, controller: WorkbenchModu
 
     if(tab.isPreview) {
         writerModifier = writerModifier.background(color = Color(0f,0f,1f,0.3f))
-        WorkbenchTab(writerModifier, tab, colors.contentColor(selected).value)
+        WorkbenchTab(writerModifier, tab)
     } else {
         DragTarget(module = tab) {
             ContextMenuArea(items = {
@@ -141,7 +137,7 @@ private fun WorkbenchTab(tab: WorkbenchModuleState<*>, controller: WorkbenchModu
                     ContextMenuItem("Open in Window") { controller.convertToWindow(tab) },
                 )
             }) {
-                WorkbenchTab(writerModifier, tab, contentColor)
+                WorkbenchTab(writerModifier, tab)
             }
         }
     }
@@ -151,7 +147,6 @@ private fun WorkbenchTab(tab: WorkbenchModuleState<*>, controller: WorkbenchModu
 private fun WorkbenchTab(
     writerModifier: Modifier,
     tab: WorkbenchModuleState<*>,
-    contentColor: Color
 ) {
     Row(
         modifier = writerModifier,
@@ -160,13 +155,12 @@ private fun WorkbenchTab(
     {
         Text(
             text = tab.getTitle(),
-            color = contentColor,
             overflow = TextOverflow.Visible,
             maxLines = 1,
             modifier = Modifier.padding(15.dp, 0.dp)
         )
         IconButton(onClick = tab::onClose) {
-            Icon(Icons.Filled.Close, "close", tint = contentColor)
+            Icon(Icons.Filled.Close, "close")
         }
     }
 }
