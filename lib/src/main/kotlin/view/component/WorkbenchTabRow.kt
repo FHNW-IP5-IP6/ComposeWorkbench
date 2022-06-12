@@ -1,4 +1,4 @@
-package view.conponent
+package view.component
 
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.Box
@@ -21,7 +21,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import controller.WorkbenchModuleController
 import model.state.WorkbenchModuleState
-import util.selectedButtonColors
 import util.vertical
 
 /**

@@ -1,4 +1,4 @@
-package view.conponent
+package view.component
 
 import SPLIT_PAIN_HANDLE_ALPHA
 import SPLIT_PAIN_HANDLE_AREA

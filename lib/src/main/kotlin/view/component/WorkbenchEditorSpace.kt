@@ -1,4 +1,4 @@
-package view.conponent
+package view.component
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable

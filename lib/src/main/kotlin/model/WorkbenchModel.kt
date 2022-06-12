@@ -10,7 +10,7 @@ import model.state.WorkbenchDefaultState
 import model.state.WorkbenchModuleState
 import org.jetbrains.compose.splitpane.ExperimentalSplitPaneApi
 import org.jetbrains.compose.splitpane.SplitPaneState
-import view.conponent.DefaultExplorerOverview
+import view.component.DefaultExplorerOverview
 
 @OptIn(ExperimentalSplitPaneApi::class)
 internal class WorkbenchModel(val appTitle: String = "") {
