@@ -1,18 +1,20 @@
 package model
 
 import androidx.compose.runtime.*
+import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyShortcut
+import model.data.*
 import model.data.DisplayType
 import model.data.ModuleType
-import model.data.SplitViewMode
 import model.data.WorkbenchModule
 import model.state.WindowStateAware
 import model.state.WorkbenchDefaultState
 import model.state.WorkbenchModuleState
 import org.jetbrains.compose.splitpane.ExperimentalSplitPaneApi
 import org.jetbrains.compose.splitpane.SplitPaneState
-import view.component.DefaultExplorerOverview
 
-@OptIn(ExperimentalSplitPaneApi::class)
+@OptIn(ExperimentalSplitPaneApi::class, ExperimentalComposeUiApi::class)
 internal class WorkbenchModel(val appTitle: String = "") {
     private val selectedModules = Array<Array<MutableState<WorkbenchModuleState<*>?>>>(DisplayType.values().size) {
         Array(
@@ -24,6 +26,9 @@ internal class WorkbenchModel(val appTitle: String = "") {
     val windows = mutableStateListOf<WindowStateAware>()
     var previewModule: WorkbenchModuleState<*>? by mutableStateOf(null)
     private set
+
+    var commands = mutableStateListOf<Command>()
+    val menu = MenuEntry("TabMenu")
 
     val registeredExplorers = mutableMapOf<String, WorkbenchModule<*>>()
     val registeredDefaultExplorers = mutableMapOf<Int, WorkbenchDefaultState<*>>()
@@ -37,7 +42,30 @@ internal class WorkbenchModel(val appTitle: String = "") {
     private var uniqueKey = 0
 
     init {
-        showDefaultExplorersOverview()
+        commands.addAll(
+            listOf(
+                Command(text = "Save All",
+                    path = "MenuBar.File",
+                    action = { saveAll(ModuleType.EDITOR) },
+                    shortcut = KeyShortcut(Key.S, ctrl = true, alt = true)
+                ),
+                Command(text = "Horizontal",
+                    path = "MenuBar.View.Split TabSpace",
+                    action = { changeSplitViewMode(SplitViewMode.HORIZONTAL) },
+                    shortcut = KeyShortcut(Key.H , ctrl = true, shift = true)
+                ),
+                Command(text = "Vertical",
+                    path = "MenuBar.View.Split TabSpace",
+                    action = { changeSplitViewMode(SplitViewMode.VERTICAL) },
+                    shortcut = KeyShortcut(Key.V , ctrl = true, shift = true)
+                ),
+                Command(text = "Unsplit",
+                    path = "MenuBar.View.Split TabSpace",
+                    action = { changeSplitViewMode(SplitViewMode.UNSPLIT) },
+                    shortcut = KeyShortcut(Key.U , ctrl = true, shift = true)
+                ),
+            )
+        )
     }
 
     fun getNextKey():Int = uniqueKey++
@@ -135,26 +163,6 @@ internal class WorkbenchModel(val appTitle: String = "") {
         }
     }
 
-    fun showDefaultExplorersOverview() {
-        val modelType = "DefaultExplorers"
-        val existing = modules.firstOrNull{ it.module.modelType == modelType }
-
-        if (existing != null) {
-            setSelectedModule(existing)
-            return
-        }
-
-        val editor = WorkbenchModule<WorkbenchModel>(
-            moduleType = ModuleType.EDITOR,
-            modelType = modelType,
-            content = {
-                DefaultExplorerOverview(it)
-            }
-        )
-        val t = WorkbenchModuleState(id = getNextKey(), title = { "Default Explorers" }, model = this, module = editor, ::removeTab, DisplayType.TAB1)
-        addState(t)
-    }
-
     fun hideDrawer(displayType: DisplayType) {
         when(displayType) {
             DisplayType.LEFT -> leftSplitState = SplitPaneState(moveEnabled = false, initialPositionPercentage = 0f)
@@ -168,6 +176,23 @@ internal class WorkbenchModel(val appTitle: String = "") {
             DisplayType.LEFT -> leftSplitState = SplitPaneState(moveEnabled = true, initialPositionPercentage = 0.25f)
             DisplayType.BOTTOM -> bottomSplitState = SplitPaneState(moveEnabled = true, initialPositionPercentage = 0.7f)
             else -> Unit
+        }
+    }
+
+    fun dispatchCommands() {
+        var m = menu
+        for (c in commands) {
+            val path = c.path.split(".")
+            if (path.size > 4) return
+            for (i in path.indices) {
+                if (i==0 && path[0] != "MenuBar") break
+                m = if (i==0) {
+                    menu
+                } else {
+                    m.getMenu(path[i])
+                }
+            }
+            m.children.add(c)
         }
     }
 }

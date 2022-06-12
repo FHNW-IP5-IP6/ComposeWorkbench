@@ -1,7 +1,7 @@
-
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.window.application
 import model.WorkbenchModel
+import model.data.*
 import model.data.DisplayType
 import model.data.ModuleType
 import model.data.WorkbenchModule
@@ -27,11 +27,12 @@ class Workbench(appTitle: String = "") {
     fun <M> registerExplorer(
         type: String,
         content: @Composable (M) -> Unit,
-    ){
+    ) {
         val explorer = WorkbenchModule(
             moduleType = ModuleType.EXPLORER,
             modelType = type,
-            content = content)
+            content = content
+        )
 
         model.registeredExplorers[type] = explorer
     }
@@ -49,12 +50,13 @@ class Workbench(appTitle: String = "") {
         type: String,
         loader: (Int) -> M,
         content: @Composable (M) -> Unit
-    ){
+    ) {
         val editor = WorkbenchModule(
             moduleType = ModuleType.EDITOR,
             modelType = type,
             loader = loader,
-            content = content)
+            content = content
+        )
         model.registeredEditors[type] = editor
     }
 
@@ -69,9 +71,16 @@ class Workbench(appTitle: String = "") {
      * @param shown: if the Explorer is shown on the Startup of the Workbench
      */
     @Suppress("UNCHECKED_CAST")
-    fun <M: Any> requestExplorer(type: String, title: (M) -> String, m: M, default: Boolean = false, location: ExplorerLocation = ExplorerLocation.LEFT, shown: Boolean = true) {
+    fun <M : Any> requestExplorer(
+        type: String,
+        title: (M) -> String,
+        m: M,
+        default: Boolean = false,
+        location: ExplorerLocation = ExplorerLocation.LEFT,
+        shown: Boolean = true
+    ) {
         val explorer = model.registeredExplorers[type]
-        if(explorer != null){
+        if (explorer != null) {
             explorer as WorkbenchModule<M>
             val id = model.getNextKey()
             if (shown) {
@@ -80,6 +89,11 @@ class Workbench(appTitle: String = "") {
             }
             if (default) {
                 model.registeredDefaultExplorers[id] = WorkbenchDefaultState(type, m, title)
+                model.commands.add(Command(
+                    text = model.registeredDefaultExplorers[id]!!.getTitle(),
+                    path = "MenuBar.View.Default Explorers",
+                    action = { model.createExplorerFromDefault(id) }
+                ))
             }
         }
     }
@@ -94,11 +108,26 @@ class Workbench(appTitle: String = "") {
      * @param onClose: The callback to be invoked when this editor is closed
      */
     @Suppress("UNCHECKED_CAST")
-    fun <M> requestEditor(type: String, title: (M) -> String, id: Int, onClose: (M) -> Unit ={}, onSave: (M) -> Unit ={}) {
+    fun <M> requestEditor(
+        type: String,
+        title: (M) -> String,
+        id: Int,
+        onClose: (M) -> Unit = {},
+        onSave: (M) -> Unit = {}
+    ) {
         val editor = model.registeredEditors[type]
-        if(editor != null){
+        if (editor != null) {
             editor as WorkbenchModule<M>
-            val t = WorkbenchModuleState(id = model.getNextKey() , title = title, model =  editor.loader!!.invoke(id), module = editor, close = model::removeTab,displayType = DisplayType.TAB1, onClose = onClose, onSave = onSave)
+            val t = WorkbenchModuleState(
+                id = model.getNextKey(),
+                title = title,
+                model = editor.loader!!.invoke(id),
+                module = editor,
+                close = model::removeTab,
+                displayType = DisplayType.TAB1,
+                onClose = onClose,
+                onSave = onSave
+            )
             model.addState(t)
         }
     }
@@ -107,13 +136,16 @@ class Workbench(appTitle: String = "") {
      * Run the Workbench
      */
     fun run(onExit: () -> Unit) = application {
+        // pre processing
+        model.dispatchCommands()
+
         // init main window
         WorkbenchMainUI(model) {
             onExit.invoke()
             exitApplication()
         }
 
-        // render seperated windows
+        // render separated windows
         WindowSpace(model)
     }
 
