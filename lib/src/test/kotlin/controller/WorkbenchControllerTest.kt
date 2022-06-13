@@ -28,7 +28,7 @@ internal class WorkbenchControllerTest{
         val moduleState = WorkbenchModuleState<String>(id = 1, title ={"title"}, model = "model", module = module, displayType = displayType){}
         sut.removeModuleState(moduleState)
 
-        assertEquals(1, model.modules.size)
+        assertEquals(0, model.modules.size)
     }
 
     @Test
@@ -39,21 +39,21 @@ internal class WorkbenchControllerTest{
         assertTrue { model.modules.contains(moduleState) }
 
         sut.removeModuleState(moduleState)
-        assertEquals(1, model.modules.size)
+        assertEquals(0, model.modules.size)
         assertFalse { model.modules.contains(moduleState) }
     }
 
     @Test
     fun convertToWindow() {
         val module = WorkbenchModule<String>(moduleType,"type") {}
-        val moduleState = WorkbenchModuleState<String>(id = 1, title ={"title"}, model = "model", module = module, displayType = displayType){}
+        val moduleState = WorkbenchModuleState<String>(id = 0, title ={"title"}, model = "model", module = module, displayType = displayType){}
 
         model.modules += moduleState
         assertTrue { model.modules.contains(moduleState) }
 
         sut.convertToWindow(moduleState)
         assertTrue { model.modules.contains(moduleState) }
-        assertEquals(DisplayType.WINDOW, model.modules[1].displayType)
+        assertEquals(DisplayType.WINDOW, model.modules[0].displayType)
         assertEquals(DisplayType.WINDOW, moduleState.displayType)
         assertEquals(1, model.windows.size)
     }

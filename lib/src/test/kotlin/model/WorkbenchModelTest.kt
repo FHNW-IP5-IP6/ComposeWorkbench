@@ -15,7 +15,7 @@ internal class WorkbenchModelTest {
 
     @Test
     fun initialStates() {
-        assertEquals( 1, sut.modules.size )
+        assertEquals( 0, sut.modules.size )
         assertTrue{ sut.registeredExplorers.isEmpty() }
         assertTrue{ sut.registeredEditors.isEmpty() }
     }

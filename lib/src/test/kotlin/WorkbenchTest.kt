@@ -29,15 +29,15 @@ internal class WorkbenchTest{
         sut.registerExplorer<String>(type = "String"){}
         val model = "value"
         sut.requestExplorer<String>("String", {"String Explorer"}, model)
-        assertEquals(2, sut.getModel().modules.size)
+        assertEquals(1, sut.getModel().modules.size)
     }
 
     @Test
     fun openEditor() {
         sut.registerEditor<String>(type = "String", loader = {"test"}){}
         val model = "value"
-        sut.requestEditor<String>("String", {"String Editor"}, 1)
-        assertEquals(2, sut.getModel().modules.size)
+        sut.requestEditor<String>("String", {"String Editor"}, 0)
+        assertEquals(1, sut.getModel().modules.size)
     }
 
 }

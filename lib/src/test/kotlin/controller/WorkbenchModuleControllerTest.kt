@@ -37,7 +37,7 @@ class WorkbenchModuleControllerTest {
         workbench.registerExplorer<String>(type = "String"){}
         val model = "value"
         workbench.requestExplorer<String>("String", {"title"}, model)
-        val explorer = workbench.getModel().modules[1]
+        val explorer = workbench.getModel().modules[0]
         assertEquals(0, sut.getIndex(explorer))
     }
 
@@ -64,8 +64,8 @@ class WorkbenchModuleControllerTest {
         workbench.requestExplorer<String>("String", {"title"}, "model1")
         workbench.requestExplorer<String>("String", {"title 2"}, "model2")
 
-        val explorer1 = workbench.getModel().modules[1]
-        val explorer2 = workbench.getModel().modules[2]
+        val explorer1 = workbench.getModel().modules[0]
+        val explorer2 = workbench.getModel().modules[1]
 
         assertEquals(1, sut.getIndex(explorer1))
         assertEquals(0, sut.getIndex(explorer2))
@@ -77,7 +77,7 @@ class WorkbenchModuleControllerTest {
         workbench.requestExplorer<String>("String", {"title"}, "model1")
         workbench.requestExplorer<String>("String", {"title 2"}, "model2")
 
-        val explorer1 = workbench.getModel().modules[1]
+        val explorer1 = workbench.getModel().modules[0]
 
         assertFalse { sut.isModuleSelected(explorer1) }
 
@@ -91,8 +91,8 @@ class WorkbenchModuleControllerTest {
         workbench.requestExplorer<String>("String", {"title"}, "model1")
         workbench.requestExplorer<String>("String", {"title 2"}, "model2")
 
-        val explorer1 = workbench.getModel().modules[1]
-        val explorer2 = workbench.getModel().modules[2]
+        val explorer1 = workbench.getModel().modules[0]
+        val explorer2 = workbench.getModel().modules[1]
 
         workbench.getModel().setSelectedModule(explorer2)
 
@@ -106,7 +106,7 @@ class WorkbenchModuleControllerTest {
         val model = "value"
         workbench.requestExplorer<String>("String", {"title"}, model)
 
-        val explorer1 = workbench.getModel().modules[1]
+        val explorer1 = workbench.getModel().modules[0]
 
         sut.moduleSelectorPressed(explorer1)
         assertFalse{ sut.isModuleSelected(explorer1) }
