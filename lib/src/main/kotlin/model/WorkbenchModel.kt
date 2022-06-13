@@ -1,9 +1,11 @@
 package model
 
+import MENU_IDENTIFIER_MENU_BAR
 import androidx.compose.runtime.*
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyShortcut
+import androidx.compose.ui.window.WindowPosition
 import model.data.*
 import model.data.DisplayType
 import model.data.ModuleType
@@ -28,7 +30,7 @@ internal class WorkbenchModel(val appTitle: String = "") {
         private set
 
     var commands = mutableStateListOf<Command>()
-    val menu = MenuEntry("TabMenu")
+    val menu = MenuEntry(MENU_IDENTIFIER_MENU_BAR)
 
     val registeredExplorers = mutableMapOf<String, WorkbenchModule<*>>()
     val registeredDefaultExplorers = mutableMapOf<Int, WorkbenchDefaultState<*>>()
@@ -46,22 +48,22 @@ internal class WorkbenchModel(val appTitle: String = "") {
         commands.addAll(
             listOf(
                 Command(text = "Save All",
-                    path = "MenuBar.File",
+                    path = "$MENU_IDENTIFIER_MENU_BAR.File",
                     action = { saveAll(ModuleType.EDITOR) },
                     shortcut = KeyShortcut(Key.S, ctrl = true, alt = true)
                 ),
                 Command(text = "Horizontal",
-                    path = "MenuBar.View.Split TabSpace",
+                    path = "$MENU_IDENTIFIER_MENU_BAR.View.Split TabSpace",
                     action = { changeSplitViewMode(SplitViewMode.HORIZONTAL) },
                     shortcut = KeyShortcut(Key.H , ctrl = true, shift = true)
                 ),
                 Command(text = "Vertical",
-                    path = "MenuBar.View.Split TabSpace",
+                    path = "$MENU_IDENTIFIER_MENU_BAR.View.Split TabSpace",
                     action = { changeSplitViewMode(SplitViewMode.VERTICAL) },
                     shortcut = KeyShortcut(Key.V , ctrl = true, shift = true)
                 ),
                 Command(text = "Unsplit",
-                    path = "MenuBar.View.Split TabSpace",
+                    path = "$MENU_IDENTIFIER_MENU_BAR.View.Split TabSpace",
                     action = { changeSplitViewMode(SplitViewMode.UNSPLIT) },
                     shortcut = KeyShortcut(Key.U , ctrl = true, shift = true)
                 ),
@@ -117,6 +119,22 @@ internal class WorkbenchModel(val appTitle: String = "") {
     fun removeTab(tab: WorkbenchModuleState<*>) {
         reselectState(tab)
         modules.remove(tab)
+        reselectEditorSpace()
+    }
+
+    fun moduleToWindow(module: WorkbenchModuleState<*>, position: WindowPosition = WindowPosition.PlatformDefault) {
+        switchDisplayType(module, DisplayType.WINDOW)
+        windows += WindowStateAware(position = position, moduleState =  module)
+    }
+
+    fun switchDisplayType(state: WorkbenchModuleState<*>, displayType: DisplayType) {
+        modules.remove(state)
+        state.displayType = displayType
+        addState(state)
+        reselectEditorSpace()
+    }
+
+    private fun reselectEditorSpace() {
         val tabs1 = modules.filter { it.displayType == DisplayType.TAB1 }
         val tabs2 = modules.filter { it.displayType == DisplayType.TAB2 }
         if (tabs1.isEmpty() || tabs2.isEmpty()) changeSplitViewMode(SplitViewMode.UNSPLIT)
@@ -154,11 +172,17 @@ internal class WorkbenchModel(val appTitle: String = "") {
         val tabs2 = modules.filter { it.displayType == DisplayType.TAB2 }
 
         if (mode == SplitViewMode.UNSPLIT) {
-            val m2 = getSelectedModule(DisplayType.TAB2, ModuleType.EDITOR).value!!
-            reselectState(m2)
-            m2.displayType = DisplayType.TAB1
-            setSelectedModule(m2)
-            setSelectedModuleNull(DisplayType.TAB2, ModuleType.EDITOR)
+            if (tabs2.isEmpty()) {
+                setSelectedModuleNull(DisplayType.TAB2, ModuleType.EDITOR)
+            } else {
+                val m2 = getSelectedModule(DisplayType.TAB2, ModuleType.EDITOR).value
+                if (m2 != null) {
+                    reselectState(m2)
+                    m2.displayType = DisplayType.TAB1
+                    setSelectedModule(m2)
+                    setSelectedModuleNull(DisplayType.TAB2, ModuleType.EDITOR)
+                }
+            }
             tabs2.forEach { it.displayType = DisplayType.TAB1 }
             return
         }
@@ -201,7 +225,7 @@ internal class WorkbenchModel(val appTitle: String = "") {
             val path = c.path.split(".")
             if (path.size > 4) return
             for (i in path.indices) {
-                if (i==0 && path[0] != "MenuBar") break
+                if (i==0 && path[0] != MENU_IDENTIFIER_MENU_BAR) break
                 m = if (i==0) {
                     menu
                 } else {

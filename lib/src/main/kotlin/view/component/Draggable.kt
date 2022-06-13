@@ -42,7 +42,7 @@ import model.state.WorkbenchModuleState
 @Composable
 internal fun DragAndDropContainer(model: WorkbenchModel, content: @Composable () -> Unit){
     DropTarget(model = model, reverse = true, modifier = Modifier.fillMaxSize(), dropTargetType = DisplayType.WINDOW, moduleReceiver = {
-        model.windows += WindowStateAware(position = getWindowPosition(), moduleState = it.toWindow())
+        model.moduleToWindow(module = it, position = getWindowPosition())
     })
     {
         content()

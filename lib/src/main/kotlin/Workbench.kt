@@ -91,7 +91,7 @@ class Workbench(appTitle: String = "") {
                 model.registeredDefaultExplorers[id] = WorkbenchDefaultState(type, m, title)
                 model.commands.add(Command(
                     text = model.registeredDefaultExplorers[id]!!.getTitle(),
-                    path = "MenuBar.View.Default Explorers",
+                    path = "$MENU_IDENTIFIER_MENU_BAR.View.Default Explorers",
                     action = { model.createExplorerFromDefault(id) }
                 ))
             }

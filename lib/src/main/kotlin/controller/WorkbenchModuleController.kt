@@ -42,7 +42,7 @@ internal class WorkbenchModuleController(val model: WorkbenchModel, val displayT
     }
 
     fun getModulesFiltered(): List<WorkbenchModuleState<*>> {
-        return model.modules.filter { it.displayType== displayType && it.module.moduleType== moduleType }.reversed()
+        return model.modules.filter { it.displayType== displayType && it.module.moduleType == moduleType }.reversed()
     }
 
     fun moduleSelectorPressed(module: WorkbenchModuleState<*>?) {
@@ -58,19 +58,16 @@ internal class WorkbenchModuleController(val model: WorkbenchModel, val displayT
     }
 
     fun removeModuleState(module: WorkbenchModuleState<*>){
-        model.modules -= module
+        model.removeTab(module)
     }
 
     fun <M> convertToWindow(module: WorkbenchModuleState<M>) {
-        val window = WindowStateAware(position = WindowPosition.PlatformDefault, moduleState =  module.toWindow())
-        model.windows += window
+        model.moduleToWindow(module)
     }
 
     internal fun updateDisplayType(module: WorkbenchModuleState<*>, displayType: DisplayType){
         if(displayType != module.displayType){
-            model.removeTab(module)
-            module.displayType = displayType
-            model.addState(module)
+            model.switchDisplayType(module, displayType)
         }else if(!isModuleSelected(module)) {
             moduleSelectorPressed(module)
         }
