@@ -128,16 +128,17 @@ internal class WorkbenchModel(val appTitle: String = "") {
     }
 
     fun switchDisplayType(state: WorkbenchModuleState<*>, displayType: DisplayType) {
-        modules.remove(state)
+        removeTab(state)
         state.displayType = displayType
         addState(state)
-        reselectEditorSpace()
     }
 
     private fun reselectEditorSpace() {
         val tabs1 = modules.filter { it.displayType == DisplayType.TAB1 }
         val tabs2 = modules.filter { it.displayType == DisplayType.TAB2 }
-        if (tabs1.isEmpty() || tabs2.isEmpty()) changeSplitViewMode(SplitViewMode.UNSPLIT)
+        if (tabs1.isEmpty() || tabs2.isEmpty()) {
+            changeSplitViewMode(SplitViewMode.UNSPLIT)
+        }
     }
 
     fun reselectState(state: WorkbenchModuleState<*>) {
@@ -172,16 +173,12 @@ internal class WorkbenchModel(val appTitle: String = "") {
         val tabs2 = modules.filter { it.displayType == DisplayType.TAB2 }
 
         if (mode == SplitViewMode.UNSPLIT) {
-            if (tabs2.isEmpty()) {
+            val m2 = getSelectedModule(DisplayType.TAB2, ModuleType.EDITOR).value
+            if (m2 != null) {
+                reselectState(m2)
+                m2.displayType = DisplayType.TAB1
+                setSelectedModule(m2)
                 setSelectedModuleNull(DisplayType.TAB2, ModuleType.EDITOR)
-            } else {
-                val m2 = getSelectedModule(DisplayType.TAB2, ModuleType.EDITOR).value
-                if (m2 != null) {
-                    reselectState(m2)
-                    m2.displayType = DisplayType.TAB1
-                    setSelectedModule(m2)
-                    setSelectedModuleNull(DisplayType.TAB2, ModuleType.EDITOR)
-                }
             }
             tabs2.forEach { it.displayType = DisplayType.TAB1 }
             return
