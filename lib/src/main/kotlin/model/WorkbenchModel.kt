@@ -25,7 +25,7 @@ internal class WorkbenchModel(val appTitle: String = "") {
     val modules = mutableStateListOf<WorkbenchModuleState<*>>()
     val windows = mutableStateListOf<WindowStateAware>()
     var previewModule: WorkbenchModuleState<*>? by mutableStateOf(null)
-    private set
+        private set
 
     var commands = mutableStateListOf<Command>()
     val menu = MenuEntry("TabMenu")
@@ -35,6 +35,7 @@ internal class WorkbenchModel(val appTitle: String = "") {
     val registeredEditors = mutableMapOf<String, WorkbenchModule<*>>()
 
     var splitViewMode by mutableStateOf(SplitViewMode.UNSPLIT)
+    var currentTabSpace = DisplayType.TAB1
 
     var bottomSplitState by mutableStateOf(SplitPaneState(moveEnabled = true, initialPositionPercentage = 0.7f))
     var leftSplitState by  mutableStateOf(SplitPaneState(moveEnabled = true, initialPositionPercentage = 0.25f))
@@ -85,6 +86,8 @@ internal class WorkbenchModel(val appTitle: String = "") {
     fun setSelectedModule (state: WorkbenchModuleState<*>) {
         selectedModules[state.displayType.ordinal][state.module.moduleType.ordinal].value = state
         showDrawer(state.displayType)
+        if (state.displayType == DisplayType.TAB1 || state.displayType == DisplayType.TAB2)
+            currentTabSpace = state.displayType
     }
 
     fun updatePreviewModule (state: WorkbenchModuleState<*>) {
@@ -114,6 +117,9 @@ internal class WorkbenchModel(val appTitle: String = "") {
     fun removeTab(tab: WorkbenchModuleState<*>) {
         reselectState(tab)
         modules.remove(tab)
+        val tabs1 = modules.filter { it.displayType == DisplayType.TAB1 }
+        val tabs2 = modules.filter { it.displayType == DisplayType.TAB2 }
+        if (tabs1.isEmpty() || tabs2.isEmpty()) changeSplitViewMode(SplitViewMode.UNSPLIT)
     }
 
     fun reselectState(state: WorkbenchModuleState<*>) {
@@ -139,15 +145,25 @@ internal class WorkbenchModel(val appTitle: String = "") {
         }
     }
 
-    fun changeSplitViewMode (mode: SplitViewMode) {
+    private fun changeSplitViewMode (mode: SplitViewMode) {
         if (mode == splitViewMode) return
 
         splitViewMode = mode
+
+        val tabs1 = modules.filter { it.displayType == DisplayType.TAB1 }
+        val tabs2 = modules.filter { it.displayType == DisplayType.TAB2 }
+
         if (mode == SplitViewMode.UNSPLIT) {
-            modules.filter { it.displayType == DisplayType.TAB2 }.forEach { it.displayType = DisplayType.TAB1 }
+            val m2 = getSelectedModule(DisplayType.TAB2, ModuleType.EDITOR).value!!
+            reselectState(m2)
+            m2.displayType = DisplayType.TAB1
+            setSelectedModule(m2)
             setSelectedModuleNull(DisplayType.TAB2, ModuleType.EDITOR)
+            tabs2.forEach { it.displayType = DisplayType.TAB1 }
             return
         }
+
+        if (tabs1.isEmpty() && tabs2.size==1 || tabs1.size==1 && tabs2.isEmpty()) return
 
         val m1 = getSelectedModule(DisplayType.TAB1, ModuleType.EDITOR).value
         val m2 = getSelectedModule(DisplayType.TAB2, ModuleType.EDITOR).value

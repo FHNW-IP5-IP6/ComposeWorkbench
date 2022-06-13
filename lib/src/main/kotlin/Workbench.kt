@@ -124,7 +124,7 @@ class Workbench(appTitle: String = "") {
                 model = editor.loader!!.invoke(id),
                 module = editor,
                 close = model::removeTab,
-                displayType = DisplayType.TAB1,
+                displayType = model.currentTabSpace,
                 onClose = onClose,
                 onSave = onSave
             )
