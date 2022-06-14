@@ -128,9 +128,11 @@ internal class WorkbenchModel(val appTitle: String = "") {
     }
 
     fun switchDisplayType(state: WorkbenchModuleState<*>, displayType: DisplayType) {
-        removeTab(state)
+        reselectState(state)
+        modules.remove(state)
         state.displayType = displayType
         addState(state)
+        reselectEditorSpace()
     }
 
     private fun reselectEditorSpace() {
@@ -181,6 +183,7 @@ internal class WorkbenchModel(val appTitle: String = "") {
                 setSelectedModuleNull(DisplayType.TAB2, ModuleType.EDITOR)
             }
             tabs2.forEach { it.displayType = DisplayType.TAB1 }
+            currentTabSpace = DisplayType.TAB1
             return
         }
 
