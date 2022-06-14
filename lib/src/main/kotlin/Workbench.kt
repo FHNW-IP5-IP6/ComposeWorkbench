@@ -1,15 +1,15 @@
+
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.window.application
 import model.WorkbenchModel
-import model.data.*
-import model.data.DisplayType
+import model.data.Command
 import model.data.ModuleType
 import model.data.WorkbenchModule
 import model.data.toDisplayType
 import model.state.WorkbenchDefaultState
 import model.state.WorkbenchModuleState
-import view.WindowSpace
-import view.WorkbenchMainUI
+import view.WorkbenchUI
+import view.conponent.WorkbenchWindow
 
 
 class Workbench(appTitle: String = "") {
@@ -140,13 +140,13 @@ class Workbench(appTitle: String = "") {
         model.dispatchCommands()
 
         // init main window
-        WorkbenchMainUI(model) {
+        WorkbenchUI(model) {
             onExit.invoke()
             exitApplication()
         }
 
-        // render separated windows
-        WindowSpace(model)
+        // init separated windows
+        WorkbenchWindow(model)
     }
 
     internal fun getModel(): WorkbenchModel {

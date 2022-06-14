@@ -4,10 +4,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Scaffold
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.window.Window
 import com.example.ui.theme.NotoSansTypography
 import controller.WorkbenchModuleController
 import model.WorkbenchModel
@@ -19,15 +17,17 @@ import view.themes.DarkColors
 import view.themes.LightColors
 
 @Composable
-internal fun WorkbenchMainUI(model: WorkbenchModel, closeRequest: ()->Unit) {
-    Window(
+internal fun WorkbenchUI(model: WorkbenchModel, closeRequest: ()->Unit) {
+    DragAndDropWindow(
+        model = model,
         onCloseRequest = closeRequest,
-        title = model.appTitle
+        currentWindow = model.mainWindow,
+        moduleReceiver = {
+            model.moduleToWindow(module = it)
+        },
+        windowScope = { workbenchMenuBar(model) }
     ) {
-        workbenchMenuBar(model)
-        DragAndDropContainer(model) {
-            WorkbenchBody(model)
-        }
+        WorkbenchBody(model)
     }
 }
 
@@ -49,7 +49,7 @@ private fun WorkbenchBody(model: WorkbenchModel) {
             Column {
                 BoxWithConstraints {
                     Row(modifier = Modifier.height(maxHeight - bottomExplorerController.getTabRowMinDimension().second)) {
-                        DropTarget(model = model, dropTargetType = DisplayType.LEFT, acceptedType = ModuleType.EXPLORER, moduleReceiver = { leftExplorerController.updateDisplayType(it, DisplayType.LEFT) }) {
+                        DropTarget(controller = leftExplorerController) {
                             WorkbenchTabRow(leftExplorerController)
                         }
                         WorkbenchVerticalSplitPane(splitPaneState = model.bottomSplitState) {
@@ -74,28 +74,10 @@ private fun WorkbenchBody(model: WorkbenchModel) {
                         .height(bottomExplorerController.getTabRowMinDimension().second).padding(start = bottomExplorerController.getTabRowMinDimension().first)
                         .align(Alignment.End)
                 ) {
-                    DropTarget(model = model, dropTargetType = DisplayType.BOTTOM, acceptedType = ModuleType.EXPLORER, moduleReceiver = { bottomExplorerController.updateDisplayType(it, DisplayType.BOTTOM) }) {
+                    DropTarget(controller = bottomExplorerController) {
                         WorkbenchTabRow(bottomExplorerController)
                     }
                 }
-            }
-        }
-    }
-}
-
-@Composable
-internal fun WindowSpace(model: WorkbenchModel){
-    key(model.windows) {
-        for (state in model.windows) {
-            Window(
-                onCloseRequest = {
-                    //TODO: bring back the module on close??
-                    state.moduleState.onClose()
-                    model.windows.remove(state) },
-                title = state.moduleState.getTitle(),
-                state = state.windowState
-            ) {
-                state.moduleState.content()
             }
         }
     }

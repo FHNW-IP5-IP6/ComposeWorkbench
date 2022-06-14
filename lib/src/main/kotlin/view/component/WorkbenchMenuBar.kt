@@ -25,12 +25,12 @@ internal fun FrameWindowScope.workbenchMenuBar(model: WorkbenchModel){
 internal fun MenuScope.MenuDispatcher(menuEntry: MenuEntry){
     for (menuItem in menuEntry.children) {
         if(menuItem is MenuEntry) {
-                Menu(menuItem.text) {
-                    MenuDispatcher(menuItem)
-                }
+            Menu(menuItem.text) {
+                MenuDispatcher(menuItem)
+            }
         }
         else if (menuItem is Command) {
-                Item(menuItem.text, onClick = menuItem.action, shortcut = menuItem.shortcut )
+            Item(menuItem.text, onClick = menuItem.action, shortcut = menuItem.shortcut )
         }
     }
 }

@@ -1,7 +1,7 @@
 package view.component
 
-import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
+import controller.WorkbenchController
 import controller.WorkbenchModuleController
 import model.WorkbenchModel
 import model.data.DisplayType
@@ -27,15 +27,11 @@ internal fun WorkbenchEditorSpace(model: WorkbenchModel){
             WorkbenchVerticalSplitPane(splitPaneState = rememberSplitPaneState(initialPositionPercentage = splitRatio)) {
                 first {
                     EditorSpaceDropTarget(
-                        model = model,
-                        displayType = DisplayType.TAB1,
                         controller = editorTabController1
                     )
                 }
                 second {
                     EditorSpaceDropTarget(
-                        model = model,
-                        displayType = DisplayType.TAB2,
                         controller = editorTabController2,
                     )
                 }
@@ -45,46 +41,29 @@ internal fun WorkbenchEditorSpace(model: WorkbenchModel){
             WorkbenchHorizontalSplitPane(splitPaneState = rememberSplitPaneState(initialPositionPercentage = splitRatio)) {
                 first {
                     EditorSpaceDropTarget(
-                        model = model,
-                        displayType = DisplayType.TAB1,
                         controller = editorTabController1
                     )
                 }
                 second {
                     EditorSpaceDropTarget(
-                        model = model,
-                        displayType = DisplayType.TAB2,
                         controller = editorTabController2
                     )
                 }
             }
         }
         else -> {
-            TabSpace(editorTabController1)
+            EditorSpaceDropTarget(
+                controller = editorTabController1
+            )
         }
     }
 }
 
 @Composable
 private fun EditorSpaceDropTarget(
-    model: WorkbenchModel,
-    controller: WorkbenchModuleController,
-    displayType: DisplayType
+    controller: WorkbenchController
 ){
-    DropTarget(
-        model = model,
-        dropTargetType = displayType,
-        moduleReceiver = {controller.updateDisplayType(it, displayType)},
-        acceptedType = ModuleType.EDITOR
-    ) {
+    DropTarget(controller = controller) {
         TabSpace(controller)
-    }
-}
-
-@Composable
-private fun TabSpace(controller: WorkbenchModuleController){
-    Column {
-        WorkbenchTabRow(controller)
-        WorkbenchTabBody(controller)
     }
 }

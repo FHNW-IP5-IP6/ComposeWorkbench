@@ -5,11 +5,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyShortcut
-import androidx.compose.ui.window.WindowPosition
 import model.data.*
-import model.data.DisplayType
-import model.data.ModuleType
-import model.data.WorkbenchModule
+import model.state.DragState
 import model.state.WindowStateAware
 import model.state.WorkbenchDefaultState
 import model.state.WorkbenchModuleState
@@ -26,8 +23,6 @@ internal class WorkbenchModel(val appTitle: String = "") {
 
     val modules = mutableStateListOf<WorkbenchModuleState<*>>()
     val windows = mutableStateListOf<WindowStateAware>()
-    var previewModule: WorkbenchModuleState<*>? by mutableStateOf(null)
-        private set
 
     var commands = mutableStateListOf<Command>()
     val menu = MenuEntry(MENU_IDENTIFIER_MENU_BAR)
@@ -41,6 +36,9 @@ internal class WorkbenchModel(val appTitle: String = "") {
 
     var bottomSplitState by mutableStateOf(SplitPaneState(moveEnabled = true, initialPositionPercentage = 0.7f))
     var leftSplitState by  mutableStateOf(SplitPaneState(moveEnabled = true, initialPositionPercentage = 0.25f))
+
+    var mainWindow = WindowStateAware(modules = emptyList()) // keeps track of the default window position
+    val dragState = DragState(mainWindow)
 
     private var uniqueKey = 0
 
@@ -92,19 +90,6 @@ internal class WorkbenchModel(val appTitle: String = "") {
             currentTabSpace = state.displayType
     }
 
-    fun updatePreviewModule (state: WorkbenchModuleState<*>) {
-        if(previewModule?.id != state.id){
-            modules.remove(previewModule)
-            previewModule = state
-            modules += state
-        }
-    }
-
-    fun clearPreview() {
-        modules.remove(previewModule)
-        previewModule = null
-    }
-
     fun setSelectedModuleNull (displayType: DisplayType, moduleType: ModuleType) {
         selectedModules[displayType.ordinal][moduleType.ordinal].value = null
         hideDrawer(displayType)
@@ -122,13 +107,12 @@ internal class WorkbenchModel(val appTitle: String = "") {
         reselectEditorSpace()
     }
 
-    fun moduleToWindow(module: WorkbenchModuleState<*>, position: WindowPosition = WindowPosition.PlatformDefault) {
+    fun moduleToWindow(module: WorkbenchModuleState<*>) {
         switchDisplayType(module, DisplayType.WINDOW)
-        windows += WindowStateAware(position = position, moduleState =  module)
+        windows += WindowStateAware(position = dragState.getWindowPosition(), modules = listOf(module))
     }
 
     fun switchDisplayType(state: WorkbenchModuleState<*>, displayType: DisplayType) {
-        reselectState(state)
         modules.remove(state)
         state.displayType = displayType
         addState(state)
@@ -161,7 +145,14 @@ internal class WorkbenchModel(val appTitle: String = "") {
     }
 
     fun saveAll (moduleType: ModuleType) {
-        modules.filter { it.module.moduleType == moduleType }.forEach{
+        saveAll(modules.filter { it.module.moduleType == moduleType })
+        windows.forEach{
+            saveAll(it.modules.filter{ it.module.moduleType == moduleType })
+        }
+    }
+
+    private fun saveAll(modules: List<WorkbenchModuleState<*>>){
+        modules.forEach{
             it.onSave()
         }
     }

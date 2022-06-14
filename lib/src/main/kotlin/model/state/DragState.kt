@@ -4,21 +4,19 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.unit.IntOffset
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.window.WindowPosition
 import model.data.ModuleType
 
 /**
  * objects which holds information about the currently dragged module and its position
  */
-internal object DragState {
+internal class DragState(mainWindow: WindowStateAware) {
     var isDragging: Boolean by mutableStateOf(false)
-    var dragPosition by mutableStateOf(Offset.Zero)
-    var dragOffset by mutableStateOf(Offset.Zero)
     var module: WorkbenchModuleState<*>? = null
-    var isWindow by mutableStateOf(false)
-    var positionOnScreen by mutableStateOf(IntOffset.Zero)
+    var positionOnScreen by mutableStateOf(DpOffset.Zero)
+    var parentWindow: WindowStateAware by mutableStateOf(mainWindow)
+    var onModuleDropped: (WorkbenchModuleState<*>) -> Unit = {}
 
     fun getModuleType(): ModuleType? {
         return module?.module?.moduleType
@@ -26,14 +24,18 @@ internal object DragState {
 
     fun reset(){
         isDragging = false
-        dragPosition = Offset.Zero
-        dragOffset = Offset.Zero
         module = null
-        isWindow = false
-        positionOnScreen = IntOffset.Zero
+        positionOnScreen = DpOffset.Zero
+        onModuleDropped = {}
+    }
+
+    fun toOffset(): Offset{
+        val x = positionOnScreen.x - parentWindow.windowState.position.x
+        val y = positionOnScreen.y - parentWindow.windowState.position.y
+        return Offset(x.value,y.value)
     }
 
     fun getWindowPosition(): WindowPosition {
-        return WindowPosition(x = positionOnScreen.x.dp, y = positionOnScreen.y.dp)
+        return WindowPosition(x = positionOnScreen.x, y = positionOnScreen.y)
     }
 }

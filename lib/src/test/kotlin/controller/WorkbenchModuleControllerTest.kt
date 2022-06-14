@@ -110,7 +110,7 @@ class WorkbenchModuleControllerTest {
 
         sut.moduleSelectorPressed(explorer1)
         assertFalse{ sut.isModuleSelected(explorer1) }
-        assertNull(sut.getSelectedModule().value)
+        assertNull(sut.getSelectedModule())
     }
 
 }
