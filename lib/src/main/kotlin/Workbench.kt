@@ -1,8 +1,11 @@
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.window.application
+import com.hivemq.client.mqtt.mqtt3.message.publish.Mqtt3Publish
+import com.hivemq.embedded.EmbeddedHiveMQ
+import com.hivemq.embedded.EmbeddedHiveMQBuilder
 import model.WorkbenchModel
-import model.data.Command
+import model.data.*
 import model.data.ModuleType
 import model.data.WorkbenchModule
 import model.data.toDisplayType
@@ -10,11 +13,32 @@ import model.state.WorkbenchDefaultState
 import model.state.WorkbenchModuleState
 import view.WorkbenchUI
 import view.conponent.WorkbenchWindow
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
 
 
-class Workbench(appTitle: String = "") {
+class Workbench(appTitle: String = "", enableMQ: Boolean = false) {
 
     private val model: WorkbenchModel = WorkbenchModel(appTitle)
+
+    // HiveMQ infrastructure
+
+    private var hiveMQ: EmbeddedHiveMQ? = null
+    init {
+        if (enableMQ) {
+            try {
+                val embeddedHiveMQBuilder: EmbeddedHiveMQBuilder = EmbeddedHiveMQ.builder()
+                hiveMQ = embeddedHiveMQBuilder.build()
+                hiveMQ!!.start().join()
+            } catch (ex: Exception) {
+                ex.printStackTrace()
+            }
+
+            // subscribe for available topics to log
+            val logMQClient = MQClient("ComposeWorkbenchLog")
+            logMQClient.subscribe(MQ_INTERNAL_TOPIC_PATH_EDITOR, ::logMQ, Executors.newSingleThreadExecutor())
+        }
+    }
 
     /**
      * Add an explorer for a given Type to the Workbench
@@ -142,6 +166,7 @@ class Workbench(appTitle: String = "") {
         // init main window
         WorkbenchUI(model) {
             onExit.invoke()
+            stopMQBroker()
             exitApplication()
         }
 
@@ -152,4 +177,18 @@ class Workbench(appTitle: String = "") {
     internal fun getModel(): WorkbenchModel {
         return model
     }
+
+    private fun stopMQBroker() {
+        try {
+            hiveMQ?.stop()?.join();
+        } catch (ex: Exception ) {
+            ex.printStackTrace();
+        }
+    }
+
+    private fun logMQ(msg: String) {
+        println("Log-MQ: $msg")
+    }
+
+
 }

@@ -9,6 +9,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.WindowPosition
 import androidx.compose.ui.window.WindowState
 import model.data.DisplayType
+import model.data.MQClient
 import model.data.WorkbenchModule
 
 internal class WorkbenchModuleState <M> (
@@ -23,6 +24,7 @@ internal class WorkbenchModuleState <M> (
     val onSave: (M) -> Unit = {},
     )
 {
+    private var client: MQClient = MQClient(id.toString())
 
     /**
      * creates a preview module from the given state
@@ -31,11 +33,16 @@ internal class WorkbenchModuleState <M> (
         id: Int,
         state: WorkbenchModuleState<M>,
         displayType: DisplayType)
-            : this(id, state.title, state.model, state.module, {}, displayType, true, {}, {})
+            : this(id, state.title, state.model, state.module, {}, displayType, true, {}, {}) {}
+
+    init {
+        client.publish("Module created.")
+    }
 
     fun onClose() {
         onClose(model)
         close(this)
+        client.publish("Module closed.")
     }
 
     fun getTitle() : String {

@@ -104,7 +104,7 @@ internal fun DropTarget(
             isCurrentDropTarget = getBounds(false, controller.getWindow(),  it.boundsInWindow(), density).contains(Offset(pos.x.value, pos.y.value))
         }) {
             val isValidTarget = module != null && getModuleType() == controller.moduleType && !controller.containsModule(module!!)
-            println("isValid ${controller.displayType}, $isValidTarget")
+            // println("isValid ${controller.displayType}, $isValidTarget")
             if (isCurrentDropTarget && isValidTarget){
                 controller.previewState.previewTitle = module!!.getTitle()
             } else {

@@ -11,3 +11,9 @@ internal const val SPLIT_PAIN_HANDLE_ALPHA = 0.50f
 
 internal const val MENU_IDENTIFIER_MENU_BAR = "MenuBar"
 
+internal const val MQ_INTERNAL_BROKER_IP_ADDRESS = "0.0.0.0"
+internal const val MQ_INTERNAL_BROKER_PORT = 1883
+private const val MQ_INTERNAL_PREFIX = "workbench"
+private const val MQ_INTERNAL_TOPIC_EDITOR = "editors"
+internal const val MQ_INTERNAL_TOPIC_PATH_EDITOR = "$MQ_INTERNAL_PREFIX/$MQ_INTERNAL_TOPIC_EDITOR"
+
