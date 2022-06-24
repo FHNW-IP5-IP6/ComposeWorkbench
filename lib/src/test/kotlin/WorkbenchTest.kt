@@ -14,29 +14,29 @@ internal class WorkbenchTest{
 
     @Test
     fun registerExplorer() {
-        sut.registerExplorer<String>(type = "String"){}
+        sut.registerExplorer<String>(type = "String", title = { "title" }){}
         assertEquals(1, sut.getModel().registeredExplorers.size)
     }
 
     @Test
     fun registerEditor() {
-        sut.registerEditor<String>(type = "String", loader = {"test"}){}
+        sut.registerEditor<String>(type = "String", loader = {"test"}, title = { "title" }){}
         assertEquals(1, sut.getModel().registeredEditors.size)
     }
 
     @Test
     fun openExplorer() {
-        sut.registerExplorer<String>(type = "String"){}
+        sut.registerExplorer<String>(type = "String", title = { "title" }){}
         val model = "value"
-        sut.requestExplorer<String>("String", {"String Explorer"}, model)
+        sut.requestExplorer<String>("String", model)
         assertEquals(1, sut.getModel().modules.size)
     }
 
     @Test
     fun openEditor() {
-        sut.registerEditor<String>(type = "String", loader = {"test"}){}
+        sut.registerEditor<String>(type = "String", loader = {"test"}, title = { "title" }){}
         val model = "value"
-        sut.requestEditor<String>("String", {"String Editor"}, 0)
+        sut.requestEditor<String>("String", 0)
         assertEquals(1, sut.getModel().modules.size)
     }
 

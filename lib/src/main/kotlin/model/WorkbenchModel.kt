@@ -29,7 +29,7 @@ internal class WorkbenchModel(val appTitle: String = "") {
 
     val registeredExplorers = mutableMapOf<String, WorkbenchModule<*>>()
     val registeredDefaultExplorers = mutableMapOf<Int, WorkbenchDefaultState<*>>()
-    val registeredEditors = mutableMapOf<String, WorkbenchModule<*>>()
+    val registeredEditors = mutableMapOf<String, MutableList<WorkbenchModule<*>>>()
 
     var splitViewMode by mutableStateOf(SplitViewMode.UNSPLIT)
     var currentTabSpace = DisplayType.TAB1
@@ -71,11 +71,22 @@ internal class WorkbenchModel(val appTitle: String = "") {
 
     fun getNextKey():Int = uniqueKey++
 
+    fun registerEditor(key: String, editor: WorkbenchModule<*>){
+        var editors = registeredEditors[key]
+        when (editors) {
+            null -> registeredEditors[key] = mutableListOf(editor)
+            else -> {
+                editors += editor
+                registeredEditors[key] = editors
+            }
+        }
+    }
+
     @Suppress("UNCHECKED_CAST")
     fun createExplorerFromDefault (id: Int) {
         val defaultState = if(registeredDefaultExplorers[id] != null) registeredDefaultExplorers[id]!!as WorkbenchDefaultState<Any> else return
         val explorer = registeredExplorers[defaultState.type] as WorkbenchModule<Any>
-        val state = WorkbenchModuleState(id, defaultState.title, defaultState.model, explorer, ::removeTab, DisplayType.LEFT)
+        val state = WorkbenchModuleState(id = id, model = defaultState.model, module = explorer, close = ::removeTab, displayType = DisplayType.LEFT)
         addState(state)
     }
 
@@ -112,10 +123,14 @@ internal class WorkbenchModel(val appTitle: String = "") {
         windows += WindowStateAware(position = dragState.getWindowPosition(), modules = listOf(module))
     }
 
-    fun switchDisplayType(state: WorkbenchModuleState<*>, displayType: DisplayType) {
+    fun updateModuleState(state: WorkbenchModuleState<*>, updater: (WorkbenchModuleState<*>) -> Unit){
         modules.remove(state)
-        state.displayType = displayType
+        updater.invoke(state)
         addState(state)
+    }
+
+    fun switchDisplayType(state: WorkbenchModuleState<*>, displayType: DisplayType) {
+        updateModuleState(state) {it.displayType = displayType}
         reselectEditorSpace()
     }
 

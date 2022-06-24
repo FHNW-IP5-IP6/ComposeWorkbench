@@ -23,7 +23,7 @@ internal fun WorkbenchWindow(model: WorkbenchModel){
                 model = model,
                 moduleReceiver = { controller.convertToWindow(it) },
                 onCloseRequest =  {
-                    state.modules.forEach { it.onClose }
+                    state.modules.forEach { it.module.onClose }
                     model.windows.remove(state) },
                 currentWindow = state
             ){

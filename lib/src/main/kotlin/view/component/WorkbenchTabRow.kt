@@ -1,10 +1,7 @@
 package view.component
 
 import androidx.compose.foundation.*
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
@@ -17,9 +14,11 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import controller.WorkbenchController
 import model.state.WorkbenchModuleState
@@ -57,10 +56,18 @@ internal fun WorkbenchTabRow(controller: WorkbenchController) {
  */
 @Composable
 internal fun WorkbenchTabBody(controller: WorkbenchController) {
-    Box {
-        controller.getSelectedModule()?.content()
+    BoxWithConstraints {
+        val contentSize = controller.getContentDimension(DpSize(maxWidth, maxHeight))
+        Column(modifier = Modifier.size(maxWidth, maxHeight).clipToBounds()) {
+            //The content is strictly sized, because a proper sizing and layout is not guaranteed by the users
+            Box(modifier = Modifier.size(contentSize).fillMaxWidth()) {
+                controller.getSelectedModule()?.content()
+            }
+            WorkbenchEditorSelector(model = controller.model, state = controller.getSelectedModule())
+        }
     }
 }
+
 
 @Composable
 private fun HorizontalWorkbenchTabRow(controller: WorkbenchController) {

@@ -19,6 +19,7 @@ dependencies {
     implementation("org.jetbrains.exposed:exposed-dao:$exposedVersion")
     implementation("org.jetbrains.exposed:exposed-jdbc:$exposedVersion")
     implementation("org.xerial:sqlite-jdbc:$sqliteVersion")
+    implementation("org.jxmapviewer:jxmapviewer2:2.6")
 }
 
 tasks.withType<KotlinCompile> {

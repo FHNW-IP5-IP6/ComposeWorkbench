@@ -38,28 +38,28 @@ fun getSmallCities(): CitiesState {
     val dbRead = { transaction((DbSettings.citiesDb)) {
         City.find { population less 10000 and(population greater 0) }.toList()
     }}
-    return CitiesState(dbRead(), dbRead)
+    return CitiesState("Small Cities", dbRead(), dbRead)
 }
 
 fun getBigCities(): CitiesState {
     val dbRead = { transaction((DbSettings.citiesDb)) {
         City.find { population greater 10000000 }.toList()
     }}
-    return CitiesState(dbRead(), dbRead)
+    return CitiesState("Big Cities", dbRead(), dbRead)
 }
 
 fun getSwissCities(): CitiesState {
     val dbRead = { transaction(DbSettings.citiesDb) {
         City.find { countryCode eq "CH" }.toList()
     }}
-    return CitiesState(dbRead(), dbRead)
+    return CitiesState("Swiss Cities", dbRead(), dbRead)
 }
 
 fun getGermanCities(): CitiesState {
     val dbRead = { transaction(DbSettings.citiesDb) {
         City.find { countryCode eq "DE" }.toList()
     }}
-    return CitiesState(dbRead(), dbRead)
+    return CitiesState("German Cities", dbRead(), dbRead)
 }
 
 @Composable
@@ -102,10 +102,15 @@ fun RowScope.TableCell(
  * Explorer Specific DB Objects.
  */
 class CitiesState(
+    private val title: String,
     private val cities: List<City>,
     private val reload: () -> List<City> ) {
 
     var state by mutableStateOf(cities)
+
+    fun title(): String{
+         return "$title ${cities.size}"
+    }
 
     fun reload(){
         state = reload.invoke()

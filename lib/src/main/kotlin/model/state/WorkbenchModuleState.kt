@@ -14,16 +14,13 @@ import model.data.WorkbenchModule
 
 internal class WorkbenchModuleState <M> (
     val id: Int,
-    val title: (M) -> String,
-    val model: M,
-    val module: WorkbenchModule<M>,
+    val dataId: Int? = null,
+    var model: M,
+    var module: WorkbenchModule<M>,
     var close: (WorkbenchModuleState<*>) -> Unit = {},
     var displayType: DisplayType,
-    var isPreview: Boolean = false,
-    val onClose: (M) -> Unit = {},
-    val onSave: (M) -> Unit = {},
-    )
-{
+    var isPreview: Boolean = false
+){
     private var client: MQClient = MQClient(id.toString())
 
     /**
@@ -33,23 +30,29 @@ internal class WorkbenchModuleState <M> (
         id: Int,
         state: WorkbenchModuleState<M>,
         displayType: DisplayType)
-            : this(id, state.title, state.model, state.module, {}, displayType, true, {}, {}) {}
+            : this(id, state.dataId, state.model, state.module, {}, displayType, true) {}
 
     init {
         client.publish("Module created.")
     }
 
+    fun updateModule(module: WorkbenchModule<*>){
+        module as WorkbenchModule<M>
+        this.module = module
+        model = module.loader!!.invoke(dataId!!)
+    }
+
     fun onClose() {
-        onClose(model)
+        module.onClose(model)
         close(this)
         client.publish("Module closed.")
     }
 
     fun getTitle() : String {
-        return title(model)
+        return module.title(model)
     }
 
-    fun onSave() = onSave(model)
+    fun onSave() = module.onSave(model)
 
     @Composable
     fun content() = module.content(model)

@@ -2,6 +2,7 @@ import androidx.compose.ui.unit.dp
 
 internal const val TAB_ROW_HEIGHT = 45f
 internal const val TAB_ROW_WIDTH = 60f
+internal val ICON_ROW_HEIGHT = 25.dp
 
 internal val MAIN_WINDOW_POS_OFFSET = 50.dp
 

@@ -27,8 +27,8 @@ internal class WorkbenchModelTest {
 
     @Test
     fun setShowAndHideDrawer() {
-        val module = WorkbenchModule<String>(ModuleType.EXPLORER,"type") {}
-        val moduleState = WorkbenchModuleState<String>(id = 1, title ={"title"}, model = "model", module = module, displayType = DisplayType.LEFT){}
+        val module = WorkbenchModule<String>(ModuleType.EXPLORER,"type", title = {"title"}) {}
+        val moduleState = WorkbenchModuleState<String>(id = 1, model = "model", module = module, displayType = DisplayType.LEFT)
         sut.modules += moduleState
 
         sut.setSelectedModule(moduleState)
@@ -42,10 +42,10 @@ internal class WorkbenchModelTest {
 
     @Test
     fun reselectState_StateIsSelected() {
-        val module = WorkbenchModule<String>(ModuleType.EXPLORER,"type") {}
-        val moduleState1 = WorkbenchModuleState<String>(id = 1, title ={"title1"}, model = "model", module = module, displayType = DisplayType.LEFT){}
-        val moduleState2 = WorkbenchModuleState<String>(id = 2, title ={"title2"}, model = "model", module = module, displayType = DisplayType.LEFT){}
-        val moduleState3 = WorkbenchModuleState<String>(id = 3, title ={"title3"}, model = "model", module = module, displayType = DisplayType.LEFT){}
+        val module = WorkbenchModule<String>(ModuleType.EXPLORER,"type", title = {"title"}) {}
+        val moduleState1 = WorkbenchModuleState<String>(id = 1, model = "model", module = module, displayType = DisplayType.LEFT)
+        val moduleState2 = WorkbenchModuleState<String>(id = 2, model = "model", module = module, displayType = DisplayType.LEFT)
+        val moduleState3 = WorkbenchModuleState<String>(id = 3, model = "model", module = module, displayType = DisplayType.LEFT)
         sut.modules += moduleState1
         sut.modules += moduleState2
         sut.modules += moduleState3
@@ -60,10 +60,10 @@ internal class WorkbenchModelTest {
 
     @Test
     fun reselectState_StateNotSelected() {
-        val module = WorkbenchModule<String>(ModuleType.EXPLORER,"type") {}
-        val moduleState1 = WorkbenchModuleState<String>(id = 1, title ={"title1"}, model = "model", module = module, displayType = DisplayType.LEFT){}
-        val moduleState2 = WorkbenchModuleState<String>(id = 2, title ={"title2"}, model = "model", module = module, displayType = DisplayType.LEFT){}
-        val moduleState3 = WorkbenchModuleState<String>(id = 3, title ={"title3"}, model = "model", module = module, displayType = DisplayType.LEFT){}
+        val module = WorkbenchModule<String>(ModuleType.EXPLORER,"type", title = {"title"}) {}
+        val moduleState1 = WorkbenchModuleState<String>(id = 1, model = "model", module = module, displayType = DisplayType.LEFT)
+        val moduleState2 = WorkbenchModuleState<String>(id = 2, model = "model", module = module, displayType = DisplayType.LEFT)
+        val moduleState3 = WorkbenchModuleState<String>(id = 3, model = "model", module = module, displayType = DisplayType.LEFT)
         sut.modules += moduleState1
         sut.modules += moduleState2
         sut.modules += moduleState3

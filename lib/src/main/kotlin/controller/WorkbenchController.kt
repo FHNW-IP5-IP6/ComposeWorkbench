@@ -1,8 +1,10 @@
 package controller
 
+import ICON_ROW_HEIGHT
 import TAB_ROW_HEIGHT
 import TAB_ROW_WIDTH
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import model.WorkbenchModel
 import model.data.DisplayType
@@ -51,6 +53,13 @@ internal interface WorkbenchController {
             return Pair(TAB_ROW_WIDTH.dp, TAB_ROW_HEIGHT.dp)
         }
         return Pair(4.dp, 4.dp)
+    }
+
+    fun getContentDimension(maxSize: DpSize): DpSize {
+        return when(moduleType) {
+            ModuleType.EXPLORER -> maxSize
+            ModuleType.EDITOR -> DpSize(maxSize.width, maxSize.height - ICON_ROW_HEIGHT)
+        }
     }
 
     fun containsModule(module: WorkbenchModuleState<*>): Boolean{

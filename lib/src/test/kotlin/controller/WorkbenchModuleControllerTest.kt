@@ -34,24 +34,23 @@ class WorkbenchModuleControllerTest {
 
     @Test
     fun getIndex_NoExplorers() {
-        workbench.registerExplorer<String>(type = "String"){}
+        workbench.registerExplorer<String>(type = "String", title = {"title"}){}
         val model = "value"
-        workbench.requestExplorer<String>("String", {"title"}, model)
+        workbench.requestExplorer<String>("String", model)
         val explorer = workbench.getModel().modules[0]
         assertEquals(0, sut.getIndex(explorer))
     }
 
     @Test
     fun getIndex_OneExplorerNotInList() {
-        workbench.registerExplorer<String>(type = "String"){}
+        workbench.registerExplorer<String>(type = "String", title = {"title"}){}
         val model = "value"
-        workbench.requestExplorer<String>("String", {"title"}, model)
+        workbench.requestExplorer<String>("String", model)
 
         val explorer2 = WorkbenchModuleState<String>(
             id = 1,
-            title ={"title 2"},
             model = "model",
-            module = WorkbenchModule(moduleType, "String"){},
+            module = WorkbenchModule(moduleType = moduleType, modelType = "String", title = {"title"}){},
             displayType = displayType
         )
 
@@ -60,9 +59,9 @@ class WorkbenchModuleControllerTest {
 
     @Test
     fun getIndex_ExplorerInList() {
-        workbench.registerExplorer<String>(type = "String"){}
-        workbench.requestExplorer<String>("String", {"title"}, "model1")
-        workbench.requestExplorer<String>("String", {"title 2"}, "model2")
+        workbench.registerExplorer<String>(type = "String", title = {"title"}){}
+        workbench.requestExplorer<String>("String", "model1")
+        workbench.requestExplorer<String>("String", "model2")
 
         val explorer1 = workbench.getModel().modules[0]
         val explorer2 = workbench.getModel().modules[1]
@@ -73,9 +72,9 @@ class WorkbenchModuleControllerTest {
 
     @Test
     fun explorerSelectorPresser_NoExplorerSelected(){
-        workbench.registerExplorer<String>(type = "String"){}
-        workbench.requestExplorer<String>("String", {"title"}, "model1")
-        workbench.requestExplorer<String>("String", {"title 2"}, "model2")
+        workbench.registerExplorer<String>(type = "String", title = {"title"}){}
+        workbench.requestExplorer<String>("String","model1")
+        workbench.requestExplorer<String>("String","model2")
 
         val explorer1 = workbench.getModel().modules[0]
 
@@ -87,9 +86,9 @@ class WorkbenchModuleControllerTest {
 
     @Test
     fun explorerSelectorPresser_DifferentExplorerSelected(){
-        workbench.registerExplorer<String>(type = "String"){}
-        workbench.requestExplorer<String>("String", {"title"}, "model1")
-        workbench.requestExplorer<String>("String", {"title 2"}, "model2")
+        workbench.registerExplorer<String>(type = "String", title = {"title"}){}
+        workbench.requestExplorer<String>("String","model1")
+        workbench.requestExplorer<String>("String","model2")
 
         val explorer1 = workbench.getModel().modules[0]
         val explorer2 = workbench.getModel().modules[1]
@@ -102,9 +101,9 @@ class WorkbenchModuleControllerTest {
 
     @Test
     fun explorerSelectorPresser_ExplorerIsSelected(){
-        workbench.registerExplorer<String>(type = "String"){}
+        workbench.registerExplorer<String>(type = "String", title = {"title"}){}
         val model = "value"
-        workbench.requestExplorer<String>("String", {"title"}, model)
+        workbench.requestExplorer<String>("String", model)
 
         val explorer1 = workbench.getModel().modules[0]
 
