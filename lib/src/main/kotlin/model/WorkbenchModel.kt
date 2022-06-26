@@ -1,6 +1,7 @@
 package model
 
-import MENU_IDENTIFIER_MENU_BAR
+import COMMAND_IDENTIFIER_MENU_BAR
+import COMMAND_IDENTIFIER_MENU_COLLAPSIBLE
 import androidx.compose.runtime.*
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.input.key.Key
@@ -24,8 +25,8 @@ internal class WorkbenchModel(val appTitle: String = "") {
     val modules = mutableStateListOf<WorkbenchModuleState<*>>()
     val windows = mutableStateListOf<WindowStateAware>()
 
-    var commands = mutableStateListOf<Command>()
-    val menu = MenuEntry(MENU_IDENTIFIER_MENU_BAR)
+    private var commands = mutableStateListOf<Command>()
+    internal var commandsMenus = mutableMapOf<String, MenuEntry>()
 
     val registeredExplorers = mutableMapOf<String, WorkbenchModule<*>>()
     val registeredDefaultExplorers = mutableMapOf<Int, WorkbenchDefaultState<*>>()
@@ -46,22 +47,22 @@ internal class WorkbenchModel(val appTitle: String = "") {
         commands.addAll(
             listOf(
                 Command(text = "Save All",
-                    path = "$MENU_IDENTIFIER_MENU_BAR.File",
+                    paths = mutableListOf("$COMMAND_IDENTIFIER_MENU_BAR.File"),
                     action = { saveAll(ModuleType.EDITOR) },
                     shortcut = KeyShortcut(Key.S, ctrl = true, alt = true)
                 ),
                 Command(text = "Horizontal",
-                    path = "$MENU_IDENTIFIER_MENU_BAR.View.Split TabSpace",
+                    paths = mutableListOf("$COMMAND_IDENTIFIER_MENU_BAR.View.Split TabSpace"),
                     action = { changeSplitViewMode(SplitViewMode.HORIZONTAL) },
                     shortcut = KeyShortcut(Key.H , ctrl = true, shift = true)
                 ),
                 Command(text = "Vertical",
-                    path = "$MENU_IDENTIFIER_MENU_BAR.View.Split TabSpace",
+                    paths = mutableListOf("$COMMAND_IDENTIFIER_MENU_BAR.View.Split TabSpace"),
                     action = { changeSplitViewMode(SplitViewMode.VERTICAL) },
                     shortcut = KeyShortcut(Key.V , ctrl = true, shift = true)
                 ),
                 Command(text = "Unsplit",
-                    path = "$MENU_IDENTIFIER_MENU_BAR.View.Split TabSpace",
+                    paths = mutableListOf("$COMMAND_IDENTIFIER_MENU_BAR.View.Split TabSpace"),
                     action = { changeSplitViewMode(SplitViewMode.UNSPLIT) },
                     shortcut = KeyShortcut(Key.U , ctrl = true, shift = true)
                 ),
@@ -161,7 +162,7 @@ internal class WorkbenchModel(val appTitle: String = "") {
 
     fun saveAll (moduleType: ModuleType) {
         saveAll(modules.filter { it.module.moduleType == moduleType })
-        windows.forEach{
+        windows.forEach{ it ->
             saveAll(it.modules.filter{ it.module.moduleType == moduleType })
         }
     }
@@ -226,20 +227,30 @@ internal class WorkbenchModel(val appTitle: String = "") {
     }
 
     fun dispatchCommands() {
-        var m = menu
+        commandsMenus[COMMAND_IDENTIFIER_MENU_BAR] = MenuEntry(COMMAND_IDENTIFIER_MENU_BAR)
+        commandsMenus[COMMAND_IDENTIFIER_MENU_COLLAPSIBLE] = MenuEntry(COMMAND_IDENTIFIER_MENU_COLLAPSIBLE)
+
+        var m: MenuEntry = commandsMenus[COMMAND_IDENTIFIER_MENU_BAR]!!
         for (c in commands) {
-            val path = c.path.split(".")
-            if (path.size > 4) return
-            for (i in path.indices) {
-                if (i==0 && path[0] != MENU_IDENTIFIER_MENU_BAR) break
-                m = if (i==0) {
-                    menu
-                } else {
-                    m.getMenu(path[i])
+            for (path in c.paths) {
+                val pathSplit = path.split(".")
+                if (pathSplit.size > 4 || pathSplit.isEmpty()) return
+                for (i in pathSplit.indices) {
+                    if (i == 0 && commandsMenus[pathSplit[0]] == null) break
+                    m = if (i == 0) {
+                        commandsMenus[pathSplit[0]]!!
+                    } else {
+                        m.getMenu(pathSplit[i])
+                    }
                 }
+                m.children.add(c)
+                m.children.sortBy { it.index }
             }
-            m.children.add(c)
         }
+    }
+
+    fun addCommand(command: Command) {
+        commands.add(command)
     }
 }
 

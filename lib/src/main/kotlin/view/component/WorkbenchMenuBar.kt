@@ -1,5 +1,6 @@
 package view.component
 
+import COMMAND_IDENTIFIER_MENU_BAR
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.window.FrameWindowScope
 import androidx.compose.ui.window.MenuBar
@@ -11,7 +12,7 @@ import model.data.MenuEntry
 @Composable
 internal fun FrameWindowScope.workbenchMenuBar(model: WorkbenchModel){
     MenuBar {
-        model.menu.children.forEach {
+        model.commandsMenus[COMMAND_IDENTIFIER_MENU_BAR]!!.children.forEach {
             if (it is MenuEntry) {
                 Menu(it.text) {
                     MenuDispatcher(it)

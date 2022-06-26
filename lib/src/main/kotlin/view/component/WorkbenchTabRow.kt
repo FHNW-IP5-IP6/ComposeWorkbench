@@ -12,7 +12,6 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.drawBehind
@@ -120,15 +119,15 @@ private fun LazyListScope.WorkbenchTabs(controller: WorkbenchController) {
 
 @OptIn(ExperimentalFoundationApi::class)
 private fun LazyListScope.preview(controller: WorkbenchController) {
-    stickyHeader() {
+    stickyHeader {
         if(controller.previewState.hasPreview()){
             val writerModifier = getTabModifier(controller, true) {}
-            WorkbenchTab(writerModifier, controller.previewState.previewTitle!!, {})
+            WorkbenchTab(writerModifier, controller.previewState.previewTitle!!) {}
         }
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class, ExperimentalComposeUiApi::class)
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun WorkbenchTab(tab: WorkbenchModuleState<*>, controller: WorkbenchController, selected: Boolean, onClick: ()->Unit) {
     val writerModifier = getTabModifier(controller, selected, onClick)
@@ -184,10 +183,10 @@ private fun getTabModifier(controller: WorkbenchController, selected: Boolean, o
                 val height = size.height
                 val width = size.width
                 val strokeWidth = 10f
-                val ypos = height - (strokeWidth/2)
+                val yPos = height - (strokeWidth/2)
                 drawLine(
-                    start = Offset(x = 0f, y = ypos),
-                    end = Offset(x = width, y = ypos),
+                    start = Offset(x = 0f, y = yPos),
+                    end = Offset(x = width, y = yPos),
                     color = contentColor,
                     strokeWidth = strokeWidth
                 )

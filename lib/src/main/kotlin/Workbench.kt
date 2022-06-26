@@ -124,9 +124,12 @@ class Workbench(appTitle: String = "", enableMQ: Boolean = false) {
             }
             if (default) {
                 model.registeredDefaultExplorers[id] = WorkbenchDefaultState(type, m, explorer.title)
-                model.commands.add(Command(
+                model.addCommand(Command(
                     text = model.registeredDefaultExplorers[id]!!.getTitle(),
-                    path = "$MENU_IDENTIFIER_MENU_BAR.View.Default Explorers",
+                    paths = mutableListOf(
+                        "$COMMAND_IDENTIFIER_MENU_BAR.View.Default Explorers",
+                        "$COMMAND_IDENTIFIER_MENU_COLLAPSIBLE"
+                    ),
                     action = { model.createExplorerFromDefault(id) }
                 ))
             }
@@ -134,7 +137,7 @@ class Workbench(appTitle: String = "", enableMQ: Boolean = false) {
     }
 
 
-    //TODO: Remove type info here move everithing to the module -> title and on close on save
+    //TODO: Remove type info here move everything to the module -> title and on close on save
     /**
      * Edit given Model with editor of given type
      *
@@ -182,9 +185,9 @@ class Workbench(appTitle: String = "", enableMQ: Boolean = false) {
 
     private fun stopMQBroker() {
         try {
-            hiveMQ?.stop()?.join();
+            hiveMQ?.stop()?.join()
         } catch (ex: Exception ) {
-            ex.printStackTrace();
+            ex.printStackTrace()
         }
     }
 

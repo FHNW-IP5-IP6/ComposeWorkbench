@@ -4,13 +4,14 @@ import androidx.compose.material.darkColors
 import androidx.compose.material.lightColors
 import androidx.compose.ui.graphics.Color
 
-    private val DarkBlue = Color(0xff182260)
-    private val CornflowerBlue = Color(0xff0069e0)
-    private val LightColdBlue = Color(0xff8fd3d8)
-    private val FlamingoPink = Color(0xffF76c6c)
-    private val SmokeWhite = Color(0xfff5f5f5)
-    private val DarkGrey = Color(0xff333333)
-    private val LightGrey = Color(0xfff4f4f4)
+    val DarkBlue = Color(0xff182260)
+    val CornflowerBlue = Color(0xff0069e0)
+    val LightColdBlue = Color(0xff8fd3d8)
+    val FlamingoPink = Color(0xffF76c6c)
+    val SmokeWhite = Color(0xfff5f5f5)
+    val DarkGrey = Color(0xff333333)
+    val LightGrey = Color(0xfff4f4f4)
+    val SlightlyGrey = Color(0xffc0c0c0)
 
     val DarkColors = darkColors(
         primary = CornflowerBlue,
