@@ -15,6 +15,7 @@ import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import org.jxmapviewer.JXMapViewer
 import org.jxmapviewer.OSMTileFactoryInfo
+import org.jxmapviewer.input.PanMouseInputListener
 import org.jxmapviewer.viewer.DefaultTileFactory
 import org.jxmapviewer.viewer.GeoPosition
 import org.jxmapviewer.viewer.TileFactoryInfo
@@ -58,6 +59,7 @@ fun CityMapEditorUi(model: CityLocationState){
             }
             IconButton(onClick = {
                     val center = map!!.centerPosition
+                    println(center)
                     model.longitude = center.longitude
                     model.latitude = center.latitude
                 },
@@ -74,7 +76,11 @@ fun createMap() : JXMapViewer {
     val info: TileFactoryInfo = OSMTileFactoryInfo()
     val tileFactory = DefaultTileFactory(info)
     mapViewer.tileFactory = tileFactory
-
     mapViewer.zoom = 5
+
+    val listener = PanMouseInputListener(mapViewer)
+    mapViewer.addMouseListener(listener)
+    mapViewer.addMouseMotionListener(listener)
+
     return mapViewer
 }

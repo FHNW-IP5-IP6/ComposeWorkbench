@@ -12,22 +12,25 @@ fun main() {
         loader = {getCityState(it)},
         icon = Icons.Default.Edit,
         title = { it.name },
-        onSave = { it.persist() }
-        ) {
+        onSave = {
+            it.persist() //TODO: replace with message to explorer}
+            explorerModel.forEach { m -> m.reload() }
+        }
+    ){
             m -> CityEditorUi(m)
-            explorerModel.forEach{ it.reload() }
-            //TODO: replace with message to explorer
     }
 
     workbench.registerEditor<CityLocationState>(type = "City",
         loader = {getCityLocationState(it)},
         icon = Icons.Default.Home,
         title = { it.name },
-        onSave = { it.persist() }
-        ) {
+        onSave = {
+            it.persist()
+            //TODO: replace with message to explorer}
+            explorerModel.forEach { m -> m.reload() }
+        }
+    ){
             m -> CityMapEditorUi(m)
-            explorerModel.forEach{ it.reload() }
-            //TODO: replace with message to explorer
     }
 
     workbench.registerExplorer<CitiesState>(type = "Cities", title = { it.title() }
@@ -42,4 +45,5 @@ fun main() {
     workbench.requestExplorer("Cities", explorerModel[2], false, ExplorerLocation.BOTTOM)
     workbench.requestExplorer("Cities", explorerModel[3], true, ExplorerLocation.BOTTOM, false)
     workbench.run { println("Exit my Compose Workbench App") }
+
 }
