@@ -1,7 +1,6 @@
 package view.component
 
 
-import COMMAND_IDENTIFIER_MENU_COLLAPSIBLE
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
@@ -11,6 +10,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import model.WorkbenchModel
+import model.data.MenuType
 import model.data.ModuleType
 import util.selectedButtonColors
 
@@ -23,8 +23,7 @@ internal fun WorkbenchAppBar(model: WorkbenchModel) {
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            //MenuEntry(true, model.commandsMenuBar)
-            WBMenu(model.commandsMenus[COMMAND_IDENTIFIER_MENU_COLLAPSIBLE]!!, Icons.Default.Menu)
+            WBMenu(model.commandsMenus[MenuType.MenuAppBar]!!, Icons.Default.Menu)
             Text(
                 model.appTitle,
                 fontSize = MaterialTheme.typography.h4.fontSize,

@@ -1,7 +1,5 @@
 package model
 
-import COMMAND_IDENTIFIER_MENU_BAR
-import COMMAND_IDENTIFIER_MENU_COLLAPSIBLE
 import androidx.compose.runtime.*
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.input.key.Key
@@ -26,7 +24,12 @@ internal class WorkbenchModel(val appTitle: String = "") {
     val windows = mutableStateListOf<WindowStateAware>()
 
     private var commands = mutableStateListOf<Command>()
-    internal var commandsMenus = mutableMapOf<String, MenuEntry>()
+    internal var commandsMenus = mutableMapOf<MenuType, MenuEntry>()
+    init {
+        MenuType.values().forEach {
+            commandsMenus[it] = MenuEntry(it.name)
+        }
+    }
 
     val registeredExplorers = mutableMapOf<String, WorkbenchModule<*>>()
     val registeredDefaultExplorers = mutableMapOf<Int, WorkbenchDefaultState<*>>()
@@ -47,22 +50,22 @@ internal class WorkbenchModel(val appTitle: String = "") {
         commands.addAll(
             listOf(
                 Command(text = "Save All",
-                    paths = mutableListOf("$COMMAND_IDENTIFIER_MENU_BAR.File"),
+                    paths = mutableListOf("${MenuType.MenuBar.name}.File"),
                     action = { saveAll(ModuleType.EDITOR) },
                     shortcut = KeyShortcut(Key.S, ctrl = true, alt = true)
                 ),
                 Command(text = "Horizontal",
-                    paths = mutableListOf("$COMMAND_IDENTIFIER_MENU_BAR.View.Split TabSpace"),
+                    paths = mutableListOf("${MenuType.MenuBar.name}.View.Split TabSpace"),
                     action = { changeSplitViewMode(SplitViewMode.HORIZONTAL) },
                     shortcut = KeyShortcut(Key.H , ctrl = true, shift = true)
                 ),
                 Command(text = "Vertical",
-                    paths = mutableListOf("$COMMAND_IDENTIFIER_MENU_BAR.View.Split TabSpace"),
+                    paths = mutableListOf("${MenuType.MenuBar.name}.View.Split TabSpace"),
                     action = { changeSplitViewMode(SplitViewMode.VERTICAL) },
                     shortcut = KeyShortcut(Key.V , ctrl = true, shift = true)
                 ),
                 Command(text = "Unsplit",
-                    paths = mutableListOf("$COMMAND_IDENTIFIER_MENU_BAR.View.Split TabSpace"),
+                    paths = mutableListOf("${MenuType.MenuBar.name}.View.Split TabSpace"),
                     action = { changeSplitViewMode(SplitViewMode.UNSPLIT) },
                     shortcut = KeyShortcut(Key.U , ctrl = true, shift = true)
                 ),
@@ -73,8 +76,7 @@ internal class WorkbenchModel(val appTitle: String = "") {
     fun getNextKey():Int = uniqueKey++
 
     fun registerEditor(key: String, editor: WorkbenchModule<*>){
-        var editors = registeredEditors[key]
-        when (editors) {
+        when (val editors = registeredEditors[key]) {
             null -> registeredEditors[key] = mutableListOf(editor)
             else -> {
                 editors += editor
@@ -227,18 +229,15 @@ internal class WorkbenchModel(val appTitle: String = "") {
     }
 
     fun dispatchCommands() {
-        commandsMenus[COMMAND_IDENTIFIER_MENU_BAR] = MenuEntry(COMMAND_IDENTIFIER_MENU_BAR)
-        commandsMenus[COMMAND_IDENTIFIER_MENU_COLLAPSIBLE] = MenuEntry(COMMAND_IDENTIFIER_MENU_COLLAPSIBLE)
-
-        var m: MenuEntry = commandsMenus[COMMAND_IDENTIFIER_MENU_BAR]!!
+        var m: MenuEntry = commandsMenus[MenuType.MenuBar]!!
         for (c in commands) {
             for (path in c.paths) {
                 val pathSplit = path.split(".")
                 if (pathSplit.size > 4 || pathSplit.isEmpty()) return
                 for (i in pathSplit.indices) {
-                    if (i == 0 && commandsMenus[pathSplit[0]] == null) break
+                    if (i == 0 && commandsMenus[MenuType.valueOf(pathSplit[0])] == null) break
                     m = if (i == 0) {
-                        commandsMenus[pathSplit[0]]!!
+                        commandsMenus[MenuType.valueOf(pathSplit[0])]!!
                     } else {
                         m.getMenu(pathSplit[i])
                     }

@@ -127,8 +127,8 @@ class Workbench(appTitle: String = "", enableMQ: Boolean = false) {
                 model.addCommand(Command(
                     text = model.registeredDefaultExplorers[id]!!.getTitle(),
                     paths = mutableListOf(
-                        "$COMMAND_IDENTIFIER_MENU_BAR.View.Default Explorers",
-                        "$COMMAND_IDENTIFIER_MENU_COLLAPSIBLE"
+                        "${MenuType.MenuBar.name}.View.Default Explorers",
+                        "${MenuType.MenuAppBar.name}"
                     ),
                     action = { model.createExplorerFromDefault(id) }
                 ))
