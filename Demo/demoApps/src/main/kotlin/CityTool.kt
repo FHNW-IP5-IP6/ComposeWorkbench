@@ -37,8 +37,8 @@ fun main() {
         }
     }
 
-    workbench.requestExplorer("Cities", explorerModel[0], true, ExplorerLocation.LEFT)
     workbench.requestExplorer("Cities", explorerModel[1], true, ExplorerLocation.LEFT)
+    workbench.requestExplorer("Cities", explorerModel[0], true, ExplorerLocation.LEFT)
     workbench.requestExplorer("Cities", explorerModel[2], false, ExplorerLocation.BOTTOM)
     workbench.requestExplorer("Cities", explorerModel[3], true, ExplorerLocation.BOTTOM, false)
     workbench.run { println("Exit my Compose Workbench App") }

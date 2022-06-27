@@ -6,8 +6,6 @@ import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IntIdTable
-import org.jetbrains.exposed.sql.StdOutSqlLogger
-import org.jetbrains.exposed.sql.addLogger
 import org.jetbrains.exposed.sql.transactions.transaction
 
 object Cities: IntIdTable() {
@@ -37,7 +35,6 @@ fun getCityLocationState(id: Int) = findById(id).toCityLocationState()
 
 internal fun findById(id: Int): City{
     return transaction(DbSettings.citiesDb) {
-        addLogger(StdOutSqlLogger)
         City.findById(id)!!
     }
 }
@@ -62,7 +59,6 @@ class CityState(private val city: City) {
 
     fun persist() {
         transaction(DbSettings.citiesDb) {
-            addLogger(StdOutSqlLogger)
             city.name = name
             city.countryCode = countryCode
             city.population = population
@@ -82,7 +78,6 @@ class CityLocationState(private val city: City) {
 
     fun persist() {
         transaction(DbSettings.citiesDb) {
-            addLogger(StdOutSqlLogger)
             city.name = name
             city.longitude = longitude
             city.latitude = latitude

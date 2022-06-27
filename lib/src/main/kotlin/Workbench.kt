@@ -136,7 +136,6 @@ class Workbench(appTitle: String = "", enableMQ: Boolean = false) {
         }
     }
 
-
     //TODO: Remove type info here move everything to the module -> title and on close on save
     /**
      * Edit given Model with editor of given type

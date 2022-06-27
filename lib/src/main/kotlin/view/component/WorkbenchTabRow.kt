@@ -13,7 +13,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.text.style.TextOverflow
@@ -57,9 +56,10 @@ internal fun WorkbenchTabRow(controller: WorkbenchController) {
 internal fun WorkbenchTabBody(controller: WorkbenchController) {
     BoxWithConstraints {
         val contentSize = controller.getContentDimension(DpSize(maxWidth, maxHeight))
-        Column(modifier = Modifier.size(maxWidth, maxHeight).clipToBounds()) {
+        Column(modifier = Modifier.size(maxWidth, maxHeight)) {
             //The content is strictly sized, because a proper sizing and layout is not guaranteed by the users
-            Box(modifier = Modifier.size(contentSize).fillMaxWidth()) {
+            Box(modifier = Modifier.size(contentSize).fillMaxWidth()
+            ) {
                 controller.getSelectedModule()?.content()
             }
             WorkbenchEditorSelector(model = controller.model, state = controller.getSelectedModule())
