@@ -6,21 +6,23 @@ import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import model.WorkbenchModel
+import controller.WorkbenchController
 import model.data.ModuleType
 import model.data.WorkbenchModule
 import model.state.WorkbenchModuleState
 
 @Composable
-internal fun WorkbenchEditorSelector(state: WorkbenchModuleState<*>?, model: WorkbenchModel) {
+internal fun WorkbenchEditorSelector(state: WorkbenchModuleState<*>?, controller: WorkbenchController) {
     if(state != null && ModuleType.EDITOR == state.module.moduleType){
-        val editors = model.registeredEditors[state.module.modelType]!!
+        val editors = controller.getRegisteredEditors<Any>(state.module.modelType)
         if(editors.size > 1){
             Row(modifier = Modifier.fillMaxWidth()) {
                 for (editor: WorkbenchModule<*> in editors){
                     IconButton(
                         onClick = {
-                            model.updateModuleState(state) { it.updateModule(editor) }
+                            controller.selectionController.updateModuleState(state) {
+                                it.updateModule(editor)
+                            }
                         }
                     ){
                         Icon(editor.icon!!, "")

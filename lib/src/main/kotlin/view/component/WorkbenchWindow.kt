@@ -5,8 +5,7 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.key
 import com.example.ui.theme.NotoSansTypography
-import controller.WorkbenchWindowController
-import model.WorkbenchModel
+import controller.WorkbenchController
 import view.component.DragAndDropWindow
 import view.component.DropTarget
 import view.component.WorkbenchTabBody
@@ -15,16 +14,16 @@ import view.themes.DarkColors
 import view.themes.LightColors
 
 @Composable
-internal fun WorkbenchWindow(model: WorkbenchModel){
-    key(model.windows) {
-        for (state in model.windows) {
-            val controller = WorkbenchWindowController(model = model, windowState = state)
+internal fun WorkbenchWindow(controller: WorkbenchController){
+    key(controller.getWindows()) {
+        for (state in controller.getWindows()) {
+            val displayController = controller.createWindowDisplayController(windowState = state)
             DragAndDropWindow(
-                model = model,
-                moduleReceiver = { controller.convertToWindow(it) },
+                controller = controller,
+                moduleReceiver = { controller.moduleToWindow(it) },
                 onCloseRequest =  {
                     state.modules.forEach { it.module.onClose }
-                    model.windows.remove(state) },
+                    controller.removeWindow(state) },
                 currentWindow = state
             ){
                 MaterialTheme(
@@ -32,10 +31,10 @@ internal fun WorkbenchWindow(model: WorkbenchModel){
                     typography = NotoSansTypography,
                 ) {
                     Column {
-                        DropTarget(controller = controller) {
-                            WorkbenchTabRow(controller)
+                        DropTarget(controller = displayController) {
+                            WorkbenchTabRow(displayController, controller)
                         }
-                        WorkbenchTabBody(controller)
+                        WorkbenchTabBody(displayController, controller)
                     }
                 }
             }

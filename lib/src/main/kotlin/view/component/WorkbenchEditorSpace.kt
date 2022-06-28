@@ -2,8 +2,7 @@ package view.component
 
 import androidx.compose.runtime.Composable
 import controller.WorkbenchController
-import controller.WorkbenchModuleController
-import model.WorkbenchModel
+import controller.WorkbenchDisplayController
 import model.data.DisplayType
 import model.data.ModuleType
 import model.data.SplitViewMode
@@ -15,24 +14,26 @@ import org.jetbrains.compose.splitpane.rememberSplitPaneState
  */
 @OptIn(ExperimentalSplitPaneApi::class)
 @Composable
-internal fun WorkbenchEditorSpace(model: WorkbenchModel){
-    val editorTabController1 = WorkbenchModuleController(model, DisplayType.TAB1, ModuleType.EDITOR)
-    val editorTabController2 = WorkbenchModuleController(model, DisplayType.TAB2, ModuleType.EDITOR)
+internal fun WorkbenchEditorSpace(controller: WorkbenchController){
+    val editorTabController1 = controller.createModuleDisplayController(DisplayType.TAB1, ModuleType.EDITOR, false)
+    val editorTabController2 = controller.createModuleDisplayController(DisplayType.TAB2, ModuleType.EDITOR, false)
     var splitRatio = .5f
     if (editorTabController1.getModulesFiltered().isEmpty()) splitRatio = 0f
     if (editorTabController2.getModulesFiltered().isEmpty()) splitRatio = 1f
 
-    when (model.splitViewMode) {
+    when (controller.getSplitViewMode()) {
         SplitViewMode.VERTICAL -> {
             WorkbenchVerticalSplitPane(splitPaneState = rememberSplitPaneState(initialPositionPercentage = splitRatio)) {
                 first {
                     EditorSpaceDropTarget(
-                        controller = editorTabController1
+                        displayController = editorTabController1,
+                        controller = controller
                     )
                 }
                 second {
                     EditorSpaceDropTarget(
-                        controller = editorTabController2,
+                        displayController = editorTabController2,
+                        controller = controller
                     )
                 }
             }
@@ -41,19 +42,22 @@ internal fun WorkbenchEditorSpace(model: WorkbenchModel){
             WorkbenchHorizontalSplitPane(splitPaneState = rememberSplitPaneState(initialPositionPercentage = splitRatio)) {
                 first {
                     EditorSpaceDropTarget(
-                        controller = editorTabController1
+                        displayController = editorTabController1,
+                        controller = controller
                     )
                 }
                 second {
                     EditorSpaceDropTarget(
-                        controller = editorTabController2
+                        displayController = editorTabController2,
+                        controller = controller
                     )
                 }
             }
         }
         else -> {
             EditorSpaceDropTarget(
-                controller = editorTabController1
+                displayController = editorTabController1,
+                controller = controller
             )
         }
     }
@@ -61,9 +65,10 @@ internal fun WorkbenchEditorSpace(model: WorkbenchModel){
 
 @Composable
 private fun EditorSpaceDropTarget(
+    displayController: WorkbenchDisplayController,
     controller: WorkbenchController
 ){
-    DropTarget(controller = controller) {
-        TabSpace(controller)
+    DropTarget(controller = displayController) {
+        TabSpace(displayController, controller)
     }
 }

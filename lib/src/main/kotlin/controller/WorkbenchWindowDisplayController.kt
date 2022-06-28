@@ -7,11 +7,12 @@ import model.state.PreviewState
 import model.state.WindowStateAware
 import model.state.WorkbenchModuleState
 
-internal class WorkbenchWindowController(
+internal class WorkbenchWindowDisplayController(
     override val model: WorkbenchModel,
     val windowState: WindowStateAware,
-    override val previewState: PreviewState = PreviewState()
-): WorkbenchController {
+    override val previewState: PreviewState = PreviewState(),
+    override val selectionController: WorkbenchSelectionController
+): WorkbenchDisplayController {
 
     override val displayType = DisplayType.WINDOW
     override val moduleType: ModuleType

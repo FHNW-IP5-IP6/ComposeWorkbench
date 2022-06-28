@@ -19,6 +19,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import controller.WorkbenchController
+import controller.WorkbenchDisplayController
 import model.state.WorkbenchModuleState
 import util.vertical
 
@@ -26,10 +27,10 @@ import util.vertical
  * Component combining tab headers and currently selected Module of the given controller
  */
 @Composable
-internal fun TabSpace(controller: WorkbenchController){
+internal fun TabSpace(displayController: WorkbenchDisplayController, controller: WorkbenchController){
     Column {
-        WorkbenchTabRow(controller)
-        WorkbenchTabBody(controller)
+        WorkbenchTabRow(displayController, controller)
+        WorkbenchTabBody(displayController, controller)
     }
 }
 
@@ -37,14 +38,14 @@ internal fun TabSpace(controller: WorkbenchController){
  * Component which shows Tab headers for all modules in the given controller
  */
 @Composable
-internal fun WorkbenchTabRow(controller: WorkbenchController) {
-    if (controller.displayType.orientation.toInt() != 0) {
+internal fun WorkbenchTabRow(displayController: WorkbenchDisplayController, controller: WorkbenchController) {
+    if (displayController.displayType.orientation.toInt() != 0) {
         Box {
-            VerticalWorkbenchTabRow(controller)
+            VerticalWorkbenchTabRow(displayController, controller)
         }
     } else {
         Box {
-           HorizontalWorkbenchTabRow(controller)
+           HorizontalWorkbenchTabRow(displayController, controller)
         }
     }
 }
@@ -53,28 +54,28 @@ internal fun WorkbenchTabRow(controller: WorkbenchController) {
  * Component which shows the currently selected Module of the given controller
  */
 @Composable
-internal fun WorkbenchTabBody(controller: WorkbenchController) {
+internal fun WorkbenchTabBody(displayController: WorkbenchDisplayController, controller: WorkbenchController) {
     BoxWithConstraints {
-        val contentSize = controller.getContentDimension(DpSize(maxWidth, maxHeight))
+        val contentSize = displayController.getContentDimension(DpSize(maxWidth, maxHeight))
         Column(modifier = Modifier.size(maxWidth, maxHeight)) {
             //The content is strictly sized, because a proper sizing and layout is not guaranteed by the users
             Box(modifier = Modifier.size(contentSize).fillMaxWidth()
             ) {
-                controller.getSelectedModule()?.content()
+                displayController.getSelectedModule()?.content()
             }
-            WorkbenchEditorSelector(model = controller.model, state = controller.getSelectedModule())
+            WorkbenchEditorSelector(controller = controller, state = displayController.getSelectedModule())
         }
     }
 }
 
 
 @Composable
-private fun HorizontalWorkbenchTabRow(controller: WorkbenchController) {
+private fun HorizontalWorkbenchTabRow(displayController: WorkbenchDisplayController, controller: WorkbenchController) {
     val scrollState = rememberLazyListState()
-    ScrollToSelected(controller, scrollState)
+    ScrollToSelected(displayController, scrollState)
     Column {
         LazyRow(state = scrollState) {
-            WorkbenchTabs(controller)
+            WorkbenchTabs(displayController, controller)
         }
         HorizontalScrollbar(
             modifier = Modifier.align(Alignment.CenterHorizontally),
@@ -84,12 +85,12 @@ private fun HorizontalWorkbenchTabRow(controller: WorkbenchController) {
 }
 
 @Composable
-private fun VerticalWorkbenchTabRow(controller: WorkbenchController) {
+private fun VerticalWorkbenchTabRow(displayController: WorkbenchDisplayController, controller: WorkbenchController) {
     val scrollState = rememberLazyListState()
-    ScrollToSelected(controller, scrollState)
+    ScrollToSelected(displayController, scrollState)
     Row {
         LazyColumn(state = scrollState) {
-            WorkbenchTabs(controller)
+            WorkbenchTabs(displayController, controller)
         }
         VerticalScrollbar(
             modifier = Modifier.align(Alignment.CenterVertically),
@@ -99,26 +100,27 @@ private fun VerticalWorkbenchTabRow(controller: WorkbenchController) {
 }
 
 @Composable
-private fun ScrollToSelected(controller: WorkbenchController, state: LazyListState){
+private fun ScrollToSelected(controller: WorkbenchDisplayController, state: LazyListState){
     LaunchedEffect(controller.getModulesFiltered().size) {
         state.scrollToItem(controller.getScrollToIndex())
     }
 }
 
-private fun LazyListScope.WorkbenchTabs(controller: WorkbenchController) {
-    preview(controller)
-    items(controller.getModulesFiltered()){ item ->
+private fun LazyListScope.WorkbenchTabs(displayController: WorkbenchDisplayController, controller: WorkbenchController) {
+    preview(displayController)
+    items(displayController.getModulesFiltered()){ item ->
         WorkbenchTab(
             tab = item,
             controller = controller,
-            selected = controller.isModuleSelected(item),
-            onClick = { controller.moduleSelectorPressed(item) },
+            displayController = displayController,
+            selected = displayController.isModuleSelected(item),
+            onClick = { displayController.moduleSelectorPressed(item) },
         )
     }
 }
 
 @OptIn(ExperimentalFoundationApi::class)
-private fun LazyListScope.preview(controller: WorkbenchController) {
+private fun LazyListScope.preview(controller: WorkbenchDisplayController) {
     stickyHeader {
         if(controller.previewState.hasPreview()){
             val writerModifier = getTabModifier(controller, true) {}
@@ -129,13 +131,13 @@ private fun LazyListScope.preview(controller: WorkbenchController) {
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun WorkbenchTab(tab: WorkbenchModuleState<*>, controller: WorkbenchController, selected: Boolean, onClick: ()->Unit) {
-    val writerModifier = getTabModifier(controller, selected, onClick)
+private fun WorkbenchTab(tab: WorkbenchModuleState<*>, controller: WorkbenchController, displayController: WorkbenchDisplayController, selected: Boolean, onClick: ()->Unit) {
+    val writerModifier = getTabModifier(displayController, selected, onClick)
 
-    DragTarget(module = tab, controller = controller) {
+    DragTarget(module = tab, controller = displayController) {
         ContextMenuArea(items = {
             listOf(
-                ContextMenuItem("Open in Window") { controller.convertToWindow(tab) },
+                ContextMenuItem("Open in Window") { controller.moduleToWindow(tab) },
             )
         }) {
             WorkbenchTab(writerModifier, tab.getTitle(), tab::onClose)
@@ -167,7 +169,7 @@ private fun WorkbenchTab(
 }
 
 @Composable
-private fun getTabModifier(controller: WorkbenchController, selected: Boolean, onClick: () -> Unit): Modifier{
+private fun getTabModifier(controller: WorkbenchDisplayController, selected: Boolean, onClick: () -> Unit): Modifier{
     val backgroundColor = if (selected) MaterialTheme.colors.background else MaterialTheme.colors.surface
     val contentColor = if (selected) MaterialTheme.colors.primary else MaterialTheme.colors.onSurface
 

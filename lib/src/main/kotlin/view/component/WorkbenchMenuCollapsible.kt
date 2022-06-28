@@ -5,7 +5,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -21,7 +23,7 @@ private val contentPadding = PaddingValues(8.dp, 2.dp, 10.dp, 2.dp)
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
-fun WBMenu(menuEntry: MenuEntry, imageVector: ImageVector) {
+fun WorkbenchMenu(menuEntry: MenuEntry, imageVector: ImageVector) {
     val onMenu = remember { mutableStateOf(false) }
     val preventReopen = remember { mutableStateOf(false) }
 

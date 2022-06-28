@@ -38,6 +38,7 @@ internal class WorkbenchModuleState <M> (
 
     fun updateModule(module: WorkbenchModule<*>){
         module as WorkbenchModule<M>
+        this.module.onClose.invoke(this.model)
         this.module = module
         model = module.loader!!.invoke(dataId!!)
     }

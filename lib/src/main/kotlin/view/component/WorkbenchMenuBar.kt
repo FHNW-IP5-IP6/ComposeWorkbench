@@ -4,15 +4,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.window.FrameWindowScope
 import androidx.compose.ui.window.MenuBar
 import androidx.compose.ui.window.MenuScope
-import model.WorkbenchModel
+import controller.WorkbenchCommandController
 import model.data.Command
 import model.data.MenuEntry
 import model.data.MenuType
 
 @Composable
-internal fun FrameWindowScope.workbenchMenuBar(model: WorkbenchModel){
+internal fun FrameWindowScope.workbenchMenuBar(commandController: WorkbenchCommandController){
     MenuBar {
-        model.commandsMenus[MenuType.MenuBar]!!.children.forEach {
+        commandController.getCommandsForType(MenuType.MenuBar).forEach {
             if (it is MenuEntry) {
                 Menu(it.text) {
                     MenuDispatcher(it)

@@ -4,10 +4,8 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.window.application
 import com.hivemq.embedded.EmbeddedHiveMQ
 import com.hivemq.embedded.EmbeddedHiveMQBuilder
-import model.WorkbenchModel
+import controller.WorkbenchController
 import model.data.*
-import model.state.WorkbenchDefaultState
-import model.state.WorkbenchModuleState
 import util.WorkbenchDefaultIcon
 import view.WorkbenchUI
 import view.conponent.WorkbenchWindow
@@ -16,10 +14,9 @@ import java.util.concurrent.Executors
 
 class Workbench(appTitle: String = "", enableMQ: Boolean = false) {
 
-    private val model: WorkbenchModel = WorkbenchModel(appTitle)
+    private val controller = WorkbenchController(appTitle)
 
     // HiveMQ infrastructure
-
     private var hiveMQ: EmbeddedHiveMQ? = null
     init {
         if (enableMQ) {
@@ -59,8 +56,7 @@ class Workbench(appTitle: String = "", enableMQ: Boolean = false) {
             onClose = {},
             onSave = {}
         )
-
-        model.registeredExplorers[type] = explorer
+        controller.registerExplorer(type, explorer)
     }
 
     /**
@@ -94,7 +90,7 @@ class Workbench(appTitle: String = "", enableMQ: Boolean = false) {
             onClose = onClose,
             onSave =  onSave
         )
-        model.registerEditor(type, editor)
+        controller.registerEditor(type, editor)
     }
 
     /**
@@ -106,7 +102,6 @@ class Workbench(appTitle: String = "", enableMQ: Boolean = false) {
      * @param location: The Drawer Location where the Explorer will be displayed
      * @param shown: if the Explorer is shown on the Startup of the Workbench
      */
-    @Suppress("UNCHECKED_CAST")
     fun <M : Any> requestExplorer(
         type: String,
         m: M,
@@ -114,29 +109,23 @@ class Workbench(appTitle: String = "", enableMQ: Boolean = false) {
         location: ExplorerLocation = ExplorerLocation.LEFT,
         shown: Boolean = true
     ) {
-        val explorer = model.registeredExplorers[type]
-        if (explorer != null) {
-            explorer as WorkbenchModule<M>
-            val id = model.getNextKey()
-            if (shown) {
-                val state = WorkbenchModuleState(id = id, model =  m, module = explorer, close =  model::removeTab, displayType =  toDisplayType(location))
-                model.addState(state)
-            }
-            if (default) {
-                model.registeredDefaultExplorers[id] = WorkbenchDefaultState(type, m, explorer.title)
-                model.addCommand(Command(
-                    text = model.registeredDefaultExplorers[id]!!.getTitle(),
-                    paths = mutableListOf(
-                        "${MenuType.MenuBar.name}.View.Default Explorers",
-                        "${MenuType.MenuAppBar.name}"
-                    ),
-                    action = { model.createExplorerFromDefault(id) }
-                ))
-            }
+        val id = controller.getNextKey()
+        if(shown){
+            controller.requestExplorerState(id = id, key = type, explorerModel = m, displayType =  toDisplayType(location))
+        }
+        if (default) {
+            controller.addDefaultExplorer(id = id, key = type, explorerModel = m)
+            controller.commandController.addCommand(Command(
+                text = controller.getRegisteredExplorer<M>(type).title(m),
+                paths = mutableListOf(
+                    "${MenuType.MenuBar.name}.View.Default Explorers",
+                    "${MenuType.MenuAppBar.name}.Default Explorers"
+                ),
+                action = { controller.createExplorerFromDefault(id) }
+            ))
         }
     }
 
-    //TODO: Remove type info here move everything to the module -> title and on close on save
     /**
      * Edit given Model with editor of given type
      *
@@ -149,19 +138,7 @@ class Workbench(appTitle: String = "", enableMQ: Boolean = false) {
         type: String,
         id: Int
     ) {
-        val editors = model.registeredEditors[type]
-        if (editors != null && editors.isNotEmpty()) {
-            val editor = editors[0] as WorkbenchModule<M>
-            val t = WorkbenchModuleState(
-                id = model.getNextKey(),
-                dataId = id,
-                model = editor.loader!!.invoke(id),
-                module = editor,
-                close = model::removeTab,
-                displayType = model.currentTabSpace,
-            )
-            model.addState(t)
-        }
+        controller.requestEditorState<M>(key = type, dataId = id)
     }
 
     /**
@@ -169,17 +146,19 @@ class Workbench(appTitle: String = "", enableMQ: Boolean = false) {
      */
     fun run(onExit: () -> Unit) = application {
         // pre processing
-        model.dispatchCommands()
+        controller.commandController.dispatchCommands()
 
         // init main window
-        WorkbenchUI(model) {
+        WorkbenchUI(
+            controller = controller
+        ) {
             onExit.invoke()
             stopMQBroker()
             exitApplication()
         }
 
         // init separated windows
-        WorkbenchWindow(model)
+        WorkbenchWindow(controller = controller)
     }
 
     private fun stopMQBroker() {
@@ -195,7 +174,7 @@ class Workbench(appTitle: String = "", enableMQ: Boolean = false) {
     }
 
     //used for testing
-    internal fun getModel(): WorkbenchModel {
-        return model
+    internal fun getWorkbenchController(): WorkbenchController {
+        return controller
     }
 }

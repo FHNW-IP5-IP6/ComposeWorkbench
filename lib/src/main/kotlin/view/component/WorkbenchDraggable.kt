@@ -26,7 +26,7 @@ import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowPosition
 import androidx.compose.ui.window.WindowState
 import controller.WorkbenchController
-import model.WorkbenchModel
+import controller.WorkbenchDisplayController
 import model.state.DragState
 import model.state.WindowStateAware
 import model.state.WorkbenchModuleState
@@ -44,7 +44,7 @@ import model.state.WorkbenchModuleState
  */
 @Composable
 internal fun DragAndDropWindow(
-    model: WorkbenchModel,
+    controller: WorkbenchController,
     currentWindow: WindowStateAware,
     onCloseRequest: () -> Unit,
     moduleReceiver: (WorkbenchModuleState<*>) -> Unit,
@@ -53,15 +53,20 @@ internal fun DragAndDropWindow(
 ){
     Window(
         onCloseRequest = onCloseRequest,
-        title = model.appTitle,
+        title = controller.getAppTitle(),
         state = currentWindow.windowState
     ) {
-        with(model.dragState){
+        with(controller.getDragState()) {
             val pos = positionOnScreen
             val density = LocalDensity.current
 
             Box(modifier = Modifier.fillMaxSize().onGloballyPositioned {
-                currentWindow.isDropTarget = getBounds(true, currentWindow, it.boundsInWindow(), density).contains(Offset(pos.x.value, pos.y.value))
+                currentWindow.isDropTarget = getBounds(true, currentWindow, it.boundsInWindow(), density).contains(
+                    Offset(
+                        x = pos.x.value,
+                        y = pos.y.value
+                    )
+                )
                 if (isDragging && currentWindow.isDropTarget && parentWindow != currentWindow) {
                     parentWindow = currentWindow
                 }
@@ -74,8 +79,8 @@ internal fun DragAndDropWindow(
                 windowScope()
                 content()
 
-                if(parentWindow == currentWindow){
-                    DragAnimation(model.dragState)
+                if (parentWindow == currentWindow) {
+                    DragAnimation(controller.getDragState())
                 }
             }
         }
@@ -91,7 +96,7 @@ internal fun DragAndDropWindow(
  */
 @Composable
 internal fun DropTarget(
-    controller: WorkbenchController,
+    controller: WorkbenchDisplayController,
     modifier: Modifier = Modifier,
     content: @Composable (BoxScope.() -> Unit)
 ){
@@ -133,7 +138,7 @@ internal fun DropTarget(
 internal fun DragTarget(
     modifier: Modifier = Modifier,
     module: WorkbenchModuleState<*>,
-    controller: WorkbenchController,
+    controller: WorkbenchDisplayController,
     content: @Composable BoxScope.() -> Unit
 ){
     with(controller.getDragState()) {

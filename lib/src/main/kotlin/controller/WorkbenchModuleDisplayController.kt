@@ -7,20 +7,21 @@ import model.state.PreviewState
 import model.state.WindowStateAware
 import model.state.WorkbenchModuleState
 
-internal class WorkbenchModuleController(
+internal class WorkbenchModuleDisplayController(
     override val model: WorkbenchModel,
     override val displayType: DisplayType,
     override val moduleType: ModuleType,
     private val deselectable: Boolean = false,
+    override val selectionController: WorkbenchSelectionController,
     override val previewState: PreviewState = PreviewState()
-): WorkbenchController {
+): WorkbenchDisplayController {
 
     init {
-        if(getModulesFiltered().isEmpty()) model.hideDrawer(displayType)
+        if(getModulesFiltered().isEmpty()) selectionController.hideDrawer(displayType)
     }
 
     override fun getSelectedModule(): WorkbenchModuleState<*>? {
-        return model.getSelectedModule(displayType, moduleType).value
+        return selectionController.getSelectedModule(displayType, moduleType).value
     }
 
     override fun getModulesFiltered(): List<WorkbenchModuleState<*>> {
@@ -29,9 +30,9 @@ internal class WorkbenchModuleController(
 
     override fun moduleSelectorPressed(module: WorkbenchModuleState<*>?) {
         if(deselectable && getSelectedModule() == module){
-            model.setSelectedModuleNull(displayType, moduleType)
+            selectionController.setSelectedModuleNull(displayType, moduleType)
         }else{
-            model.setSelectedModule(module!!)
+            selectionController.setSelectedModule(module!!)
         }
     }
 
@@ -40,7 +41,7 @@ internal class WorkbenchModuleController(
     }
 
     override fun removeModuleState(module: WorkbenchModuleState<*>){
-        model.removeTab(module)
+        selectionController.removeTab(module)
     }
 
     override fun getWindow(): WindowStateAware = model.mainWindow
@@ -51,7 +52,7 @@ internal class WorkbenchModuleController(
 
     override fun onModuleDroppedIn(module: WorkbenchModuleState<*>) {
         if(displayType != module.displayType){
-            model.switchDisplayType(module, displayType)
+            selectionController.switchDisplayType(module, displayType)
         }else if(!isModuleSelected(module)) {
             moduleSelectorPressed(module)
         }

@@ -7,8 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.example.ui.theme.NotoSansTypography
-import controller.WorkbenchModuleController
-import model.WorkbenchModel
+import controller.WorkbenchController
 import model.data.DisplayType
 import model.data.ModuleType
 import org.jetbrains.compose.splitpane.ExperimentalSplitPaneApi
@@ -17,54 +16,52 @@ import view.themes.DarkColors
 import view.themes.LightColors
 
 @Composable
-internal fun WorkbenchUI(model: WorkbenchModel, closeRequest: ()->Unit) {
+internal fun WorkbenchUI(controller: WorkbenchController,
+                         closeRequest: ()->Unit) {
     DragAndDropWindow(
-        model = model,
+        controller = controller,
         onCloseRequest = closeRequest,
-        currentWindow = model.mainWindow,
+        currentWindow = controller.getMainWindow(),
         moduleReceiver = {
-            model.moduleToWindow(module = it)
+            controller.moduleToWindow(moduleState = it)
         },
-        windowScope = { workbenchMenuBar(model) }
+        windowScope = { workbenchMenuBar(controller.commandController) }
     ) {
-        WorkbenchBody(model)
+        WorkbenchBody(controller)
     }
 }
 
 @Composable
 @OptIn(ExperimentalSplitPaneApi::class)
-private fun WorkbenchBody(model: WorkbenchModel) {
-
+private fun WorkbenchBody(controller: WorkbenchController) {
     MaterialTheme(
         colors = if (false) DarkColors else LightColors,
         typography = NotoSansTypography,
     ) {
         Scaffold(
-            topBar = { WorkbenchAppBar(model) },
+            topBar = { WorkbenchAppBar(controller) },
         ) {
-            val leftExplorerController =
-                WorkbenchModuleController(model, DisplayType.LEFT, ModuleType.EXPLORER, true)
-            val bottomExplorerController =
-                WorkbenchModuleController(model, DisplayType.BOTTOM, ModuleType.EXPLORER, true)
+            val leftExplorerController = controller.createModuleDisplayController(displayType = DisplayType.LEFT, moduleType = ModuleType.EXPLORER, deselectable = true)
+            val bottomExplorerController = controller.createModuleDisplayController(displayType = DisplayType.BOTTOM, moduleType = ModuleType.EXPLORER, deselectable = true)
             Column {
                 BoxWithConstraints {
                     Row(modifier = Modifier.height(maxHeight - bottomExplorerController.getTabRowMinDimension().second)) {
                         DropTarget(controller = leftExplorerController) {
-                            WorkbenchTabRow(leftExplorerController)
+                            WorkbenchTabRow(leftExplorerController, controller)
                         }
-                        WorkbenchVerticalSplitPane(splitPaneState = model.bottomSplitState) {
+                        WorkbenchVerticalSplitPane(splitPaneState = controller.getBottomSplitState()) {
                             first {
-                                WorkbenchHorizontalSplitPane(splitPaneState = model.leftSplitState){
+                                WorkbenchHorizontalSplitPane(splitPaneState = controller.getLeftSplitState()){
                                     first {
-                                        WorkbenchTabBody(leftExplorerController)
+                                        WorkbenchTabBody(leftExplorerController, controller)
                                     }
                                     second {
-                                        WorkbenchEditorSpace(model)
+                                        WorkbenchEditorSpace(controller)
                                     }
                                 }
                             }
                             second {
-                                WorkbenchTabBody(bottomExplorerController)
+                                WorkbenchTabBody(bottomExplorerController, controller)
                             }
                         }
                     }
@@ -75,7 +72,7 @@ private fun WorkbenchBody(model: WorkbenchModel) {
                         .align(Alignment.End)
                 ) {
                     DropTarget(controller = bottomExplorerController) {
-                        WorkbenchTabRow(bottomExplorerController)
+                        WorkbenchTabRow(bottomExplorerController, controller)
                     }
                 }
             }
