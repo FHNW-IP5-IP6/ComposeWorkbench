@@ -3,9 +3,9 @@ package view.component
 import androidx.compose.runtime.Composable
 import controller.WorkbenchController
 import controller.WorkbenchDisplayController
-import model.data.DisplayType
-import model.data.ModuleType
-import model.data.SplitViewMode
+import model.data.enums.DisplayType
+import model.data.enums.ModuleType
+import model.data.enums.SplitViewMode
 import org.jetbrains.compose.splitpane.ExperimentalSplitPaneApi
 import org.jetbrains.compose.splitpane.rememberSplitPaneState
 
@@ -15,8 +15,8 @@ import org.jetbrains.compose.splitpane.rememberSplitPaneState
 @OptIn(ExperimentalSplitPaneApi::class)
 @Composable
 internal fun WorkbenchEditorSpace(controller: WorkbenchController){
-    val editorTabController1 = controller.createModuleDisplayController(DisplayType.TAB1, ModuleType.EDITOR, false)
-    val editorTabController2 = controller.createModuleDisplayController(DisplayType.TAB2, ModuleType.EDITOR, false)
+    val editorTabController1 = controller.getDisplayController(DisplayType.TAB1, ModuleType.EDITOR, false)
+    val editorTabController2 = controller.getDisplayController(DisplayType.TAB2, ModuleType.EDITOR, false)
     var splitRatio = .5f
     if (editorTabController1.getModulesFiltered().isEmpty()) splitRatio = 0f
     if (editorTabController2.getModulesFiltered().isEmpty()) splitRatio = 1f

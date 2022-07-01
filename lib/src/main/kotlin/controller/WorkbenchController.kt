@@ -2,33 +2,48 @@ package controller
 
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import model.WorkbenchModel
-import model.data.DisplayType
-import model.data.ModuleType
-import model.data.SplitViewMode
 import model.data.WorkbenchModule
-import model.state.DragState
-import model.state.WindowStateAware
+import model.data.enums.DisplayType
+import model.data.enums.ModuleType
+import model.data.enums.SplitViewMode
 import model.state.WorkbenchDefaultState
+import model.state.WorkbenchDragState
 import model.state.WorkbenchModuleState
+import model.state.WorkbenchWindowState
+import org.jetbrains.compose.splitpane.ExperimentalSplitPaneApi
 import org.jetbrains.compose.splitpane.SplitPaneState
 
+@OptIn(ExperimentalSplitPaneApi::class)
+@Suppress("UNCHECKED_CAST")
 internal class WorkbenchController(appTitle: String) {
 
     private val model: WorkbenchModel = WorkbenchModel(appTitle)
-    val selectionController = WorkbenchSelectionController(model)
-    val commandController = WorkbenchCommandController(model, selectionController)
+    val commandController = WorkbenchCommandController(model, this)
+    val displayControllers: MutableMap<DisplayControllerKey, WorkbenchDisplayController> = mutableMapOf()
 
-    fun createWindowDisplayController(windowState: WindowStateAware): WorkbenchDisplayController {
-        return WorkbenchWindowDisplayController(model = model, windowState = windowState, selectionController = selectionController)
+    fun getDisplayController(displayType: DisplayType, moduleType: ModuleType, deselectable: Boolean = false): WorkbenchDisplayController{
+        val key = DisplayControllerKey(displayType, moduleType, model.mainWindow)
+        if (!displayControllers.containsKey(key)) {
+            displayControllers[key] = WorkbenchDisplayController(model = model, displayType = displayType, moduleType = moduleType, windowState = model.mainWindow, deselectable = deselectable){
+                handleEmptyTabRow(it)
+            }
+        }
+        return displayControllers[key]!!
     }
 
-    fun createModuleDisplayController(displayType: DisplayType, moduleType: ModuleType, deselectable: Boolean = false): WorkbenchDisplayController{
-        return WorkbenchModuleDisplayController(model = model, displayType = displayType, moduleType = moduleType, deselectable = deselectable, selectionController = selectionController)
+    fun getDisplayController(windowState: WorkbenchWindowState): WorkbenchDisplayController {
+        val key = DisplayControllerKey(DisplayType.WINDOW, moduleType = ModuleType.BOTH, windowState)
+        if (!displayControllers.containsKey(key)) {
+            displayControllers[key] =  WorkbenchDisplayController(model = model, windowState = windowState, displayType = DisplayType.WINDOW, moduleType = ModuleType.BOTH, deselectable = false){
+                handleEmptyTabRow(it)
+            }
+        }
+        return displayControllers[key]!!
     }
 
     //Model Accessor functions
-    fun getDragState(): DragState {
-        return model.dragState
+    fun getDragState(): WorkbenchDragState {
+        return model.workbenchDragState
     }
 
     fun getAppTitle(): String {
@@ -48,66 +63,78 @@ internal class WorkbenchController(appTitle: String) {
     }
 
     //Window specific stuff
-    fun getMainWindow(): WindowStateAware {
+    fun getMainWindow(): WorkbenchWindowState {
         return model.mainWindow
     }
 
-    fun getWindows(): SnapshotStateList<WindowStateAware> {
+    fun getWindows(): SnapshotStateList<WorkbenchWindowState> {
         return model.windows
     }
 
-    fun removeWindow(window: WindowStateAware){
+    fun removeWindow(window: WorkbenchWindowState){
         model.windows.remove(window)
+        displayControllers.remove(DisplayControllerKey(DisplayType.WINDOW, ModuleType.BOTH, window))
     }
 
-    fun moduleToWindow(moduleState: WorkbenchModuleState<*>): WindowStateAware {
-        selectionController.switchDisplayType(moduleState, DisplayType.WINDOW)
-        val window =  WindowStateAware(position = model.dragState.getWindowPosition(), modules = listOf(moduleState))
+    fun moduleToWindow(moduleState: WorkbenchModuleState<*>): WorkbenchWindowState {
+        val window = WorkbenchWindowState(position = model.workbenchDragState.getWindowPosition())
+        val displayController = getDisplayController(window)
+        displayController.addModuleState(moduleState)
         model.windows += window
+        reselectEditorSpace()
         return window
     }
 
     //Registry specific stuff
     fun getNextKey():Int = model.uniqueKey++
 
-    fun registerEditor(key: String, editor: WorkbenchModule<*>){
-        when (val editors = model.registeredEditors[key]) {
-            null -> model.registeredEditors[key] = mutableListOf(editor)
+    fun registerEditor(moduleType: String, editor: WorkbenchModule<*>){
+        when (val editors = model.registeredEditors[moduleType]) {
+            null -> model.registeredEditors[moduleType] = mutableListOf(editor)
             else -> {
                 editors += editor
-                model.registeredEditors[key] = editors
+                model.registeredEditors[moduleType] = editors
             }
         }
     }
 
-    fun registerExplorer(key: String, explorer: WorkbenchModule<*>){
-        model.registeredExplorers[key] = explorer
+    fun registerExplorer(moduleType: String, explorer: WorkbenchModule<*>){
+        model.registeredExplorers[moduleType] = explorer
     }
 
-    fun <M>requestEditorState(key: String, dataId: Int){
-        val editors = getRegisteredEditors<M>(key)
+    fun <M>requestEditorState(moduleType: String, dataId: Int): WorkbenchModuleState<M> {
+        val editors = getRegisteredEditors<M>(moduleType)
         val editor = editors[0]
         val moduleState = WorkbenchModuleState(
             id = getNextKey(),
+            window = model.mainWindow,
             dataId = dataId,
             model = editor.loader!!.invoke(dataId),
             module = editor,
-            close = { selectionController.removeTab(it) },
+            close = { displayControllers[DisplayControllerKey(it)]?.removeModuleState(it) },
             displayType = model.currentTabSpace,
         )
-        selectionController.addModuleState(moduleState)
+        addModule(moduleState)
+        return moduleState
     }
 
-    fun  <M>requestExplorerState(id: Int, key: String, explorerModel: M, displayType: DisplayType) {
-        val explorer = getRegisteredExplorer<M>(key)
-        val state = WorkbenchModuleState(
+    fun  <M>requestExplorerState(id: Int, moduleType: String, explorerModel: M, displayType: DisplayType): WorkbenchModuleState<M> {
+        val explorer = getRegisteredExplorer<M>(moduleType)
+        val moduleState = WorkbenchModuleState(
             id = id,
             model = explorerModel,
+            window = model.mainWindow,
             module = explorer,
-            close = { selectionController.removeTab(it) },
+            close = { displayControllers[DisplayControllerKey(it)]?.removeModuleState(it) },
             displayType = displayType
         )
-        selectionController.addModuleState(state)
+        addModule(moduleState)
+        return moduleState
+    }
+
+    private fun addModule(moduleState: WorkbenchModuleState<*>){
+        val displayController = getDisplayController(moduleState.displayType, moduleState.module.moduleType, true)
+        displayController.addModuleState(moduleState)
     }
 
     fun <M>addDefaultExplorer(key: String, id: Int, explorerModel: M){
@@ -118,8 +145,8 @@ internal class WorkbenchController(appTitle: String) {
     fun createExplorerFromDefault (id: Int) {
         val defaultState = if(model.registeredDefaultExplorers[id] != null) model.registeredDefaultExplorers[id]!!as WorkbenchDefaultState<Any> else return
         val explorer = model.registeredExplorers[defaultState.type] as WorkbenchModule<Any>
-        val state = WorkbenchModuleState(id = id, model = defaultState.model, module = explorer, close = { selectionController.removeTab(it) }, displayType = DisplayType.LEFT)
-        selectionController.addModuleState(state)
+        val moduleState = WorkbenchModuleState(id = id, model = defaultState.model, module = explorer, window = model.mainWindow, close = { displayControllers[DisplayControllerKey(it)]?.removeModuleState(it) }, displayType = DisplayType.LEFT)
+        addModule(moduleState)
     }
 
     fun <M>getRegisteredExplorer(key: String): WorkbenchModule<M> {
@@ -136,4 +163,99 @@ internal class WorkbenchController(appTitle: String) {
         return editors as MutableList<WorkbenchModule<M>>
     }
 
+    //Handle empty tab rows
+    public fun handleEmptyTabRow(displayController: WorkbenchDisplayController){
+        when (displayController.displayType) {
+            DisplayType.TAB1 -> reselectEditorSpace()
+            DisplayType.TAB2 -> reselectEditorSpace()
+            DisplayType.WINDOW -> {
+                model.windows -= displayController.windowState
+                displayControllers.remove(DisplayControllerKey(displayController))
+            }
+            else -> displayControllers.remove(DisplayControllerKey(displayController))
+        }
+    }
+
+    //Editor split view specific
+    private fun reselectEditorSpace() {
+        if (model.splitViewMode == SplitViewMode.UNSPLIT) return
+        val tab1 = getDisplayController(DisplayType.TAB1, ModuleType.EDITOR)
+        val tab2 = getDisplayController(DisplayType.TAB2, ModuleType.EDITOR)
+        if (tab1.getModulesFiltered().isEmpty() || tab2.getModulesFiltered().isEmpty()){
+            unsplit(tab1, tab2)
+        }
+    }
+
+    private fun unsplit(tab1: WorkbenchDisplayController, tab2: WorkbenchDisplayController){
+        model.splitViewMode = SplitViewMode.UNSPLIT
+        if (tab2.getModulesFiltered().isEmpty()){
+            //Tab 2 is empty so we remove it
+            model.splitViewMode = SplitViewMode.UNSPLIT
+            model.currentTabSpace = DisplayType.TAB1
+            displayControllers.remove(DisplayControllerKey(tab2))
+        } else {
+            val selected = tab2.getSelectedModule()
+            tab2.getModulesFiltered().forEach {  it.displayType = DisplayType.TAB1 }
+            if (selected != null) {
+                tab1.setSelectedModule(selected)
+            }
+            displayControllers.remove(DisplayControllerKey(tab2))
+            model.currentTabSpace = DisplayType.TAB1
+        }
+    }
+
+    private fun updateSplitMode(splitViewMode: SplitViewMode, tab1: WorkbenchDisplayController, tab2: WorkbenchDisplayController){
+        model.splitViewMode = splitViewMode
+
+        if (tab1.getModulesFiltered().isEmpty() && tab2.getModulesFiltered().size==1
+            || tab2.getModulesFiltered().size==1 && tab1.getModulesFiltered().isEmpty()) return
+
+        val m1 = tab1.getSelectedModule()
+        val m2 = tab2.getSelectedModule()
+        if (m1 != null && m2 == null) {
+            tab1.removeModuleState(m1) //change selection of tab1
+            tab2.addModuleState(m1)
+        }
+        if (m1 == null && m2 != null) {
+            tab2.removeModuleState(m2)
+            tab1.addModuleState(m2)
+        }
+    }
+
+    fun changeSplitViewMode(splitViewMode: SplitViewMode){
+        val tab1 = getDisplayController(DisplayType.TAB1, ModuleType.EDITOR)
+        val tab2 = getDisplayController(DisplayType.TAB2, ModuleType.EDITOR)
+        when (splitViewMode) {
+            SplitViewMode.UNSPLIT -> unsplit(tab1, tab2)
+            else -> updateSplitMode(splitViewMode, tab1, tab2)
+        }
+    }
+}
+
+internal class DisplayControllerKey(
+    val displayType: DisplayType,
+    val moduleType: ModuleType,
+    val windowState: WorkbenchWindowState
+){
+    constructor(moduleState: WorkbenchModuleState<*>) :
+            this(moduleState.displayType,
+                if(DisplayType.WINDOW == moduleState.displayType) ModuleType.BOTH else moduleState.module.moduleType,
+                moduleState.window)
+
+    constructor(displayController: WorkbenchDisplayController) :
+            this(displayController.displayType,
+                displayController.moduleType,
+                displayController.windowState)
+
+    override fun equals(other: Any?): Boolean = (other is DisplayControllerKey)
+            && displayType == other.displayType
+            && moduleType == other.moduleType
+            && windowState == other.windowState
+
+    override fun hashCode(): Int {
+        var result = displayType.hashCode()
+        result = 31 * result + moduleType.hashCode()
+        result = 31 * result + windowState.hashCode()
+        return result
+    }
 }

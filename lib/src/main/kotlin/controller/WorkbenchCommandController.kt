@@ -4,15 +4,19 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyShortcut
 import model.WorkbenchModel
-import model.data.*
+import model.data.Command
+import model.data.MenuEntry
+import model.data.MenuItem
+import model.data.enums.MenuType
+import model.data.enums.ModuleType
+import model.data.enums.SplitViewMode
 import model.state.WorkbenchModuleState
 
 @OptIn(ExperimentalComposeUiApi::class)
-internal class WorkbenchCommandController(private val model: WorkbenchModel,
-                                          private val selectionController: WorkbenchSelectionController) {
+internal class WorkbenchCommandController(private val model: WorkbenchModel, workbenchController: WorkbenchController) {
 
     fun getMenuEntry(type: MenuType): MenuEntry {
-        return model.commandsMenus[MenuType.MenuAppBar]!!
+        return model.commandsMenus[type]!!
     }
 
     fun getCommandsForType(type: MenuType): MutableList<MenuItem> {
@@ -32,17 +36,17 @@ internal class WorkbenchCommandController(private val model: WorkbenchModel,
                 ),
                 Command(text = "Horizontal",
                     paths = mutableListOf("${MenuType.MenuBar.name}.View.Split TabSpace"),
-                    action = { selectionController.changeSplitViewMode(SplitViewMode.HORIZONTAL) },
+                    action = { workbenchController.changeSplitViewMode(SplitViewMode.HORIZONTAL) },
                     shortcut = KeyShortcut(Key.H , ctrl = true, shift = true)
                 ),
                 Command(text = "Vertical",
                     paths = mutableListOf("${MenuType.MenuBar.name}.View.Split TabSpace"),
-                    action = { selectionController.changeSplitViewMode(SplitViewMode.VERTICAL) },
+                    action = { workbenchController.changeSplitViewMode(SplitViewMode.VERTICAL) },
                     shortcut = KeyShortcut(Key.V , ctrl = true, shift = true)
                 ),
                 Command(text = "Unsplit",
                     paths = mutableListOf("${MenuType.MenuBar.name}.View.Split TabSpace"),
-                    action = { selectionController.changeSplitViewMode(SplitViewMode.UNSPLIT) },
+                    action = { workbenchController.changeSplitViewMode(SplitViewMode.UNSPLIT) },
                     shortcut = KeyShortcut(Key.U , ctrl = true, shift = true)
                 ),
             )
@@ -75,9 +79,6 @@ internal class WorkbenchCommandController(private val model: WorkbenchModel,
 
     fun saveAll (moduleType: ModuleType) {
         saveAll(model.modules.filter { it.module.moduleType == moduleType })
-        model.windows.forEach{ it ->
-            saveAll(it.modules.filter{ it.module.moduleType == moduleType })
-        }
     }
 
     private fun saveAll(modules: List<WorkbenchModuleState<*>>){

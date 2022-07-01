@@ -12,8 +12,10 @@ fun main() {
         loader = {getCityState(it)},
         icon = Icons.Default.Edit,
         title = { it.name },
+        onClose = { println("Editor on Close") },
         onSave = {
-            it.persist() //TODO: replace with message to explorer}
+            it.persist()
+            //TODO: replace with message to explorer}
             explorerModel.forEach { m -> m.reload() }
         }
     ){
@@ -24,6 +26,7 @@ fun main() {
         loader = {getCityLocationState(it)},
         icon = Icons.Default.Home,
         title = { it.name },
+        onClose = { println("Editor on Close") },
         onSave = {
             it.persist()
             //TODO: replace with message to explorer}

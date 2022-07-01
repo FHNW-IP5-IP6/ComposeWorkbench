@@ -1,12 +1,12 @@
 
-import model.data.DisplayType
-import model.data.ModuleType
+import model.data.enums.DisplayType
+import model.data.enums.ModuleType
 import model.state.WorkbenchModuleState
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 
 @Suppress("UNCHECKED_CAST")
-class WorkbenchEditorTest {
+class WorkbenchMultiEditorModuleTest {
 
     private var sut = Workbench()
 
@@ -29,7 +29,7 @@ class WorkbenchEditorTest {
         assertEquals(2, controller.getRegisteredEditors<TestModel>(type).size)
 
         sut.requestEditor<TestModel>(type = type, id = id)
-        val displayController = controller.createModuleDisplayController(displayType = DisplayType.TAB1, moduleType = ModuleType.EDITOR)
+        val displayController = controller.getDisplayController(displayType = DisplayType.TAB1, moduleType = ModuleType.EDITOR)
 
         assertEquals(1, displayController.getModulesFiltered().size)
 
@@ -37,7 +37,7 @@ class WorkbenchEditorTest {
         assertEquals(id, module.model.id)
         assertEquals(controller.getRegisteredEditors<TestModel>(type)[0], module.module)
 
-        controller.selectionController.updateModuleState(module) { module.updateModule(controller.getRegisteredEditors<TestModel>(type)[1]) }
+        displayController.updateAndRefreshState(module) { module.updateModule(controller.getRegisteredEditors<TestModel>(type)[1]) }
 
         assertEquals(1, displayController.getModulesFiltered().size)
         module = displayController.getSelectedModule() as WorkbenchModuleState<TestModel>
@@ -56,14 +56,14 @@ class WorkbenchEditorTest {
         assertEquals(2, controller.getRegisteredEditors<TestModel>(type).size)
 
         sut.requestEditor<TestModel>(type = type, id = id)
-        val displayController = controller.createModuleDisplayController(displayType = DisplayType.TAB1, moduleType = ModuleType.EDITOR)
+        val displayController = controller.getDisplayController(displayType = DisplayType.TAB1, moduleType = ModuleType.EDITOR)
 
         assertEquals(1, displayController.getModulesFiltered().size)
         val module1: WorkbenchModuleState<TestModel> = displayController.getSelectedModule() as WorkbenchModuleState<TestModel>
         assertEquals(id, module1.model.id)
         assertEquals(controller.getRegisteredEditors<TestModel>(type)[0], module1.module)
 
-        controller.selectionController.updateModuleState(module1) { module1.updateModule(controller.getRegisteredEditors<TestModel2>(type)[1]) }
+        displayController.updateAndRefreshState(module1) { module1.updateModule(controller.getRegisteredEditors<TestModel2>(type)[1]) }
 
         assertEquals(1, displayController.getModulesFiltered().size)
         val module2: WorkbenchModuleState<TestModel2> = displayController.getSelectedModule() as WorkbenchModuleState<TestModel2>

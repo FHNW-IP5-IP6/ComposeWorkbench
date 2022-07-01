@@ -2,6 +2,7 @@ package model.data
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.vector.ImageVector
+import model.data.enums.ModuleType
 import util.WorkbenchDefaultIcon
 
 internal class WorkbenchModule<M>(

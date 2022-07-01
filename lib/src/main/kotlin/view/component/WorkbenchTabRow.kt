@@ -63,7 +63,7 @@ internal fun WorkbenchTabBody(displayController: WorkbenchDisplayController, con
             ) {
                 displayController.getSelectedModule()?.content()
             }
-            WorkbenchEditorSelector(controller = controller, state = displayController.getSelectedModule())
+            WorkbenchEditorSelector(controller = controller, displayController = displayController)
         }
     }
 }
@@ -110,11 +110,11 @@ private fun LazyListScope.WorkbenchTabs(displayController: WorkbenchDisplayContr
     preview(displayController)
     items(displayController.getModulesFiltered()){ item ->
         WorkbenchTab(
-            tab = item,
+            moduleState = item,
             controller = controller,
             displayController = displayController,
             selected = displayController.isModuleSelected(item),
-            onClick = { displayController.moduleSelectorPressed(item) },
+            onClick = { displayController.moduleStateSelectorPressed(item) },
         )
     }
 }
@@ -131,16 +131,16 @@ private fun LazyListScope.preview(controller: WorkbenchDisplayController) {
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun WorkbenchTab(tab: WorkbenchModuleState<*>, controller: WorkbenchController, displayController: WorkbenchDisplayController, selected: Boolean, onClick: ()->Unit) {
+private fun WorkbenchTab(moduleState: WorkbenchModuleState<*>, controller: WorkbenchController, displayController: WorkbenchDisplayController, selected: Boolean, onClick: ()->Unit) {
     val writerModifier = getTabModifier(displayController, selected, onClick)
 
-    DragTarget(module = tab, controller = displayController) {
+    DragTarget(module = moduleState, controller = displayController) {
         ContextMenuArea(items = {
             listOf(
-                ContextMenuItem("Open in Window") { controller.moduleToWindow(tab) },
+                ContextMenuItem("Open in Window") { controller.moduleToWindow(moduleState) },
             )
         }) {
-            WorkbenchTab(writerModifier, tab.getTitle(), tab::onClose)
+            WorkbenchTab(writerModifier, moduleState.getTitle(), moduleState::onClose)
         }
     }
 }

@@ -7,7 +7,7 @@ import androidx.compose.ui.window.MenuScope
 import controller.WorkbenchCommandController
 import model.data.Command
 import model.data.MenuEntry
-import model.data.MenuType
+import model.data.enums.MenuType
 
 @Composable
 internal fun FrameWindowScope.workbenchMenuBar(commandController: WorkbenchCommandController){

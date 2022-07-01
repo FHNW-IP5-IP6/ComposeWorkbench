@@ -6,16 +6,16 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.window.WindowPosition
-import model.data.ModuleType
+import model.data.enums.ModuleType
 
 /**
  * objects which holds information about the currently dragged module and its position
  */
-internal class DragState(mainWindow: WindowStateAware) {
+internal class WorkbenchDragState(mainWindow: WorkbenchWindowState) {
     var isDragging: Boolean by mutableStateOf(false)
     var module: WorkbenchModuleState<*>? = null
     var positionOnScreen by mutableStateOf(DpOffset.Zero)
-    var parentWindow: WindowStateAware by mutableStateOf(mainWindow)
+    var parentWindow: WorkbenchWindowState by mutableStateOf(mainWindow)
     var onModuleDropped: (WorkbenchModuleState<*>) -> Unit = {}
 
     fun getModuleType(): ModuleType? {

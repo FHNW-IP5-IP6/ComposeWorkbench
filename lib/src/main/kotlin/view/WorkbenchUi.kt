@@ -8,8 +8,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.example.ui.theme.NotoSansTypography
 import controller.WorkbenchController
-import model.data.DisplayType
-import model.data.ModuleType
+import model.data.enums.DisplayType
+import model.data.enums.ModuleType
 import org.jetbrains.compose.splitpane.ExperimentalSplitPaneApi
 import view.component.*
 import view.themes.DarkColors
@@ -41,8 +41,8 @@ private fun WorkbenchBody(controller: WorkbenchController) {
         Scaffold(
             topBar = { WorkbenchAppBar(controller) },
         ) {
-            val leftExplorerController = controller.createModuleDisplayController(displayType = DisplayType.LEFT, moduleType = ModuleType.EXPLORER, deselectable = true)
-            val bottomExplorerController = controller.createModuleDisplayController(displayType = DisplayType.BOTTOM, moduleType = ModuleType.EXPLORER, deselectable = true)
+            val leftExplorerController = controller.getDisplayController(displayType = DisplayType.LEFT, moduleType = ModuleType.EXPLORER, deselectable = true)
+            val bottomExplorerController = controller.getDisplayController(displayType = DisplayType.BOTTOM, moduleType = ModuleType.EXPLORER, deselectable = true)
             Column {
                 BoxWithConstraints {
                     Row(modifier = Modifier.height(maxHeight - bottomExplorerController.getTabRowMinDimension().second)) {

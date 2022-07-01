@@ -27,9 +27,9 @@ import androidx.compose.ui.window.WindowPosition
 import androidx.compose.ui.window.WindowState
 import controller.WorkbenchController
 import controller.WorkbenchDisplayController
-import model.state.DragState
-import model.state.WindowStateAware
+import model.state.WorkbenchDragState
 import model.state.WorkbenchModuleState
+import model.state.WorkbenchWindowState
 
 /**
  * Window in which a drag animation is visible
@@ -45,7 +45,7 @@ import model.state.WorkbenchModuleState
 @Composable
 internal fun DragAndDropWindow(
     controller: WorkbenchController,
-    currentWindow: WindowStateAware,
+    currentWindow: WorkbenchWindowState,
     onCloseRequest: () -> Unit,
     moduleReceiver: (WorkbenchModuleState<*>) -> Unit,
     windowScope: @Composable FrameWindowScope.() -> Unit = {},
@@ -106,9 +106,9 @@ internal fun DropTarget(
         var isCurrentDropTarget by remember { mutableStateOf(false) }
 
         Box(modifier = modifier.onGloballyPositioned {
-            isCurrentDropTarget = getBounds(false, controller.getWindow(),  it.boundsInWindow(), density).contains(Offset(pos.x.value, pos.y.value))
+            isCurrentDropTarget = getBounds(false, controller.windowState,  it.boundsInWindow(), density).contains(Offset(pos.x.value, pos.y.value))
         }) {
-            val isValidTarget = module != null && getModuleType() == controller.moduleType && !controller.containsModule(module!!)
+            val isValidTarget = module != null && controller.acceptsModuleOfType(getModuleType()!!) && !controller.containsModule(module!!)
             // println("isValid ${controller.displayType}, $isValidTarget")
             if (isCurrentDropTarget && isValidTarget){
                 controller.previewState.previewTitle = module!!.getTitle()
@@ -153,7 +153,7 @@ internal fun DragTarget(
                     reset()
                     isDragging = true
                     controller.getDragState().module = module
-                    parentWindow = controller.getWindow()
+                    parentWindow = controller.windowState
                     onModuleDropped = controller::onModuleDraggedOut
                 }, onDrag = { change, _ ->
                     change.consumeAllChanges()
@@ -169,7 +169,7 @@ internal fun DragTarget(
 }
 
 @Composable
-private fun DragAnimation(state: DragState){
+private fun DragAnimation(state: WorkbenchDragState){
     var dragAnimationSize by remember { mutableStateOf(IntSize.Zero) }
     with(state){
         if (isDragging) {
@@ -209,7 +209,7 @@ private fun DragAnimation(state: DragState){
     }
 }
 
-private fun getBounds(isWindow: Boolean = false, windowState: WindowStateAware, relativeToWindow: Rect, density: Density): Rect{
+private fun getBounds(isWindow: Boolean = false, windowState: WorkbenchWindowState, relativeToWindow: Rect, density: Density): Rect{
     with(density) {
         if(isWindow) {
             windowState.windowHeaderOffset = windowState.windowState.size.height - relativeToWindow.height.toDp()

@@ -13,8 +13,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import controller.WorkbenchController
-import model.data.MenuType
-import model.data.ModuleType
+import model.data.enums.MenuType
+import model.data.enums.ModuleType
 import util.selectedButtonColors
 
 @Composable

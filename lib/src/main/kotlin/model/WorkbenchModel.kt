@@ -1,24 +1,27 @@
 package model
 
-import androidx.compose.runtime.*
-import model.data.*
-import model.state.DragState
-import model.state.WindowStateAware
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import model.data.Command
+import model.data.MenuEntry
+import model.data.WorkbenchModule
+import model.data.enums.DisplayType
+import model.data.enums.MenuType
+import model.data.enums.SplitViewMode
 import model.state.WorkbenchDefaultState
+import model.state.WorkbenchDragState
 import model.state.WorkbenchModuleState
+import model.state.WorkbenchWindowState
 import org.jetbrains.compose.splitpane.ExperimentalSplitPaneApi
 import org.jetbrains.compose.splitpane.SplitPaneState
 
 @OptIn(ExperimentalSplitPaneApi::class)
 internal class WorkbenchModel(val appTitle: String = "") {
-    val selectedModules = Array<Array<MutableState<WorkbenchModuleState<*>?>>>(DisplayType.values().size) {
-        Array(
-            ModuleType.values().size
-        ) { mutableStateOf(null) }
-    }
 
     val modules = mutableStateListOf<WorkbenchModuleState<*>>()
-    val windows = mutableStateListOf<WindowStateAware>()
+    val windows = mutableStateListOf<WorkbenchWindowState>()
 
     var commands = mutableStateListOf<Command>()
     var commandsMenus = mutableMapOf<MenuType, MenuEntry>()
@@ -38,8 +41,8 @@ internal class WorkbenchModel(val appTitle: String = "") {
     var bottomSplitState by mutableStateOf(SplitPaneState(moveEnabled = true, initialPositionPercentage = 0.7f))
     var leftSplitState by  mutableStateOf(SplitPaneState(moveEnabled = true, initialPositionPercentage = 0.25f))
 
-    var mainWindow = WindowStateAware(modules = emptyList()) // keeps track of the default window position
-    val dragState = DragState(mainWindow)
+    var mainWindow = WorkbenchWindowState() // keeps track of the default window position
+    val workbenchDragState = WorkbenchDragState(mainWindow)
 
     var uniqueKey = 0
 }

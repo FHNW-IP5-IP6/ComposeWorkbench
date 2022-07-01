@@ -5,10 +5,15 @@ import androidx.compose.ui.window.application
 import com.hivemq.embedded.EmbeddedHiveMQ
 import com.hivemq.embedded.EmbeddedHiveMQBuilder
 import controller.WorkbenchController
-import model.data.*
+import model.data.Command
+import model.data.MQClient
+import model.data.WorkbenchModule
+import model.data.enums.MenuType
+import model.data.enums.ModuleType
+import model.data.enums.toDisplayType
 import util.WorkbenchDefaultIcon
 import view.WorkbenchUI
-import view.conponent.WorkbenchWindow
+import view.component.WorkbenchWindow
 import java.util.concurrent.Executors
 
 
@@ -111,7 +116,7 @@ class Workbench(appTitle: String = "", enableMQ: Boolean = false) {
     ) {
         val id = controller.getNextKey()
         if(shown){
-            controller.requestExplorerState(id = id, key = type, explorerModel = m, displayType =  toDisplayType(location))
+            controller.requestExplorerState(id = id, moduleType = type, explorerModel = m, displayType =  toDisplayType(location))
         }
         if (default) {
             controller.addDefaultExplorer(id = id, key = type, explorerModel = m)
@@ -138,7 +143,7 @@ class Workbench(appTitle: String = "", enableMQ: Boolean = false) {
         type: String,
         id: Int
     ) {
-        controller.requestEditorState<M>(key = type, dataId = id)
+        controller.requestEditorState<M>(moduleType = type, dataId = id)
     }
 
     /**

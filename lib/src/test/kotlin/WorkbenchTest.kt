@@ -1,6 +1,6 @@
 
-import model.data.DisplayType
-import model.data.ModuleType
+import model.data.enums.DisplayType
+import model.data.enums.ModuleType
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -34,7 +34,7 @@ internal class WorkbenchTest{
         sut.registerExplorer<String>(type = "String", title = { "title" }){}
         val model = "value"
         sut.requestExplorer<String>("String", model)
-        val displayController = sut.getWorkbenchController().createModuleDisplayController(displayType = DisplayType.LEFT, moduleType = ModuleType.EXPLORER)
+        val displayController = sut.getWorkbenchController().getDisplayController(displayType = DisplayType.LEFT, moduleType = ModuleType.EXPLORER)
         assertEquals(1, displayController.getModulesFiltered().size)
     }
 
@@ -51,7 +51,7 @@ internal class WorkbenchTest{
     fun openEditor() {
         sut.registerEditor(type = "String", loader = {"test"}, title = { "title" }){}
         sut.requestEditor<String>("String", 0)
-        val displayController = sut.getWorkbenchController().createModuleDisplayController(displayType = DisplayType.TAB1, moduleType = ModuleType.EDITOR)
+        val displayController = sut.getWorkbenchController().getDisplayController(displayType = DisplayType.TAB1, moduleType = ModuleType.EDITOR)
         assertEquals(1, displayController.getModulesFiltered().size)
     }
 
