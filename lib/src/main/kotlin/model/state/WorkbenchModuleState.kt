@@ -8,7 +8,7 @@ import model.data.enums.DisplayType
 
 internal class WorkbenchModuleState <M> (
     val id: Int,
-    private val dataId: Int? = null,
+    val dataId: Int? = null,
     var model: M,
     var module: WorkbenchModule<M>,
     var window: WorkbenchWindowState,

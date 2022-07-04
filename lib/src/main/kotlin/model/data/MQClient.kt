@@ -17,7 +17,7 @@ class MQClient(val type: String, val id: Int) {
 
     private var running = false
     private lateinit var client: Mqtt5BlockingClient
-    private var ident: String = "$type:$id"
+    private var ident: String = "$type/$id"
 
     init {
         try {
@@ -35,27 +35,25 @@ class MQClient(val type: String, val id: Int) {
 
     internal fun publish(topic: String, msg: String) {
         if (!running) return
-        val msgWithId: String = "$ident:$msg"
         client.publishWith()
             .topic(topic)
             .qos(MqttQos.AT_LEAST_ONCE)
-            .payload(msgWithId.toByteArray())
+            .payload(msg.toByteArray())
             .send()
     }
 
     fun publishUnsaved() {
-        publish(MQ_INTERNAL_TOPIC_PATH_EDITOR, MQ_INTERNAL_EDITOR_STATE_UNSAVED)
+        publish("$MQ_INTERNAL_TOPIC_PATH_EDITOR/$ident", MQ_INTERNAL_EDITOR_STATE_UNSAVED)
     }
 
     fun publishSaved() {
-        publish(MQ_INTERNAL_TOPIC_PATH_EDITOR, MQ_INTERNAL_EDITOR_STATE_SAVED)
+        publish("$MQ_INTERNAL_TOPIC_PATH_EDITOR/$ident", MQ_INTERNAL_EDITOR_STATE_SAVED)
     }
 
-
-    fun subscribe(topic: String, callBack: (String)->Unit) {
+    internal fun subscribe(topic: String, callBack: (String, String)->Unit) {
         if (!running) return
         val clbck: (Mqtt5Publish) -> Unit = {
-            callBack(String(it.payloadAsBytes))
+            callBack(it.topic.toString(), String(it.payloadAsBytes))
         }
         client.toAsync().subscribeWith()
             .topicFilter(topic)
@@ -64,10 +62,10 @@ class MQClient(val type: String, val id: Int) {
             .send()
     }
 
-    fun subscribe(topic: String, callBack: (String)->Unit, executor: Executor) {
+    internal fun subscribe(topic: String, callBack: (String, String)->Unit, executor: Executor) {
         if (!running) return
         val clbck: (Mqtt5Publish) -> Unit = {
-            callBack(String(it.payloadAsBytes))
+            callBack(it.topic.toString(), String(it.payloadAsBytes))
         }
         client.toAsync().subscribeWith()
             .topicFilter(topic)
@@ -75,6 +73,13 @@ class MQClient(val type: String, val id: Int) {
             .callback(clbck)
             .executor(executor)
             .send()
+    }
+
+    fun subscribeForUpdates(editorType: String, callBack: ()->Unit) {
+        val clbck: (String, String) -> Unit = {_,_->
+            callBack()
+        }
+        subscribe("$MQ_INTERNAL_TOPIC_PATH_EDITOR/$editorType/#", clbck)
     }
 
 }

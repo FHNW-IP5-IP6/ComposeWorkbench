@@ -35,7 +35,7 @@ class Workbench(appTitle: String = "", enableMQ: Boolean = false) {
 
             // subscribe for available topics to log
             val logMQClient = MQClient("workbench-log", 0)
-            logMQClient.subscribe(MQ_INTERNAL_TOPIC_PATH_EDITOR, ::logMQ, Executors.newSingleThreadExecutor())
+            logMQClient.subscribe("$MQ_INTERNAL_TOPIC_PATH_EDITOR/#", ::logMQ, Executors.newSingleThreadExecutor())
         }
     }
 
@@ -177,8 +177,8 @@ class Workbench(appTitle: String = "", enableMQ: Boolean = false) {
         }
     }
 
-    private fun logMQ(msg: String) {
-        println("Log-MQ: $msg")
+    private fun logMQ(topic: String, msg: String) {
+        println("Log-MQ:$topic: $msg")
     }
 
     //used for testing

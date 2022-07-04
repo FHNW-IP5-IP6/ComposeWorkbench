@@ -101,8 +101,8 @@ internal class WorkbenchCommandController(private val model: WorkbenchModel, wor
     fun saveAll() {
         model.modules.forEach { it ->
             model.unsavedEditors.forEach { entry ->
-                if (it.module.moduleType.name == entry.key) {
-                    if (entry.value.contains(it.id)) {
+                if (it.module.modelType == entry.key) {
+                    if (entry.value.contains(it.dataId ?: it.id)) {
                         it.onSave()
                     }
                 }

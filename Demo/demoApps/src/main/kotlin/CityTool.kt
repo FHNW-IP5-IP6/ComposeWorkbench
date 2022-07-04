@@ -17,8 +17,6 @@ fun main() {
         onClose = {m, c -> println("Editor on Close") },
         onSave = { m, c ->
             m.persist()
-            //TODO: replace with message to explorer}
-            // explorerModel.forEach { m -> m.reload() }
             c.publishSaved()
         }
     ){m, c ->
@@ -33,8 +31,6 @@ fun main() {
         onClose = { m, c -> println("Editor on Close") },
         onSave = { m, c ->
             m.persist()
-            //TODO: replace with message to explorer}
-            //explorerModel.forEach { m -> m.reload() }
             c.publishSaved()
         }
     ){ m, c ->
@@ -43,6 +39,7 @@ fun main() {
 
     workbench.registerExplorer<CitiesState>(type = "Cities", title = { it.title() }
     ) { m, c ->
+        c.subscribeForUpdates("City", m::reload)
         CitiesExplorerUi(m) {
             workbench.requestEditor<CityState>("City", it)
         }

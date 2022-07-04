@@ -9,28 +9,28 @@ import java.util.concurrent.Executors
 
 internal class WorkbenchMQDispatcher (val model: WorkbenchModel, private val commandController: WorkbenchCommandController)
 {
-    private var mqClient: MQClient = MQClient("workbench-editor-dispatcher", 0)
+    private var mqClient: MQClient = MQClient("workbench-editors-dispatcher", 0)
 
     init {
-        mqClient.subscribe(MQ_INTERNAL_TOPIC_PATH_EDITOR, ::dispatchEditorMessagesForSavingState, Executors.newSingleThreadExecutor())
+        mqClient.subscribe("$MQ_INTERNAL_TOPIC_PATH_EDITOR/#", ::dispatchEditorMessagesForSavingState, Executors.newSingleThreadExecutor())
     }
 
-    private fun dispatchEditorMessagesForSavingState(msg: String) {
-        val splitMsg = msg.split(":")
-        if (splitMsg.size == 3) {
-            val type = splitMsg[0]
-            val dataId = splitMsg[1].toInt()
-            val cmd = splitMsg[2]
-            if (cmd == MQ_INTERNAL_EDITOR_STATE_UNSAVED) {
-                commandController.addUnsavedModule(type, dataId)
-            } else if (cmd == MQ_INTERNAL_EDITOR_STATE_SAVED) {
-                commandController.removeSavedModule(type, dataId)
+    private fun dispatchEditorMessagesForSavingState(topic: String, msg: String) {
+        val splitTopic = topic.split("/")
+        if (splitTopic.size == 4) {
+            val type = splitTopic[splitTopic.size-2]
+            try {
+                val dataId = splitTopic[splitTopic.size-1].toInt()
+                if (msg == MQ_INTERNAL_EDITOR_STATE_UNSAVED) {
+                    commandController.addUnsavedModule(type, dataId)
+                } else if (msg == MQ_INTERNAL_EDITOR_STATE_SAVED) {
+                    commandController.removeSavedModule(type, dataId)
+                }
+                model.unsavedState = model.unsavedEditors.isNotEmpty()
+            } catch (exception: NumberFormatException) {
+                return
             }
-            model.unsavedState = model.unsavedEditors.isNotEmpty()
         }
     }
-
-
-
 
 }
