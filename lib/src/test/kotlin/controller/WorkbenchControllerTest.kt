@@ -34,7 +34,7 @@ class WorkbenchControllerTest {
 
     @Test
     fun registerAndRequestEditor(){
-        val editorModule = WorkbenchModule(ModuleType.EDITOR,"type", title ={"title"}, loader = {"model"} ) {}
+        val editorModule = WorkbenchModule(ModuleType.EDITOR,"type", title ={"title"}, loader = {"model"} ) {_,_->}
         sut.registerEditor("type", editorModule)
         val moduleState = sut.requestEditorState<String>("type", 666)
 
@@ -47,7 +47,7 @@ class WorkbenchControllerTest {
 
     @Test
     fun registerAndRequestExplorer(){
-        val explorerModule = WorkbenchModule<String>(ModuleType.EXPLORER,"type", title ={"title"}) {}
+        val explorerModule = WorkbenchModule<String>(ModuleType.EXPLORER,"type", title ={"title"}) {_,_->}
         sut.registerExplorer("type", explorerModule)
         val moduleState = sut.requestExplorerState(id = 0, moduleType = "type", explorerModel = "model1", DisplayType.LEFT)
 
@@ -59,7 +59,7 @@ class WorkbenchControllerTest {
 
     @Test
     fun convertEditorToWindow() {
-        val editorModule = WorkbenchModule(ModuleType.EDITOR,"type", title ={"title"}, loader = {"model"} ) {}
+        val editorModule = WorkbenchModule(ModuleType.EDITOR,"type", title ={"title"}, loader = {"model"} ) {_,_->}
         sut.registerEditor("type", editorModule)
         sut.requestEditorState<String>("type", 666)
 
@@ -80,7 +80,7 @@ class WorkbenchControllerTest {
 
     @Test
     fun convertExplorerToWindow() {
-        val explorerModule = WorkbenchModule<String>(ModuleType.EXPLORER,"type", title ={"title"}) {}
+        val explorerModule = WorkbenchModule<String>(ModuleType.EXPLORER,"type", title ={"title"}) {_,_->}
         sut.registerExplorer("type", explorerModule)
         sut.requestExplorerState<String>( 0,"type", "model", DisplayType.LEFT)
 
@@ -137,7 +137,7 @@ class WorkbenchControllerTest {
 
     @Test
     fun handleEmptyTabRowExplorerTab1() {
-        val editorModule = WorkbenchModule(ModuleType.EDITOR,"type", title ={"title"}, loader = {"model $it" } ) {}
+        val editorModule = WorkbenchModule(ModuleType.EDITOR,"type", title ={"title"}, loader = {"model $it" } ) {_,_->}
         sut.registerEditor("type", editorModule)
         val moduleState1 = sut.requestEditorState<String>("type", 666)
         val moduleState2 = sut.requestEditorState<String>("type", 777)

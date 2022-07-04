@@ -16,3 +16,7 @@ private const val MQ_INTERNAL_PREFIX = "workbench"
 private const val MQ_INTERNAL_TOPIC_EDITOR = "editors"
 internal const val MQ_INTERNAL_TOPIC_PATH_EDITOR = "$MQ_INTERNAL_PREFIX/$MQ_INTERNAL_TOPIC_EDITOR"
 
+internal const val MQ_INTERNAL_EDITOR_COMMAND_SAVE = "save"
+internal const val MQ_INTERNAL_EDITOR_STATE_SAVED = "saved"
+internal const val MQ_INTERNAL_EDITOR_STATE_UNSAVED = "unsaved"
+

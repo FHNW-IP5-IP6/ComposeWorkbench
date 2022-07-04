@@ -24,14 +24,14 @@ import javax.swing.JPanel
 
 fun main() = application {
     Window(onCloseRequest = ::exitApplication) {
-        CityMapEditorUi(findById(2661374).toCityLocationState())
+        CityMapEditorUi(findById(2661374).toCityLocationState()) {}
     }
 }
 
 var map: JXMapViewer? = null
 
 @Composable
-fun CityMapEditorUi(model: CityLocationState){
+fun CityMapEditorUi(model: CityLocationState, onChange: ()->Unit){
     Row (modifier = Modifier.fillMaxSize()) {
         BoxWithConstraints {
             SwingPanel(
@@ -62,6 +62,7 @@ fun CityMapEditorUi(model: CityLocationState){
                     println(center)
                     model.longitude = center.longitude
                     model.latitude = center.latitude
+                    onChange.invoke()
                 },
             ){
                 Icon(Icons.Filled.Refresh, "")

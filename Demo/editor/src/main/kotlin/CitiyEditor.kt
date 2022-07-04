@@ -5,6 +5,7 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.material.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -13,12 +14,12 @@ import androidx.compose.ui.window.application
 
 fun main() = application {
     Window(onCloseRequest = ::exitApplication) {
-        CityEditorUi(findById(2661374).toCityState())
+        CityEditorUi(findById(2661374).toCityState()) {}
     }
 }
 
 @Composable
-fun CityEditorUi(model: CityState) {
+fun CityEditorUi(model: CityState, onChange: ()->Unit) {
     with(model) {
         Box(
             modifier = Modifier.fillMaxSize()
@@ -38,31 +39,31 @@ fun CityEditorUi(model: CityState) {
                     Column {
                         Row {
                             EditableField(label = "Name",
-                                onValueChange = { name = it },
+                                onValueChange = { name = it; onChange.invoke() },
                                 getValue = { name })
                             EditableField(label = "Country",
-                                onValueChange = { countryCode = it },
+                                onValueChange = { countryCode = it; onChange.invoke() },
                                 getValue = { countryCode })
                         }
                         Row {
                             EditableField(label = "Population",
-                                onValueChange = { population = if (it.toIntOrNull() == null) 0 else it.toInt() },
+                                onValueChange = { population = if (it.toIntOrNull() == null) 0 else it.toInt(); onChange.invoke() },
                                 getValue = { population.toString() })
                             EditableField(label = "Elevation",
-                                onValueChange = { elevation = if (it.toDoubleOrNull() == null) 0.0 else it.toDouble() },
+                                onValueChange = { elevation = if (it.toDoubleOrNull() == null) 0.0 else it.toDouble(); onChange.invoke() },
                                 getValue = { elevation.toString() })
                         }
                         Row {
                             EditableField(label = "Timezone",
-                                onValueChange = { timeZone = it },
+                                onValueChange = { timeZone = it; onChange.invoke() },
                                 getValue = { timeZone })
                         }
                         Row {
                             EditableField(label = "Longitude",
-                                onValueChange = { longitude = if (it.toDoubleOrNull() == null) 0.0 else it.toDouble() },
+                                onValueChange = { longitude = if (it.toDoubleOrNull() == null) 0.0 else it.toDouble(); onChange.invoke() },
                                 getValue = { longitude.toString() })
                             EditableField(label = "Latitude",
-                                onValueChange = { latitude = if (it.toDoubleOrNull() == null) 0.0 else it.toDouble() },
+                                onValueChange = { latitude = if (it.toDoubleOrNull() == null) 0.0 else it.toDouble(); onChange.invoke() },
                                 getValue = { latitude.toString() })
                         }
                     }

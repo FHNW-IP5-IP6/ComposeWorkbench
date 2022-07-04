@@ -31,8 +31,9 @@ internal class WorkbenchCommandController(private val model: WorkbenchModel, wor
             listOf(
                 Command(text = "Save All",
                     paths = mutableListOf("${MenuType.MenuBar.name}.File"),
-                    action = { saveAll(ModuleType.EDITOR) },
-                    shortcut = KeyShortcut(Key.S, ctrl = true, alt = true)
+                    action = { saveAll() },
+                    shortcut = KeyShortcut(Key.S, ctrl = true, alt = true),
+
                 ),
                 Command(text = "Horizontal",
                     paths = mutableListOf("${MenuType.MenuBar.name}.View.Split TabSpace"),
@@ -77,13 +78,36 @@ internal class WorkbenchCommandController(private val model: WorkbenchModel, wor
         model.commands.add(command)
     }
 
-    fun saveAll (moduleType: ModuleType) {
-        saveAll(model.modules.filter { it.module.moduleType == moduleType })
+    private fun refreshSaveState() {
+        // remove type key if set is empty
+        model.unsavedEditors.forEach{
+            if (it.value.isEmpty())
+                model.unsavedEditors.remove(it.key)
+        }
     }
 
-    private fun saveAll(modules: List<WorkbenchModuleState<*>>){
-        modules.forEach{
-            it.onSave()
+    fun addUnsavedModule(type: String, dataId: Int) {
+        if (!model.unsavedEditors.containsKey(type)) {
+            model.unsavedEditors[type] = mutableSetOf<Int>()
         }
+        model.unsavedEditors[type]!!.add(dataId)
+    }
+
+    fun removeSavedModule(type: String, dataId: Int) {
+        model.unsavedEditors[type]?.remove(dataId)
+        refreshSaveState()
+    }
+
+    fun saveAll() {
+        model.modules.forEach { it ->
+            model.unsavedEditors.forEach { entry ->
+                if (it.module.moduleType.name == entry.key) {
+                    if (entry.value.contains(it.id)) {
+                        it.onSave()
+                    }
+                }
+            }
+        }
+        refreshSaveState()
     }
 }

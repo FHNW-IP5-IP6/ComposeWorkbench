@@ -2,6 +2,8 @@ package model.data
 
 import MQ_INTERNAL_BROKER_IP_ADDRESS
 import MQ_INTERNAL_BROKER_PORT
+import MQ_INTERNAL_EDITOR_STATE_SAVED
+import MQ_INTERNAL_EDITOR_STATE_UNSAVED
 import MQ_INTERNAL_TOPIC_PATH_EDITOR
 import com.hivemq.client.mqtt.MqttClient
 import com.hivemq.client.mqtt.datatypes.MqttQos
@@ -11,10 +13,11 @@ import java.net.InetSocketAddress
 import java.util.concurrent.Executor
 
 
-class MQClient(ident: String) {
+class MQClient(val type: String, val id: Int) {
 
     private var running = false
     private lateinit var client: Mqtt5BlockingClient
+    private var ident: String = "$type:$id"
 
     init {
         try {
@@ -30,14 +33,24 @@ class MQClient(ident: String) {
         }
     }
 
-    fun publish(msg: String) {
+    internal fun publish(topic: String, msg: String) {
         if (!running) return
+        val msgWithId: String = "$ident:$msg"
         client.publishWith()
-            .topic(MQ_INTERNAL_TOPIC_PATH_EDITOR)
+            .topic(topic)
             .qos(MqttQos.AT_LEAST_ONCE)
-            .payload(msg.toByteArray())
+            .payload(msgWithId.toByteArray())
             .send()
     }
+
+    fun publishUnsaved() {
+        publish(MQ_INTERNAL_TOPIC_PATH_EDITOR, MQ_INTERNAL_EDITOR_STATE_UNSAVED)
+    }
+
+    fun publishSaved() {
+        publish(MQ_INTERNAL_TOPIC_PATH_EDITOR, MQ_INTERNAL_EDITOR_STATE_SAVED)
+    }
+
 
     fun subscribe(topic: String, callBack: (String)->Unit) {
         if (!running) return

@@ -33,9 +33,10 @@ internal fun WorkbenchAppBar(controller: WorkbenchController) {
                 modifier = Modifier.align(alignment = Alignment.CenterVertically),
             )
             Button(
-                onClick = { controller.commandController.saveAll(ModuleType.EDITOR) },
+                onClick = { controller.commandController.saveAll() },
                 modifier = Modifier.align(alignment = Alignment.CenterVertically),
-                colors = ButtonDefaults.selectedButtonColors(true)
+                colors = ButtonDefaults.selectedButtonColors(true),
+                enabled = controller.model.unsavedState
             ) {
                 Text("Save All")
             }

@@ -2,42 +2,47 @@
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Home
+import model.data.MQClient
 
 fun main() {
 
-    val workbench: Workbench = Workbench("Cities App")
+    val workbench: Workbench = Workbench("Cities App", true)
     val explorerModel: List<CitiesState> = listOf(getSwissCities(),getSmallCities(), getBigCities(),  getGermanCities())
 
-    workbench.registerEditor<CityState>(type = "City",
+    workbench.registerEditor<CityState>(
+        type = "City",
         loader = {getCityState(it)},
         icon = Icons.Default.Edit,
         title = { it.name },
-        onClose = { println("Editor on Close") },
-        onSave = {
-            it.persist()
+        onClose = {m, c -> println("Editor on Close") },
+        onSave = { m, c ->
+            m.persist()
             //TODO: replace with message to explorer}
-            explorerModel.forEach { m -> m.reload() }
+            // explorerModel.forEach { m -> m.reload() }
+            c.publishSaved()
         }
-    ){
-            m -> CityEditorUi(m)
+    ){m, c ->
+        CityEditorUi(m, c::publishUnsaved)
     }
 
-    workbench.registerEditor<CityLocationState>(type = "City",
+    workbench.registerEditor<CityLocationState>(
+        type = "City",
         loader = {getCityLocationState(it)},
         icon = Icons.Default.Home,
         title = { it.name },
-        onClose = { println("Editor on Close") },
-        onSave = {
-            it.persist()
+        onClose = { m, c -> println("Editor on Close") },
+        onSave = { m, c ->
+            m.persist()
             //TODO: replace with message to explorer}
-            explorerModel.forEach { m -> m.reload() }
+            //explorerModel.forEach { m -> m.reload() }
+            c.publishSaved()
         }
-    ){
-            m -> CityMapEditorUi(m)
+    ){ m, c ->
+        CityMapEditorUi(m, c::publishUnsaved)
     }
 
     workbench.registerExplorer<CitiesState>(type = "Cities", title = { it.title() }
-    ) { m ->
+    ) { m, c ->
         CitiesExplorerUi(m) {
             workbench.requestEditor<CityState>("City", it)
         }

@@ -25,6 +25,10 @@ internal class WorkbenchModel(val appTitle: String = "") {
 
     var commands = mutableStateListOf<Command>()
     var commandsMenus = mutableMapOf<MenuType, MenuEntry>()
+
+    var unsavedState by mutableStateOf(false)
+    val unsavedEditors = mutableMapOf<String, MutableSet<Int>>()
+
     init {
         MenuType.values().forEach {
             commandsMenus[it] = MenuEntry(it.name)

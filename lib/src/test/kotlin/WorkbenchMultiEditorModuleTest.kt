@@ -24,8 +24,8 @@ class WorkbenchMultiEditorModuleTest {
         val type = "editorType"
         val id = 456
         val controller = sut.getWorkbenchController()
-        sut.registerEditor(type = type, title = {it.title}, loader = { TestModel(it) }){}
-        sut.registerEditor(type = type, title = {it.title}, loader = { TestModel(it) }){}
+        sut.registerEditor(type = type, title = {it.title}, loader = { TestModel(it) }){_,_->}
+        sut.registerEditor(type = type, title = {it.title}, loader = { TestModel(it) }){_,_->}
         assertEquals(2, controller.getRegisteredEditors<TestModel>(type).size)
 
         sut.requestEditor<TestModel>(type = type, id = id)
@@ -51,8 +51,8 @@ class WorkbenchMultiEditorModuleTest {
         val controller = sut.getWorkbenchController()
         val type = "editorType"
         val id = 456
-        sut.registerEditor(type = type, title = {it.title}, loader = { TestModel(it) }){}
-        sut.registerEditor(type = type, title = {it.title}, loader = { TestModel2(it) }){}
+        sut.registerEditor(type = type, title = {it.title}, loader = { TestModel(it) }){_,_->}
+        sut.registerEditor(type = type, title = {it.title}, loader = { TestModel2(it) }){_,_->}
         assertEquals(2, controller.getRegisteredEditors<TestModel>(type).size)
 
         sut.requestEditor<TestModel>(type = type, id = id)

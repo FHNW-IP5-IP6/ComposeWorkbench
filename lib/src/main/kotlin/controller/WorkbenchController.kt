@@ -17,9 +17,10 @@ import org.jetbrains.compose.splitpane.SplitPaneState
 @Suppress("UNCHECKED_CAST")
 internal class WorkbenchController(appTitle: String) {
 
-    private val model: WorkbenchModel = WorkbenchModel(appTitle)
+    val model: WorkbenchModel = WorkbenchModel(appTitle)
     val commandController = WorkbenchCommandController(model, this)
     val displayControllers: MutableMap<DisplayControllerKey, WorkbenchDisplayController> = mutableMapOf()
+    val mqController = WorkbenchMQDispatcher(model, commandController)
 
     fun getDisplayController(displayType: DisplayType, moduleType: ModuleType, deselectable: Boolean = false): WorkbenchDisplayController{
         val key = DisplayControllerKey(displayType, moduleType, model.mainWindow)
@@ -258,4 +259,5 @@ internal class DisplayControllerKey(
         result = 31 * result + windowState.hashCode()
         return result
     }
+
 }

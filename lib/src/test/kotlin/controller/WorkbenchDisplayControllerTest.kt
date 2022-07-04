@@ -157,7 +157,7 @@ class WorkbenchDisplayControllerTest {
     }
 
     private fun getModule() :WorkbenchModule<String> {
-        return WorkbenchModule<String>(moduleType,"type", title ={"title"}) {}
+        return WorkbenchModule<String>(moduleType,"type", title ={"title"}) {_,_->}
     }
 
 }

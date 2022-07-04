@@ -1,5 +1,6 @@
 package model.state
 
+import MQ_INTERNAL_TOPIC_PATH_EDITOR
 import androidx.compose.runtime.Composable
 import model.data.MQClient
 import model.data.WorkbenchModule
@@ -15,29 +16,33 @@ internal class WorkbenchModuleState <M> (
     var displayType: DisplayType,
     var isPreview: Boolean = false
 ){
-    private var client: MQClient = MQClient(id.toString())
+    private var client: MQClient = MQClient(module.modelType, dataId ?: id)
+
+    init {
+        client.publish(MQ_INTERNAL_TOPIC_PATH_EDITOR, "created")
+    }
 
     fun updateModule(module: WorkbenchModule<*>){
         module as WorkbenchModule<M>
-        this.module.onClose.invoke(this.model)
+        //this.module.onClose.invoke(this.model)
         this.module = module
         model = module.loader!!.invoke(dataId!!)
     }
 
     fun onClose() {
-        module.onClose(model)
+        module.onClose(model, client)
         close(this)
-        client.publish("Module closed.")
+        client.publish(MQ_INTERNAL_TOPIC_PATH_EDITOR, "closed")
     }
 
     fun getTitle() : String {
         return module.title(model)
     }
 
-    fun onSave() = module.onSave(model)
+    fun onSave() = module.onSave(model, client)
 
     @Composable
-    fun content() = module.content(model)
+    fun content() = module.content(model, client)
 }
 
 internal class WorkbenchDefaultState <M> (

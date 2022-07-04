@@ -19,9 +19,9 @@ import java.util.concurrent.Executors
 
 class Workbench(appTitle: String = "", enableMQ: Boolean = false) {
 
-    private val controller = WorkbenchController(appTitle)
-
     // HiveMQ infrastructure
+    // IMPORTANT!!! has to be first instance to initiate, otherwise early clients won't connect to broker
+    // TODO: reconnect of clients after not reaching client?
     private var hiveMQ: EmbeddedHiveMQ? = null
     init {
         if (enableMQ) {
@@ -34,10 +34,13 @@ class Workbench(appTitle: String = "", enableMQ: Boolean = false) {
             }
 
             // subscribe for available topics to log
-            val logMQClient = MQClient("ComposeWorkbenchLog")
+            val logMQClient = MQClient("workbench-log", 0)
             logMQClient.subscribe(MQ_INTERNAL_TOPIC_PATH_EDITOR, ::logMQ, Executors.newSingleThreadExecutor())
         }
     }
+
+    private val controller = WorkbenchController(appTitle)
+
 
     /**
      * Add an explorer for a given Type to the Workbench
@@ -51,15 +54,15 @@ class Workbench(appTitle: String = "", enableMQ: Boolean = false) {
     fun <M> registerExplorer(
         type: String,
         title: (M) -> String,
-        content: @Composable (M) -> Unit,
+        content: @Composable (M, MQClient) -> Unit,
     ) {
         val explorer = WorkbenchModule(
             moduleType = ModuleType.EXPLORER,
             modelType = type,
             content = content,
             title = title,
-            onClose = {},
-            onSave = {}
+            onClose = {_,_ ->},
+            onSave = {_,_ ->}
         )
         controller.registerExplorer(type, explorer)
     }
@@ -81,9 +84,9 @@ class Workbench(appTitle: String = "", enableMQ: Boolean = false) {
         title: (M) -> String,
         loader: (Int) -> M,
         icon: ImageVector = WorkbenchDefaultIcon,
-        onClose: (M) -> Unit = {},
-        onSave: (M) -> Unit = {},
-        content: @Composable (M) -> Unit
+        onClose: (M, MQClient) -> Unit = {_,_ ->},
+        onSave: (M, MQClient) -> Unit = {_,_ ->},
+        content: @Composable (M, MQClient) -> Unit
     ) {
         val editor = WorkbenchModule(
             moduleType = ModuleType.EDITOR,
