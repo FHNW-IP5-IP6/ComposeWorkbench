@@ -1,10 +1,10 @@
 package model.state
 
-import MQ_INTERNAL_TOPIC_PATH_EDITOR
 import androidx.compose.runtime.Composable
 import model.data.MQClient
 import model.data.WorkbenchModule
 import model.data.enums.DisplayType
+import model.data.enums.OnCloseResponse
 
 internal class WorkbenchModuleState <M> (
     val id: Int,
@@ -19,7 +19,7 @@ internal class WorkbenchModuleState <M> (
     private var client: MQClient = MQClient(module.modelType, dataId ?: id)
 
     init {
-        client.publish(MQ_INTERNAL_TOPIC_PATH_EDITOR, "created")
+        client.publishCreated()
     }
 
     fun updateModule(module: WorkbenchModule<*>){
@@ -30,16 +30,16 @@ internal class WorkbenchModuleState <M> (
     }
 
     fun onClose() {
-        module.onClose(model, client)
         close(this)
-        client.publish(MQ_INTERNAL_TOPIC_PATH_EDITOR, "closed")
+        module.onClose(model, client)
+        client.publishClosed()
     }
 
     fun getTitle() : String {
         return module.title(model)
     }
 
-    fun onSave() = module.onSave(model, client)
+    fun onSave(): Boolean = module.onSave(model, client)
 
     @Composable
     fun content() = module.content(model, client)

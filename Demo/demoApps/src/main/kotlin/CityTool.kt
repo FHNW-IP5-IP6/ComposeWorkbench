@@ -14,10 +14,11 @@ fun main() {
         loader = {getCityState(it)},
         icon = Icons.Default.Edit,
         title = { it.name },
-        onClose = {m, c -> println("Editor on Close") },
+        onClose = {m, c ->  },
         onSave = { m, c ->
             m.persist()
             c.publishSaved()
+            true
         }
     ){m, c ->
         CityEditorUi(m, c::publishUnsaved)
@@ -28,10 +29,11 @@ fun main() {
         loader = {getCityLocationState(it)},
         icon = Icons.Default.Home,
         title = { it.name },
-        onClose = { m, c -> println("Editor on Close") },
+        onClose = { m, c ->  },
         onSave = { m, c ->
             m.persist()
             c.publishSaved()
+            true
         }
     ){ m, c ->
         CityMapEditorUi(m, c::publishUnsaved)

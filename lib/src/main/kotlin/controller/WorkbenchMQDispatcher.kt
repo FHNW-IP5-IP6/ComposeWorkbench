@@ -12,10 +12,10 @@ internal class WorkbenchMQDispatcher (val model: WorkbenchModel, private val com
     private var mqClient: MQClient = MQClient("workbench-editors-dispatcher", 0)
 
     init {
-        mqClient.subscribe("$MQ_INTERNAL_TOPIC_PATH_EDITOR/#", ::dispatchEditorMessagesForSavingState, Executors.newSingleThreadExecutor())
+        mqClient.subscribe("$MQ_INTERNAL_TOPIC_PATH_EDITOR/#", ::dispatchEditorMessages, Executors.newSingleThreadExecutor())
     }
 
-    private fun dispatchEditorMessagesForSavingState(topic: String, msg: String) {
+    private fun dispatchEditorMessages(topic: String, msg: String) {
         val splitTopic = topic.split("/")
         if (splitTopic.size == 4) {
             val type = splitTopic[splitTopic.size-2]
@@ -26,7 +26,6 @@ internal class WorkbenchMQDispatcher (val model: WorkbenchModel, private val com
                 } else if (msg == MQ_INTERNAL_EDITOR_STATE_SAVED) {
                     commandController.removeSavedModule(type, dataId)
                 }
-                model.unsavedState = model.unsavedEditors.isNotEmpty()
             } catch (exception: NumberFormatException) {
                 return
             }

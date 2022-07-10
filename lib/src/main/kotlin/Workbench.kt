@@ -62,7 +62,7 @@ class Workbench(appTitle: String = "", enableMQ: Boolean = false) {
             content = content,
             title = title,
             onClose = {_,_ ->},
-            onSave = {_,_ ->}
+            onSave = {_,_ -> true}
         )
         controller.registerExplorer(type, explorer)
     }
@@ -85,7 +85,7 @@ class Workbench(appTitle: String = "", enableMQ: Boolean = false) {
         loader: (Int) -> M,
         icon: ImageVector = WorkbenchDefaultIcon,
         onClose: (M, MQClient) -> Unit = {_,_ ->},
-        onSave: (M, MQClient) -> Unit = {_,_ ->},
+        onSave: (M, MQClient) -> Boolean = {_,_ -> true},
         content: @Composable (M, MQClient) -> Unit
     ) {
         val editor = WorkbenchModule(

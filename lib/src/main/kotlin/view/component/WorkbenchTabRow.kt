@@ -11,6 +11,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
@@ -20,6 +22,7 @@ import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import controller.WorkbenchController
 import controller.WorkbenchDisplayController
+import model.data.enums.OnCloseResponse
 import model.state.WorkbenchModuleState
 import util.vertical
 
@@ -133,6 +136,7 @@ private fun LazyListScope.preview(controller: WorkbenchDisplayController) {
 @Composable
 private fun WorkbenchTab(moduleState: WorkbenchModuleState<*>, controller: WorkbenchController, displayController: WorkbenchDisplayController, selected: Boolean, onClick: ()->Unit) {
     val writerModifier = getTabModifier(displayController, selected, onClick)
+    var displayOnSave = remember { mutableStateOf(false) }
 
     DragTarget(module = moduleState, controller = displayController) {
         ContextMenuArea(items = {
@@ -140,8 +144,27 @@ private fun WorkbenchTab(moduleState: WorkbenchModuleState<*>, controller: Workb
                 ContextMenuItem("Open in Window") { controller.moduleToWindow(moduleState) },
             )
         }) {
-            WorkbenchTab(writerModifier, moduleState.getTitle(), moduleState::onClose)
+            WorkbenchTab(writerModifier, moduleState.getTitle()) {
+                if (controller.isUnsaved(moduleState)) {
+                    displayOnSave.value = true
+                } else {
+                    moduleState.onClose()
+                }
+            }
         }
+    }
+
+    if (displayOnSave.value) {
+        WorkbenchPopupSave({resp ->
+            if (resp == OnCloseResponse.DISCARD) {
+                moduleState.onClose()
+            } else if (resp == OnCloseResponse.SAVE) {
+                if (moduleState.onSave()) {
+                    moduleState.onClose()
+                }
+            }
+            displayOnSave.value = false
+        }, false)
     }
 }
 

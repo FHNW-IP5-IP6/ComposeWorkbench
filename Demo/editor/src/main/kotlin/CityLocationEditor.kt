@@ -7,12 +7,14 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.awt.SwingPanel
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
+import androidx.compose.ui.zIndex
 import org.jxmapviewer.JXMapViewer
 import org.jxmapviewer.OSMTileFactoryInfo
 import org.jxmapviewer.input.PanMouseInputListener
@@ -32,23 +34,22 @@ var map: JXMapViewer? = null
 
 @Composable
 fun CityMapEditorUi(model: CityLocationState, onChange: ()->Unit){
-    Row (modifier = Modifier.fillMaxSize()) {
-        BoxWithConstraints {
-            SwingPanel(
-                modifier = Modifier.size(maxWidth - 40.dp , maxHeight),
-                background = Color.Transparent,
-                factory = {
-                    JPanel().apply {
-                        map = createMap()
-                        map!!.addressLocation = GeoPosition(model.latitude, model.longitude)
-                        layout = BoxLayout(this, BoxLayout.Y_AXIS)
-                        add(map)
-                        isVisible = true
-                    }
+    Row {
+        SwingPanel(
+            modifier = Modifier.weight(1f).fillMaxHeight().zIndex(-99.0f),
+            background = Color.Transparent,
+            factory = {
+                JPanel().apply {
+                    map = createMap()
+                    map!!.addressLocation = GeoPosition(model.latitude, model.longitude)
+                    layout = BoxLayout(this, BoxLayout.Y_AXIS)
+                    add(map)
+                    isVisible = true
                 }
-            )
-        }
-        Column(modifier = Modifier.requiredWidth(40.dp).fillMaxHeight()) {
+            }
+        )
+        Column(modifier = Modifier.fillMaxHeight(),
+        ) {
             IconButton(onClick = { map!!.zoom = map!!.zoom - 1 },
             ){
                 Icon(Icons.Filled.Add, "")
@@ -58,12 +59,12 @@ fun CityMapEditorUi(model: CityLocationState, onChange: ()->Unit){
                 Icon(Icons.Filled.Close, "")
             }
             IconButton(onClick = {
-                    val center = map!!.centerPosition
-                    println(center)
-                    model.longitude = center.longitude
-                    model.latitude = center.latitude
-                    onChange.invoke()
-                },
+                val center = map!!.centerPosition
+                println(center)
+                model.longitude = center.longitude
+                model.latitude = center.latitude
+                onChange.invoke()
+            },
             ){
                 Icon(Icons.Filled.Refresh, "")
             }

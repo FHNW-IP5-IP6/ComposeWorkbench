@@ -85,7 +85,7 @@ internal class WorkbenchDisplayController(
 
     fun getModulesFiltered(): List<WorkbenchModuleState<*>> {
         return model.modules.filter {
-                    it.displayType == displayType
+            it.displayType == displayType
                     && (moduleType == ModuleType.BOTH || it.module.moduleType == moduleType)
                     && it.window == windowState
         }.reversed()
@@ -119,7 +119,7 @@ internal class WorkbenchDisplayController(
     fun removeModuleState(state: WorkbenchModuleState<*>) {
         reselectModuleState(state)
         model.modules.remove(state)
-        if (getModulesFiltered().isEmpty()){
+        if (getModulesFiltered().isEmpty()) {
             removeMe(this)
         }
     }

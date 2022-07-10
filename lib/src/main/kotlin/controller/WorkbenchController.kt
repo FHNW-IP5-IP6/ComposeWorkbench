@@ -133,6 +133,28 @@ internal class WorkbenchController(appTitle: String) {
         return moduleState
     }
 
+    fun <M>isUnsaved(state: WorkbenchModuleState<M>): Boolean {
+        model.unsavedEditors.forEach { entry ->
+            if (state.module.modelType == entry.key) {
+                if (entry.value.contains(state.dataId ?: state.id)) {
+                    return true
+                }
+            }
+        }
+        return false;
+    }
+
+    private fun <M>onModuleClose(moduleState: WorkbenchModuleState<M>) {
+        if(isUnsaved(moduleState)) {
+            // return on cancel response
+            // save on save response
+            // close without saving on discard response
+        } else {
+            moduleState.onClose()
+        }
+        // remove module if accepted
+    }
+
     private fun addModule(moduleState: WorkbenchModuleState<*>){
         val displayController = getDisplayController(moduleState.displayType, moduleState.module.moduleType, true)
         displayController.addModuleState(moduleState)
