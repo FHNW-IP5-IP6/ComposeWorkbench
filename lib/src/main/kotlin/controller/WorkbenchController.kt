@@ -175,12 +175,17 @@ internal class WorkbenchController(appTitle: String) {
         return explorer as WorkbenchModule<M>
     }
 
-    fun <M>getRegisteredEditors(key: String): MutableList<WorkbenchModule<M>> {
+    fun <M>getRegisteredEditors(key: String): List<WorkbenchModule<M>> {
         val editors = model.registeredEditors[key]
         if (editors == null || editors.isEmpty()) {
             throw IllegalStateException("Could not find registered Editor of type $key")
         }
         return editors as MutableList<WorkbenchModule<M>>
+    }
+
+    fun getRegisteredEditors(moduleState: WorkbenchModuleState<*>?): List<WorkbenchModule<*>> {
+        if (moduleState == null || moduleState.module.moduleType != ModuleType.EDITOR) return emptyList<WorkbenchModule<*>>()
+        return getRegisteredEditors<Any>(moduleState.module.modelType)
     }
 
     //Handle empty tab rows

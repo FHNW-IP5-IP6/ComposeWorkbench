@@ -10,6 +10,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.awt.awtEvent
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.PointerEventType
@@ -55,10 +56,8 @@ internal fun DragAndDropWindow(
     ) {
         with(controller.dragController) {
             val density = LocalDensity.current
-            Box(modifier = Modifier.onPointerEvent(PointerEventType.Enter) {
-                currentWindow.hasFocus = true
-            }.onPointerEvent(PointerEventType.Exit) {
-                currentWindow.hasFocus = false
+            Box(modifier = Modifier.onFocusChanged {
+                currentWindow.hasFocus = it.hasFocus
             }.fillMaxSize().onGloballyPositioned {
                 addReverseDropTarget(currentWindow, getBounds(true, currentWindow, it.boundsInWindow(), density))
             }) {

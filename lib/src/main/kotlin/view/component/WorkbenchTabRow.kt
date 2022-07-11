@@ -18,10 +18,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import controller.WorkbenchController
 import controller.WorkbenchDisplayController
+import model.data.WorkbenchModule
 import model.data.enums.OnCloseResponse
 import model.state.WorkbenchModuleState
 import util.vertical
@@ -58,18 +58,40 @@ internal fun WorkbenchTabRow(displayController: WorkbenchDisplayController, cont
  */
 @Composable
 internal fun WorkbenchTabBody(displayController: WorkbenchDisplayController, controller: WorkbenchController) {
-    BoxWithConstraints {
-        val contentSize = displayController.getContentDimension(DpSize(maxWidth, maxHeight))
-        Column(modifier = Modifier.size(maxWidth, maxHeight)) {
-            //The content is strictly sized, because a proper sizing and layout is not guaranteed by the users
-            Box(modifier = Modifier.size(contentSize).fillMaxWidth()
-            ) {
-                displayController.getSelectedModule()?.content()
+    var editorSelector = controller.getRegisteredEditors(displayController.getSelectedModule()).size > 1
+    Column(){
+        Box(modifier = Modifier.weight(if (editorSelector) 0.85f else 1f).fillMaxSize()) {
+            displayController.getSelectedModule()?.content()
+        }
+        if(editorSelector){
+            Box(modifier = Modifier.weight(0.15f).fillMaxSize()) {
+                WorkbenchEditorSelector(controller = controller, displayController = displayController)
             }
-            WorkbenchEditorSelector(controller = controller, displayController = displayController)
         }
     }
 }
+
+@Composable
+internal fun WorkbenchEditorSelector(displayController: WorkbenchDisplayController, controller: WorkbenchController) {
+    val editors = controller.getRegisteredEditors(displayController.getSelectedModule())
+    Row(modifier = Modifier.fillMaxSize(),
+        horizontalArrangement = Arrangement.Start,
+        verticalAlignment = Alignment.Bottom
+    ) {
+        for (editor: WorkbenchModule<*> in editors){
+            IconButton(
+                onClick = {
+                    displayController.updateAndRefreshState(displayController.getSelectedModule()!!) {
+                        it.updateModule(editor)
+                    }
+                }
+            ){
+                Icon(editor.icon, "")
+            }
+        }
+    }
+}
+
 
 
 @Composable
