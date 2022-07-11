@@ -16,7 +16,6 @@ internal fun WorkbenchWindow(controller: WorkbenchController){
             val displayController = controller.getDisplayController(state)
             DragAndDropWindow(
                 controller = controller,
-                moduleReceiver = { controller.moduleToWindow(it) },
                 onCloseRequest =  {
                     displayController.getModulesFiltered().forEach{ it.module.onClose }
                     controller.removeWindow(state) },
@@ -27,7 +26,7 @@ internal fun WorkbenchWindow(controller: WorkbenchController){
                     typography = NotoSansTypography,
                 ) {
                     Column {
-                        DropTarget(controller = displayController) {
+                        DropTarget(displayController = displayController, controller = controller) {
                             WorkbenchTabRow(displayController, controller)
                         }
                         WorkbenchTabBody(displayController, controller)

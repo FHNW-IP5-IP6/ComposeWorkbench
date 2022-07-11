@@ -10,7 +10,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.awt.awtEvent
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.PointerEventType
@@ -27,7 +26,6 @@ import androidx.compose.ui.window.WindowPosition
 import androidx.compose.ui.window.WindowState
 import controller.WorkbenchController
 import controller.WorkbenchDisplayController
-import model.state.WorkbenchDragState
 import model.state.WorkbenchModuleState
 import model.state.WorkbenchWindowState
 
@@ -35,19 +33,18 @@ import model.state.WorkbenchWindowState
  * Window in which a drag animation is visible
  * Modules which are dragged outside this Container will be opened as a new window
  *
- * @param model: Workbench model
+ * @param controller: Workbench Controller
  * @param currentWindow: Holder of the windows state
  * @param content: Content of the drag and drop container
  * @param onCloseRequest: Callback which is called, when the window is closed
- * @param moduleReceiver: Callback which is called, when module is dropped outside the given window
  * @param windowScope: Configurable scope for this window
  */
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 internal fun DragAndDropWindow(
     controller: WorkbenchController,
     currentWindow: WorkbenchWindowState,
     onCloseRequest: () -> Unit,
-    moduleReceiver: (WorkbenchModuleState<*>) -> Unit,
     windowScope: @Composable FrameWindowScope.() -> Unit = {},
     content: @Composable () -> Unit
 ){
@@ -56,32 +53,18 @@ internal fun DragAndDropWindow(
         title = controller.getAppTitle(),
         state = currentWindow.windowState
     ) {
-        with(controller.getDragState()) {
-            val pos = positionOnScreen
+        with(controller.dragController) {
             val density = LocalDensity.current
-
-            Box(modifier = Modifier.fillMaxSize().onGloballyPositioned {
-                currentWindow.isDropTarget = getBounds(true, currentWindow, it.boundsInWindow(), density).contains(
-                    Offset(
-                        x = pos.x.value,
-                        y = pos.y.value
-                    )
-                )
-                if (isDragging && currentWindow.isDropTarget && parentWindow != currentWindow) {
-                    parentWindow = currentWindow
-                }
+            Box(modifier = Modifier.onPointerEvent(PointerEventType.Enter) {
+                currentWindow.hasFocus = true
+            }.onPointerEvent(PointerEventType.Exit) {
+                currentWindow.hasFocus = false
+            }.fillMaxSize().onGloballyPositioned {
+                addReverseDropTarget(currentWindow, getBounds(true, currentWindow, it.boundsInWindow(), density))
             }) {
-                if (!parentWindow.isDropTarget && !isDragging && module != null && parentWindow == currentWindow) {
-                    onModuleDropped(module!!)
-                    moduleReceiver(module!!)
-                    reset()
-                }
                 windowScope()
                 content()
-
-                if (parentWindow == currentWindow) {
-                    DragAnimation(controller.getDragState())
-                }
+                DragAnimation(controller, currentWindow)
             }
         }
     }
@@ -90,35 +73,28 @@ internal fun DragAndDropWindow(
 /**
  * Target to drop a dragged module
  *
+ * @param controller: Workbench Controller
  * @param content: content of the drop target
  * @param modifier: Modifier to for the Box surrounding the content
- * @param controller: WorkbenchController responsible for the target
+ * @param displayController: WorkbenchController responsible for the target
  */
 @Composable
 internal fun DropTarget(
-    controller: WorkbenchDisplayController,
+    controller: WorkbenchController,
+    displayController: WorkbenchDisplayController,
     modifier: Modifier = Modifier,
     content: @Composable (BoxScope.() -> Unit)
 ){
-    with(controller.getDragState()) {
-        val pos = positionOnScreen
+    with(controller.dragController) {
         val density = LocalDensity.current
-        var isCurrentDropTarget by remember { mutableStateOf(false) }
 
         Box(modifier = modifier.onGloballyPositioned {
-            isCurrentDropTarget = getBounds(false, controller.windowState,  it.boundsInWindow(), density).contains(Offset(pos.x.value, pos.y.value))
+            addDropTarget(displayController, getBounds(false, displayController.windowState,  it.boundsInWindow(), density))
         }) {
-            val isValidTarget = module != null && controller.acceptsModuleOfType(getModuleType()!!) && !controller.containsModule(module!!)
-            // println("isValid ${controller.displayType}, $isValidTarget")
-            if (isCurrentDropTarget && isValidTarget){
-                controller.previewState.previewTitle = module!!.getTitle()
+            if (isCurrentDropTarget(displayController)){
+                displayController.previewState.previewTitle = getModuleState()!!.getTitle()
             } else {
-                controller.previewState.previewTitle = null
-            }
-            if (isCurrentDropTarget && !isDragging && isValidTarget) {
-                onModuleDropped(module!!)
-                controller.onModuleDroppedIn(module!!)
-                reset()
+                displayController.previewState.previewTitle = null
             }
             content()
         }
@@ -130,35 +106,36 @@ internal fun DropTarget(
  *
  * @param content: content of the drag target
  * @param modifier: Modifier to for the Box surrounding the content
- * @param controller: WorkbenchController responsible for the target
+ * @param displayController: WorkbenchController responsible for the target
  * @param module: ModuleType which can be dragged
+ * @param controller: Workbench Controller
  */
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 internal fun DragTarget(
     modifier: Modifier = Modifier,
     module: WorkbenchModuleState<*>,
-    controller: WorkbenchDisplayController,
+    controller: WorkbenchController,
+    displayController: WorkbenchDisplayController,
     content: @Composable BoxScope.() -> Unit
 ){
-    with(controller.getDragState()) {
+    with(controller.dragController) {
         Box(modifier = modifier
             .onPointerEvent(PointerEventType.Move) {
-                if (isDragging) {
-                    positionOnScreen = DpOffset(it.awtEvent.xOnScreen.dp, it.awtEvent.yOnScreen.dp)
+                if (isDragging()) {
+                    setPosition(DpOffset(it.awtEvent.xOnScreen.dp, it.awtEvent.yOnScreen.dp))
                 }
             }
             .pointerInput(key1 = module.id) {
                 detectDragGestures(onDragStart = {
                     reset()
-                    isDragging = true
-                    controller.getDragState().module = module
-                    parentWindow = controller.windowState
-                    onModuleDropped = controller::onModuleDraggedOut
+                    setDragging(true)
+                    setModuleState(module)
                 }, onDrag = { change, _ ->
                     change.consumeAllChanges()
                 }, onDragEnd = {
-                    isDragging = false
+                    setDragging(false)
+                    dropDraggedModule(controller, displayController)
                 }, onDragCancel = {
                     reset()
                 })
@@ -168,12 +145,35 @@ internal fun DragTarget(
     }
 }
 
+private fun dropDraggedModule(
+    controller: WorkbenchController,
+    displayController: WorkbenchDisplayController) {
+    with(controller.dragController){
+        if(getModuleState() != null){
+            val reverseDropTarget = getCurrentReverseDopTarget()
+            if(reverseDropTarget == null){
+                displayController.onModuleDraggedOut(getModuleState() !!)
+                controller.moduleToWindow(getModuleState() !!)
+            }else {
+                val dropTarget = getCurrentDopTarget(reverseDropTarget.windowState)
+                if(dropTarget != null && isValidDropTarget(dropTarget)){
+                    displayController.onModuleDraggedOut(getModuleState() !!)
+                    dropTarget.displayController.onModuleDroppedIn(getModuleState() !!)
+                }
+            }
+        }
+        reset()
+    }
+}
+
 @Composable
-private fun DragAnimation(state: WorkbenchDragState){
-    var dragAnimationSize by remember { mutableStateOf(IntSize.Zero) }
-    with(state){
-        if (isDragging) {
-            if (parentWindow != null && !parentWindow!!.isDropTarget){
+private fun DragAnimation(controller: WorkbenchController, currentWindow: WorkbenchWindowState){
+    with(controller.dragController){
+        val dropTarget = getCurrentReverseDopTarget()
+        var dragAnimationSize by remember { mutableStateOf(IntSize.Zero) }
+
+        if (isDragging()) {
+            if (dropTarget == null){
                 Window(
                     onCloseRequest = {},
                     transparent = false,
@@ -181,15 +181,15 @@ private fun DragAnimation(state: WorkbenchDragState){
                     undecorated = true,
                     state = WindowState(
                         size =  DpSize(dragAnimationSize.width.dp / 2, dragAnimationSize.height.dp / 2),
-                        position = WindowPosition(positionOnScreen.x, positionOnScreen.y)
+                        position = WindowPosition(getPosition().x, getPosition().y)
                     )
                 ) {
                     Box() {
-                        module?.content()
+                        getModuleState()?.content()
                     }
                 }
-            } else {
-                val offset = toOffset()
+            } else if (currentWindow == dropTarget.windowState) {
+                val offset = toOffset(dropTarget.windowState)
                 Box(modifier = Modifier
                     .graphicsLayer {
                         scaleX = 0.5f
@@ -202,7 +202,7 @@ private fun DragAnimation(state: WorkbenchDragState){
                         dragAnimationSize = it.size
                     }
                 ) {
-                    module?.content()
+                    getModuleState()?.content()
                 }
             }
         }

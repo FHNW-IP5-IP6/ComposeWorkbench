@@ -7,7 +7,6 @@ import model.data.enums.DisplayType
 import model.data.enums.ModuleType
 import model.data.enums.SplitViewMode
 import model.state.WorkbenchDefaultState
-import model.state.WorkbenchDragState
 import model.state.WorkbenchModuleState
 import model.state.WorkbenchWindowState
 import org.jetbrains.compose.splitpane.ExperimentalSplitPaneApi
@@ -21,6 +20,7 @@ internal class WorkbenchController(appTitle: String) {
     val commandController = WorkbenchCommandController(model, this)
     val displayControllers: MutableMap<DisplayControllerKey, WorkbenchDisplayController> = mutableMapOf()
     val mqController = WorkbenchMQDispatcher(model, commandController)
+    val dragController = WorkbenchDragController()
 
     fun getDisplayController(displayType: DisplayType, moduleType: ModuleType, deselectable: Boolean = false): WorkbenchDisplayController{
         val key = DisplayControllerKey(displayType, moduleType, model.mainWindow)
@@ -43,10 +43,6 @@ internal class WorkbenchController(appTitle: String) {
     }
 
     //Model Accessor functions
-    fun getDragState(): WorkbenchDragState {
-        return model.workbenchDragState
-    }
-
     fun getAppTitle(): String {
         return model.appTitle
     }
@@ -74,11 +70,12 @@ internal class WorkbenchController(appTitle: String) {
 
     fun removeWindow(window: WorkbenchWindowState){
         model.windows.remove(window)
+        dragController.removeReverseDropTarget(window)
         displayControllers.remove(DisplayControllerKey(DisplayType.WINDOW, ModuleType.BOTH, window))
     }
 
     fun moduleToWindow(moduleState: WorkbenchModuleState<*>): WorkbenchWindowState {
-        val window = WorkbenchWindowState(position = model.workbenchDragState.getWindowPosition())
+        val window = WorkbenchWindowState(position = dragController.getWindowPosition())
         val displayController = getDisplayController(window)
         displayController.addModuleState(moduleState)
         model.windows += window
@@ -192,11 +189,16 @@ internal class WorkbenchController(appTitle: String) {
             DisplayType.TAB1 -> reselectEditorSpace()
             DisplayType.TAB2 -> reselectEditorSpace()
             DisplayType.WINDOW -> {
-                model.windows -= displayController.windowState
-                displayControllers.remove(DisplayControllerKey(displayController))
+                removeWindow(displayController.windowState)
+                removeDisplayController(displayController)
             }
-            else -> displayControllers.remove(DisplayControllerKey(displayController))
+            else -> removeDisplayController(displayController)
         }
+    }
+
+    private fun removeDisplayController(displayController: WorkbenchDisplayController){
+        dragController.removeDropTarget(displayController)
+        displayControllers.remove(DisplayControllerKey(displayController))
     }
 
     //Editor split view specific
@@ -215,14 +217,14 @@ internal class WorkbenchController(appTitle: String) {
             //Tab 2 is empty so we remove it
             model.splitViewMode = SplitViewMode.UNSPLIT
             model.currentTabSpace = DisplayType.TAB1
-            displayControllers.remove(DisplayControllerKey(tab2))
+            removeDisplayController(tab2)
         } else {
             val selected = tab2.getSelectedModule()
             tab2.getModulesFiltered().forEach {  it.displayType = DisplayType.TAB1 }
             if (selected != null) {
                 tab1.setSelectedModule(selected)
             }
-            displayControllers.remove(DisplayControllerKey(tab2))
+            removeDisplayController(tab2)
             model.currentTabSpace = DisplayType.TAB1
         }
     }

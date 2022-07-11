@@ -68,7 +68,7 @@ private fun EditorSpaceDropTarget(
     displayController: WorkbenchDisplayController,
     controller: WorkbenchController
 ){
-    DropTarget(controller = displayController) {
+    DropTarget(displayController = displayController, controller = controller) {
         TabSpace(displayController, controller)
     }
 }

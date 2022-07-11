@@ -5,10 +5,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.layout.layout
+import androidx.compose.ui.unit.DpOffset
 import java.awt.Cursor
 
 //https://stackoverflow.com/questions/70057396/how-to-show-vertical-text-with-proper-size-layout-in-jetpack-compose
@@ -32,6 +34,8 @@ internal fun ButtonDefaults.selectedButtonColors(selected: Boolean) =
     } else {
         this.outlinedButtonColors()
     }
+
+internal fun DpOffset.toOffset() = Offset(this.x.value, this.y.value)
 
 @OptIn(ExperimentalComposeUiApi::class)
 internal fun Modifier.cursorForHorizontalResize(): Modifier =

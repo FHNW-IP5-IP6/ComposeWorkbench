@@ -138,7 +138,7 @@ private fun WorkbenchTab(moduleState: WorkbenchModuleState<*>, controller: Workb
     val writerModifier = getTabModifier(displayController, selected, onClick)
     var displayOnSave = remember { mutableStateOf(false) }
 
-    DragTarget(module = moduleState, controller = displayController) {
+    DragTarget(module = moduleState, displayController = displayController, controller = controller) {
         ContextMenuArea(items = {
             listOf(
                 ContextMenuItem("Open in Window") { controller.moduleToWindow(moduleState) },

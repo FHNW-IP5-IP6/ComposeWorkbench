@@ -22,9 +22,6 @@ internal fun WorkbenchUI(controller: WorkbenchController,
         controller = controller,
         onCloseRequest = closeRequest,
         currentWindow = controller.getMainWindow(),
-        moduleReceiver = {
-            controller.moduleToWindow(moduleState = it)
-        },
         windowScope = { workbenchMenuBar(controller.commandController) }
     ) {
         WorkbenchBody(controller)
@@ -46,7 +43,7 @@ private fun WorkbenchBody(controller: WorkbenchController) {
             Column {
                 BoxWithConstraints {
                     Row(modifier = Modifier.height(maxHeight - bottomExplorerController.getTabRowMinDimension().second)) {
-                        DropTarget(controller = leftExplorerController) {
+                        DropTarget(displayController = leftExplorerController, controller = controller) {
                             WorkbenchTabRow(leftExplorerController, controller)
                         }
                         WorkbenchVerticalSplitPane(splitPaneState = controller.getBottomSplitState()) {
@@ -71,7 +68,7 @@ private fun WorkbenchBody(controller: WorkbenchController) {
                         .height(bottomExplorerController.getTabRowMinDimension().second).padding(start = bottomExplorerController.getTabRowMinDimension().first)
                         .align(Alignment.End)
                 ) {
-                    DropTarget(controller = bottomExplorerController) {
+                    DropTarget(displayController = bottomExplorerController, controller = controller) {
                         WorkbenchTabRow(bottomExplorerController, controller)
                     }
                 }

@@ -8,7 +8,6 @@ import model.data.enums.DisplayType
 import model.data.enums.MenuType
 import model.data.enums.SplitViewMode
 import model.state.WorkbenchDefaultState
-import model.state.WorkbenchDragState
 import model.state.WorkbenchModuleState
 import model.state.WorkbenchWindowState
 import org.jetbrains.compose.splitpane.ExperimentalSplitPaneApi
@@ -42,7 +41,6 @@ internal class WorkbenchModel(val appTitle: String = "") {
     var leftSplitState by  mutableStateOf(SplitPaneState(moveEnabled = true, initialPositionPercentage = 0.25f))
 
     var mainWindow = WorkbenchWindowState() // keeps track of the default window position
-    val workbenchDragState = WorkbenchDragState(mainWindow)
 
     var uniqueKey = 0
 }

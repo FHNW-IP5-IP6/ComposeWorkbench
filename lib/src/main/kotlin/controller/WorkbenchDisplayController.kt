@@ -9,7 +9,10 @@ import androidx.compose.ui.unit.dp
 import model.WorkbenchModel
 import model.data.enums.DisplayType
 import model.data.enums.ModuleType
-import model.state.*
+import model.state.WorkbenchModuleState
+import model.state.WorkbenchPreviewState
+import model.state.WorkbenchSelectionState
+import model.state.WorkbenchWindowState
 import org.jetbrains.compose.splitpane.ExperimentalSplitPaneApi
 import org.jetbrains.compose.splitpane.SplitPaneState
 
@@ -32,8 +35,6 @@ internal class WorkbenchDisplayController(
     fun acceptsModuleOfType(moduleType: ModuleType): Boolean {
         return ModuleType.BOTH == this.moduleType || this.moduleType == moduleType
     }
-
-    fun getDragState(): WorkbenchDragState = model.workbenchDragState
 
     fun getScrollToIndex() = getIndex(getSelectedModule())
 
@@ -133,9 +134,8 @@ internal class WorkbenchDisplayController(
     }
 
     fun onModuleDroppedIn(moduleState: WorkbenchModuleState<*>) {
-        if (displayType != moduleState.displayType) {
-            addModuleState(moduleState)
-        } else if (!isModuleSelected(moduleState)) {
+        addModuleState(moduleState)
+        if (!isModuleSelected(moduleState)) {
             moduleStateSelectorPressed(moduleState)
         }
     }

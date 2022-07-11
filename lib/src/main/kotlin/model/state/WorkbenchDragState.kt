@@ -1,41 +1,32 @@
 package model.state
 
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.unit.DpOffset
-import androidx.compose.ui.window.WindowPosition
-import model.data.enums.ModuleType
+import controller.WorkbenchDisplayController
 
 /**
  * objects which holds information about the currently dragged module and its position
  */
-internal class WorkbenchDragState(mainWindow: WorkbenchWindowState) {
+internal class WorkbenchDragState {
     var isDragging: Boolean by mutableStateOf(false)
     var module: WorkbenchModuleState<*>? = null
     var positionOnScreen by mutableStateOf(DpOffset.Zero)
-    var parentWindow: WorkbenchWindowState by mutableStateOf(mainWindow)
-    var onModuleDropped: (WorkbenchModuleState<*>) -> Unit = {}
+    var reverseDropTargets = mutableStateListOf<ReverseDropTarget>()
+    var dropTargets = mutableStateListOf<DropTarget>()
+}
 
-    fun getModuleType(): ModuleType? {
-        return module?.module?.moduleType
-    }
+internal class DropTarget(
+    val displayController: WorkbenchDisplayController,
+    val bounds: Rect
+) {
+}
 
-    fun reset(){
-        isDragging = false
-        module = null
-        positionOnScreen = DpOffset.Zero
-        onModuleDropped = {}
-    }
-
-    fun toOffset(): Offset{
-        val x = positionOnScreen.x - parentWindow.windowState.position.x
-        val y = positionOnScreen.y - parentWindow.windowState.position.y
-        return Offset(x.value,y.value)
-    }
-
-    fun getWindowPosition(): WindowPosition {
-        return WindowPosition(x = positionOnScreen.x, y = positionOnScreen.y)
-    }
+internal class ReverseDropTarget(
+    val windowState: WorkbenchWindowState,
+    val bounds: Rect
+) {
 }

@@ -21,7 +21,6 @@ class WorkbenchControllerTest {
         sut = WorkbenchController("appTitle")
     }
 
-
     @Test
     fun getNextKey() {
         assertFalse { sut.getNextKey() == sut.getNextKey() }
