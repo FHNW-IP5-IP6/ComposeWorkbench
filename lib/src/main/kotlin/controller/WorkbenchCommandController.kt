@@ -33,7 +33,6 @@ internal class WorkbenchCommandController(private val model: WorkbenchModel, wor
                     paths = mutableListOf("${MenuType.MenuBar.name}.File"),
                     action = { saveAll() },
                     shortcut = KeyShortcut(Key.S, ctrl = true, alt = true),
-
                 ),
                 Command(text = "Horizontal",
                     paths = mutableListOf("${MenuType.MenuBar.name}.View.Split TabSpace"),

@@ -1,5 +1,6 @@
 package controller
 
+import MQ_INTERNAL_EDITOR_STATE_CLOSED
 import MQ_INTERNAL_EDITOR_STATE_SAVED
 import MQ_INTERNAL_EDITOR_STATE_UNSAVED
 import MQ_INTERNAL_TOPIC_PATH_EDITOR
@@ -23,7 +24,7 @@ internal class WorkbenchMQDispatcher (val model: WorkbenchModel, private val com
                 val dataId = splitTopic[splitTopic.size-1].toInt()
                 if (msg == MQ_INTERNAL_EDITOR_STATE_UNSAVED) {
                     commandController.addUnsavedModule(type, dataId)
-                } else if (msg == MQ_INTERNAL_EDITOR_STATE_SAVED) {
+                } else if (msg == MQ_INTERNAL_EDITOR_STATE_SAVED || msg == MQ_INTERNAL_EDITOR_STATE_CLOSED) {
                     commandController.removeSavedModule(type, dataId)
                 }
             } catch (exception: NumberFormatException) {
@@ -31,5 +32,4 @@ internal class WorkbenchMQDispatcher (val model: WorkbenchModel, private val com
             }
         }
     }
-
 }
