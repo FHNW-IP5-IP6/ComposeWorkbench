@@ -2,12 +2,14 @@
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Home
-import model.data.MQClient
+
+const val CITY_MQ_TOPIC = "city-tool"
 
 fun main() {
 
-    val workbench: Workbench = Workbench("Cities App", true)
+    val workbench = Workbench("Cities App", true)
     val explorerModel: List<CitiesState> = listOf(getSwissCities(),getSmallCities(), getBigCities(),  getGermanCities())
+
 
     workbench.registerEditor<CityState>(
         type = "City",
@@ -21,7 +23,10 @@ fun main() {
             true
         }
     ){m, c ->
-        CityEditorUi(m, c::publishUnsaved)
+        CityEditorUi(m) { field, value ->
+            c.publishUnsaved()
+            c.publish("$CITY_MQ_TOPIC/city/${m.id}/$field", value)
+        }
     }
 
     workbench.registerEditor<CityLocationState>(
@@ -41,7 +46,10 @@ fun main() {
 
     workbench.registerExplorer<CitiesState>(type = "Cities", title = { it.title() }
     ) { m, c ->
-        c.subscribeForUpdates("City", m::reload)
+        c.subscribeForUpdates("City") { id, msg ->
+            if (msg == "saved" || msg == "closed") m.reload(id)
+        }
+        c.subscribe("$CITY_MQ_TOPIC/city/#", updateTempChanges(m))
         CitiesExplorerUi(m) {
             workbench.requestEditor<CityState>("City", it)
         }
@@ -52,5 +60,26 @@ fun main() {
     workbench.requestExplorer("Cities", explorerModel[2], false, ExplorerLocation.BOTTOM)
     workbench.requestExplorer("Cities", explorerModel[3], true, ExplorerLocation.BOTTOM, false)
     workbench.run { println("Exit my Compose Workbench App") }
+
+}
+
+private fun updateTempChanges(m: CitiesState) = { topic: String, msg: String ->
+    val topicSplit = topic.split("/")
+    if (topicSplit.size == 4) {
+        val id = topicSplit[2]
+        val city = m.state.find { it.id.toString() == id }
+        if (city != null) {
+            when (topicSplit[3]) {
+                "name" -> city.name = msg
+                "country" -> city.countryCode = msg
+                "population" -> {
+                    val pop = msg.toIntOrNull()
+                    if (pop != null) {
+                        city.population = pop
+                    }
+                }
+            }
+        }
+    }
 
 }

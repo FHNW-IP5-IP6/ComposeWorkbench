@@ -48,7 +48,7 @@ internal fun City.toCityLocationState(): CityLocationState {
 }
 
 class CityState(private val city: City) {
-    val id = city.id
+    val id = city.id.value
     var name by mutableStateOf(city.name)
     var countryCode by mutableStateOf(city.countryCode)
     var population by mutableStateOf(city.population)

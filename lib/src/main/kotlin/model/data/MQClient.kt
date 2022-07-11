@@ -35,7 +35,7 @@ class MQClient(val type: String, val id: Int) {
         }
     }
 
-    private fun publish(topic: String, msg: String) {
+    fun publish(topic: String, msg: String) {
         if (!running) return
         client.publishWith()
             .topic(topic)
@@ -64,7 +64,7 @@ class MQClient(val type: String, val id: Int) {
         publish(MQ_INTERNAL_EDITOR_STATE_CLOSED)
     }
 
-    internal fun subscribe(topic: String, callBack: (String, String)->Unit) {
+    fun subscribe(topic: String, callBack: (String, String)->Unit) {
         if (!running) return
         val clbck: (Mqtt5Publish) -> Unit = {
             callBack(it.topic.toString(), String(it.payloadAsBytes))
@@ -88,7 +88,7 @@ class MQClient(val type: String, val id: Int) {
             .send()
     }
 
-    internal fun subscribe(topic: String, callBack: (String, String)->Unit, executor: Executor) {
+    fun subscribe(topic: String, callBack: (String, String)->Unit, executor: Executor) {
         if (!running) return
         val clbck: (Mqtt5Publish) -> Unit = {
             callBack(it.topic.toString(), String(it.payloadAsBytes))
@@ -101,9 +101,15 @@ class MQClient(val type: String, val id: Int) {
             .send()
     }
 
-    fun subscribeForUpdates(editorType: String, callBack: ()->Unit) {
-        val clbck: (String, String) -> Unit = {_,_->
-            callBack()
+    fun subscribeForUpdates(editorType: String, callBack: (id: Int, msg: String)->Unit) {
+        val clbck: (String, String) -> Unit = {topic,msg->
+            val splitTopic = topic.split("/")
+            var id = -1
+            if (splitTopic.size == 4) {
+                val dataId = splitTopic[3].toIntOrNull()
+                if (dataId != null) id = dataId
+            }
+            callBack(id, msg)
         }
         subscribe("$MQ_INTERNAL_TOPIC_PATH_EDITOR/$editorType/#", clbck)
     }
