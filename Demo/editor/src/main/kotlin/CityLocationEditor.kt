@@ -60,7 +60,6 @@ fun CityMapEditorUi(model: CityLocationState, onChange: ()->Unit){
             }
             IconButton(onClick = {
                 val center = map!!.centerPosition
-                println(center)
                 model.longitude = center.longitude
                 model.latitude = center.latitude
                 onChange.invoke()

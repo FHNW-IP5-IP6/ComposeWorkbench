@@ -10,7 +10,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.awt.awtEvent
-import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.PointerEventType
@@ -29,6 +28,8 @@ import controller.WorkbenchController
 import controller.WorkbenchDisplayController
 import model.state.WorkbenchModuleState
 import model.state.WorkbenchWindowState
+import java.awt.event.WindowEvent
+import java.awt.event.WindowFocusListener
 
 /**
  * Window in which a drag animation is visible
@@ -49,16 +50,24 @@ internal fun DragAndDropWindow(
     windowScope: @Composable FrameWindowScope.() -> Unit = {},
     content: @Composable () -> Unit
 ){
+    //TODO: set current window hasFocus true as soon as the window is focused
     Window(
         onCloseRequest = onCloseRequest,
         title = controller.getAppTitle(),
         state = currentWindow.windowState
     ) {
+        window.addWindowFocusListener(object : WindowFocusListener {
+            override fun windowGainedFocus(e: WindowEvent) {
+                currentWindow.hasFocus = true
+            }
+            override fun windowLostFocus(e: WindowEvent) {
+                currentWindow.hasFocus = false
+            }
+        })
+
         with(controller.dragController) {
             val density = LocalDensity.current
-            Box(modifier = Modifier.onFocusChanged {
-                currentWindow.hasFocus = it.hasFocus
-            }.fillMaxSize().onGloballyPositioned {
+            Box(modifier = Modifier.fillMaxSize().onGloballyPositioned {
                 addReverseDropTarget(currentWindow, getBounds(true, currentWindow, it.boundsInWindow(), density))
             }) {
                 windowScope()
