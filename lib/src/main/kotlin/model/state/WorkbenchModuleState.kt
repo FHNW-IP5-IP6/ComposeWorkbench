@@ -4,7 +4,6 @@ import androidx.compose.runtime.Composable
 import model.data.MQClient
 import model.data.WorkbenchModule
 import model.data.enums.DisplayType
-import model.data.enums.OnCloseResponse
 
 internal class WorkbenchModuleState <M> (
     val id: Int,
@@ -24,7 +23,6 @@ internal class WorkbenchModuleState <M> (
 
     fun updateModule(module: WorkbenchModule<*>){
         module as WorkbenchModule<M>
-        //this.module.onClose.invoke(this.model)
         this.module = module
         model = module.loader!!.invoke(dataId!!)
     }

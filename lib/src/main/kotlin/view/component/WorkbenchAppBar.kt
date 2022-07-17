@@ -14,7 +14,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import controller.WorkbenchController
 import model.data.enums.MenuType
-import model.data.enums.ModuleType
 import util.selectedButtonColors
 
 @Composable
@@ -33,10 +32,10 @@ internal fun WorkbenchAppBar(controller: WorkbenchController) {
                 modifier = Modifier.align(alignment = Alignment.CenterVertically),
             )
             Button(
-                onClick = { controller.commandController.saveAll() },
+                onClick = { controller.saveAll() },
                 modifier = Modifier.align(alignment = Alignment.CenterVertically),
                 colors = ButtonDefaults.selectedButtonColors(true),
-                enabled = controller.model.unsavedEditors.isNotEmpty()
+                enabled = controller.informationState.unsavedEditors.isNotEmpty()
             ) {
                 Text("Save All")
             }

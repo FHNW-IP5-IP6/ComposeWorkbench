@@ -1,16 +1,14 @@
 package controller
 
+import model.data.TabRowKey
 import model.data.WorkbenchModule
 import model.data.enums.DisplayType
 import model.data.enums.ModuleType
-import model.data.enums.SplitViewMode
-import model.state.WorkbenchWindowState
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
 
 class WorkbenchControllerTest {
 
@@ -37,9 +35,9 @@ class WorkbenchControllerTest {
         sut.registerEditor("type", editorModule)
         val moduleState = sut.requestEditorState<String>("type", 666)
 
-        val displayController = sut.getDisplayController(moduleState.displayType, ModuleType.EDITOR)
-        assertEquals(1, displayController.getModulesFiltered().size)
-        assertEquals(moduleState, displayController.getSelectedModule())
+        val tabRowKey = TabRowKey(displayType = moduleState.displayType, moduleType = ModuleType.EDITOR, windowState = sut.getMainWindow())
+        assertEquals(1, sut.getModulesFiltered(tabRowKey).size)
+        assertEquals(moduleState, sut.getSelectedModule(tabRowKey))
         assertEquals(1, sut.getRegisteredEditors<String>("type").size)
         assertEquals(editorModule, sut.getRegisteredEditors<String>("type").first())
     }
@@ -50,9 +48,9 @@ class WorkbenchControllerTest {
         sut.registerExplorer("type", explorerModule)
         val moduleState = sut.requestExplorerState(id = 0, moduleType = "type", explorerModel = "model1", DisplayType.LEFT)
 
-        val displayController = sut.getDisplayController(moduleState.displayType, ModuleType.EXPLORER)
-        assertEquals(1, displayController.getModulesFiltered().size)
-        assertEquals(moduleState, displayController.getSelectedModule())
+        val tabRowKey = TabRowKey(displayType = moduleState.displayType, moduleType = ModuleType.EXPLORER, windowState = sut.getMainWindow())
+        assertEquals(1, sut.getModulesFiltered(tabRowKey).size)
+        assertEquals(moduleState, sut.getSelectedModule(tabRowKey))
         assertEquals(explorerModule, sut.getRegisteredExplorer<String>("type"))
     }
 
@@ -62,19 +60,19 @@ class WorkbenchControllerTest {
         sut.registerEditor("type", editorModule)
         sut.requestEditorState<String>("type", 666)
 
-        val displayController = sut.getDisplayController(DisplayType.TAB1, ModuleType.EDITOR)
-        assertEquals(1, displayController.getModulesFiltered().size)
-        assertNotNull(displayController.getSelectedModule())
+        val tabRowKey = TabRowKey(displayType = DisplayType.TAB1, moduleType = ModuleType.EDITOR, windowState = sut.getMainWindow())
+        assertEquals(1, sut.getModulesFiltered(tabRowKey).size)
+        assertNotNull(sut.getSelectedModule(tabRowKey))
 
-        val moduleState = displayController.getSelectedModule()!!
+        val moduleState = sut.getSelectedModule(tabRowKey)!!
         val window = sut.moduleToWindow(moduleState)
-        assertFalse { displayController.getModulesFiltered().contains(moduleState) }
+        assertFalse { sut.getModulesFiltered(tabRowKey).contains(moduleState) }
 
-        val windowDisplayController = sut.getDisplayController(window)
+        val tabRowKeyWindow = TabRowKey(displayType = DisplayType.WINDOW, moduleType = ModuleType.BOTH, windowState = window)
         assertEquals(DisplayType.WINDOW, moduleState.displayType)
-        assertEquals(1, windowDisplayController.getModulesFiltered().size)
-        assertEquals(moduleState, windowDisplayController.getSelectedModule())
-        assertEquals(1, sut.getWindows().size)
+        assertEquals(1, sut.getModulesFiltered(tabRowKeyWindow).size)
+        assertEquals(moduleState, sut.getSelectedModule(tabRowKeyWindow))
+        assertEquals(1, sut.informationState.windows.size)
     }
 
     @Test
@@ -83,80 +81,18 @@ class WorkbenchControllerTest {
         sut.registerExplorer("type", explorerModule)
         sut.requestExplorerState<String>( 0,"type", "model", DisplayType.LEFT)
 
-        val displayController = sut.getDisplayController(DisplayType.LEFT, ModuleType.EXPLORER)
-        assertEquals(1, displayController.getModulesFiltered().size)
-        assertNotNull(displayController.getSelectedModule())
+        val tabRowKey = TabRowKey(displayType = DisplayType.LEFT, moduleType = ModuleType.EXPLORER, windowState = sut.getMainWindow())
+        assertEquals(1, sut.getModulesFiltered(tabRowKey).size)
+        assertNotNull(sut.getSelectedModule(tabRowKey))
 
-        val moduleState = displayController.getSelectedModule()!!
+        val moduleState = sut.getSelectedModule(tabRowKey)!!
         val window = sut.moduleToWindow(moduleState)
-        assertFalse { displayController.getModulesFiltered().contains(moduleState) }
-        assertFalse { sut.displayControllers.containsKey(DisplayControllerKey(displayController)) }
+        assertFalse { sut.getModulesFiltered(tabRowKey).contains(moduleState) }
 
-        val windowDisplayController = sut.getDisplayController(window)
+        val tabRowKeyWindow = TabRowKey(displayType = DisplayType.WINDOW, moduleType = ModuleType.BOTH, windowState = window)
         assertEquals(DisplayType.WINDOW, moduleState.displayType)
-        assertEquals(1, windowDisplayController.getModulesFiltered().size)
-        assertEquals(moduleState, windowDisplayController.getSelectedModule())
-        assertEquals(1, sut.getWindows().size)
+        assertEquals(1, sut.getModulesFiltered(tabRowKeyWindow).size)
+        assertEquals(moduleState, sut.getSelectedModule(tabRowKeyWindow))
+        assertEquals(1, sut.informationState.windows.size)
     }
-
-    @Test
-    fun handleEmptyTabRow() {
-        val displayController = sut.getDisplayController(DisplayType.LEFT, ModuleType.EXPLORER)
-        assertTrue { displayController.getModulesFiltered().isEmpty() }
-        assertTrue { sut.displayControllers.containsKey(DisplayControllerKey(displayController)) }
-
-        sut.handleEmptyTabRow(displayController = displayController)
-        assertFalse { sut.displayControllers.containsKey(DisplayControllerKey(displayController)) }
-    }
-
-    @Test
-    fun handleEmptyTabRowWindow() {
-        val windowState = WorkbenchWindowState()
-        sut.getWindows().add(windowState)
-        val displayController = sut.getDisplayController(windowState)
-        assertEquals(1, sut.getWindows().size)
-        assertTrue { displayController.getModulesFiltered().isEmpty() }
-        assertTrue { sut.displayControllers.containsKey(DisplayControllerKey(displayController)) }
-
-        sut.handleEmptyTabRow(displayController = displayController)
-        assertFalse { sut.displayControllers.containsKey(DisplayControllerKey(displayController)) }
-        assertTrue { sut.getWindows().isEmpty() }
-    }
-
-    @Test
-    fun handleEmptyTabRowExplorerTab2() {
-        sut.changeSplitViewMode(SplitViewMode.VERTICAL)
-        val displayController = sut.getDisplayController(DisplayType.TAB2, ModuleType.EDITOR)
-        assertTrue { displayController.getModulesFiltered().isEmpty() }
-        assertTrue { sut.displayControllers.containsKey(DisplayControllerKey(displayController)) }
-
-        sut.handleEmptyTabRow(displayController = displayController)
-        assertFalse { sut.displayControllers.containsKey(DisplayControllerKey(displayController)) }
-    }
-
-    @Test
-    fun handleEmptyTabRowExplorerTab1() {
-        val editorModule = WorkbenchModule(ModuleType.EDITOR,"type", title ={"title"}, loader = {"model $it" } ) {_,_->}
-        sut.registerEditor("type", editorModule)
-        val moduleState1 = sut.requestEditorState<String>("type", 666)
-        val moduleState2 = sut.requestEditorState<String>("type", 777)
-        sut.changeSplitViewMode(SplitViewMode.VERTICAL)
-        moduleState2.displayType = DisplayType.TAB2
-        moduleState1.displayType = DisplayType.TAB2
-
-        val tab1 = sut.getDisplayController(DisplayType.TAB1, ModuleType.EDITOR)
-        val tab2 = sut.getDisplayController(DisplayType.TAB2, ModuleType.EDITOR)
-
-        assertEquals(2, tab2.getModulesFiltered().size)
-        assertTrue { tab1.getModulesFiltered().isEmpty() }
-
-        val selected = tab2.getSelectedModule()
-        sut.handleEmptyTabRow(displayController = tab1)
-        assertFalse { sut.displayControllers.containsKey(DisplayControllerKey(tab2)) }
-        assertTrue { sut.displayControllers.containsKey(DisplayControllerKey(tab1)) }
-        assertEquals(DisplayType.TAB1, moduleState1.displayType)
-        assertEquals(DisplayType.TAB1, moduleState2.displayType)
-        assertEquals(selected, tab1.getSelectedModule())
-    }
-
 }

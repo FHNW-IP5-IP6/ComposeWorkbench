@@ -3,12 +3,12 @@ package controller
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.WindowPosition
+import model.data.TabRowKey
 import model.data.WorkbenchModule
 import model.data.enums.DisplayType
 import model.data.enums.ModuleType
 import model.state.DropTarget
-import model.state.WorkbenchWindowState
+import model.state.getMainWorkbenchWindowState
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
@@ -18,20 +18,20 @@ import kotlin.test.assertTrue
 
 class WorkbenchDragControllerTest {
 
-    private var sut = WorkbenchDragController()
     private var controller = WorkbenchController("appTitle")
+    private var sut = WorkbenchDragController(controller)
 
     @BeforeEach
     fun setup() {
-        sut = WorkbenchDragController()
         controller = WorkbenchController("appTitle")
+        sut = WorkbenchDragController(controller)
     }
 
     @Test
     fun initialState() {
-        assertFalse { sut.isDragging() }
-        assertNull(sut.getModuleState())
-        assertEquals(DpOffset.Zero, sut.getPosition())
+        assertFalse { sut.dragState.isDragging }
+        assertNull(sut.dragState.module)
+        assertEquals(DpOffset.Zero, sut.dragState.positionOnScreen)
     }
 
     @Test
@@ -45,28 +45,33 @@ class WorkbenchDragControllerTest {
         sut.setModuleState(moduleState)
         sut.setPosition(DpOffset(20.dp, 10.dp))
 
-        assertTrue { sut.isDragging() }
-        assertEquals(moduleState, sut.getModuleState())
-        assertEquals(DpOffset(20.dp, 10.dp), sut.getPosition())
+        assertTrue { sut.dragState.isDragging }
+        assertEquals(moduleState, sut.dragState.module)
+        assertEquals(DpOffset(20.dp, 10.dp), sut.dragState.positionOnScreen)
 
         sut.reset()
-        assertFalse { sut.isDragging() }
-        assertNull(sut.getModuleState())
-        assertEquals(DpOffset.Zero, sut.getPosition())
+        assertFalse { sut.dragState.isDragging }
+        assertNull(sut.dragState.module)
+        assertEquals(DpOffset.Zero, sut.dragState.positionOnScreen)
     }
 
     @Test
     fun getCurrentReverseDropTarget() {
-        val windowState1 = WorkbenchWindowState(position = WindowPosition(0.dp, 0.dp))
-        val windowState2 = WorkbenchWindowState(position = WindowPosition(0.dp, 0.dp))
-        sut.addReverseDropTarget(windowState1, Rect(0f, 0f, 100f, 100f))
-        sut.addReverseDropTarget(windowState2, Rect(50f, 50f, 100f, 100f))
+        val windowState1 = getMainWorkbenchWindowState()
+        val windowState2 = getMainWorkbenchWindowState()
+        val tabRowKey1 = TabRowKey(DisplayType.WINDOW, ModuleType.BOTH, windowState1)
+        val tabRowKey2 = TabRowKey(DisplayType.WINDOW, ModuleType.BOTH, windowState2)
+        sut.addReverseDropTarget(tabRowKey1, Rect(0f, 0f, 100f, 100f))
+        sut.addReverseDropTarget(tabRowKey2, Rect(50f, 50f, 100f, 100f))
+        windowState1.hasFocus = true
+        windowState2.hasFocus = false
 
         sut.setPosition(DpOffset(60.dp, 60.dp))
-        assertEquals(windowState1, sut.getCurrentReverseDopTarget()?.windowState)
+        assertEquals(windowState1, sut.getCurrentReverseDopTarget()?.tabRowKey?.windowState)
 
         windowState2.hasFocus = true
-        assertEquals(windowState2, sut.getCurrentReverseDopTarget()?.windowState)
+        windowState1.hasFocus = false
+        assertEquals(windowState2, sut.getCurrentReverseDopTarget()?.tabRowKey?.windowState)
     }
 
     @Test
@@ -76,17 +81,17 @@ class WorkbenchDragControllerTest {
         val explorerLeft = controller.requestExplorerState(id = 1, moduleType = "type", explorerModel = "model1", displayType = DisplayType.LEFT)
         val explorerBottom = controller.requestExplorerState(id = 2, moduleType = "type", explorerModel = "model2", displayType = DisplayType.BOTTOM)
 
-        val displayControllerBottom = controller.getDisplayController(DisplayType.BOTTOM, ModuleType.EXPLORER, true)
-        val target = DropTarget(displayControllerBottom, Rect(0f, 50f, 100f, 100f))
+        val tabRowKeyBottom = TabRowKey(DisplayType.BOTTOM, ModuleType.EXPLORER, controller.getMainWindow())
+        val target = DropTarget(false, tabRowKeyBottom, Rect(0f, 50f, 100f, 100f))
 
         sut.setModuleState(explorerLeft)
-        assertTrue {  sut.isValidDropTarget(target) }
+        assertTrue {  sut.isValidDropTarget(target.tabRowKey) }
 
         sut.setModuleState(explorerBottom)
-        assertFalse {  sut.isValidDropTarget(target) }
+        assertFalse {  sut.isValidDropTarget(target.tabRowKey) }
 
         sut.setModuleState(null)
-        assertFalse {  sut.isValidDropTarget(target) }
+        assertFalse {  sut.isValidDropTarget(target.tabRowKey) }
     }
 
     @Test
@@ -100,34 +105,37 @@ class WorkbenchDragControllerTest {
         val editor2 = controller.requestEditorState<String>("type", 2)
         editor2.displayType = DisplayType.TAB2
         val explorer = controller.requestExplorerState(id = 1, moduleType = "type", explorerModel = "model", displayType = DisplayType.LEFT)
-        val editorController1 = controller.getDisplayController(DisplayType.TAB1, ModuleType.EDITOR)
-        val editorController2 = controller.getDisplayController(DisplayType.TAB2, ModuleType.EDITOR)
-        val explorerController = controller.getDisplayController(DisplayType.LEFT, ModuleType.EXPLORER, true)
+        val editorTabRowKey1 = TabRowKey(DisplayType.TAB1, ModuleType.EDITOR, controller.getMainWindow())
+        val editorTabRowKey2 = TabRowKey(DisplayType.TAB2, ModuleType.EDITOR, controller.getMainWindow())
+        val explorerTabRowKey = TabRowKey(DisplayType.LEFT, ModuleType.EXPLORER, controller.getMainWindow())
 
         //Only one reverse target (main window)
-        sut.addReverseDropTarget(windowState = controller.getMainWindow(), Rect(0f, 0f, 100f, 100f))
-        assertEquals(controller.getMainWindow() ,sut.getCurrentReverseDopTarget()?.windowState)
-        assertFalse { sut.isCurrentDropTarget(explorerController) }
-        assertFalse { sut.isCurrentDropTarget(editorController1) }
-        assertFalse { sut.isCurrentDropTarget(editorController2) }
+        sut.addReverseDropTarget(TabRowKey(DisplayType.WINDOW, ModuleType.BOTH, controller.getMainWindow()), Rect(0f, 0f, 100f, 100f))
+        assertEquals(controller.getMainWindow() ,sut.getCurrentReverseDopTarget()?.tabRowKey?.windowState)
+        assertFalse { sut.isCurrentDropTarget(explorerTabRowKey) }
+        assertFalse { sut.isCurrentDropTarget(editorTabRowKey1) }
+        assertFalse { sut.isCurrentDropTarget(editorTabRowKey2) }
 
         sut.setModuleState(editor1)
-        sut.addDropTarget(editorController1, Rect(0f,0f,10f,10f))
-        sut.addDropTarget(editorController2, Rect(20f,20f,30f,30f))
-        sut.addDropTarget(explorerController, Rect(50f,50f,100f,100f))
+        sut.addDropTarget(editorTabRowKey1, Rect(0f,0f,10f,10f))
+        sut.addDropTarget(editorTabRowKey2, Rect(20f,20f,30f,30f))
+        sut.addDropTarget(explorerTabRowKey, Rect(50f,50f,100f,100f))
+        assertEquals(4, sut.dragState.dropTargets.size)
 
         //one drop target is valid and position matches bounds
         sut.setPosition(DpOffset(25.dp, 25.dp))
-        assertFalse { sut.isCurrentDropTarget(explorerController) }
-        assertFalse { sut.isCurrentDropTarget(editorController1) }
-        assertTrue { sut.isCurrentDropTarget(editorController2) }
+        assertFalse { sut.isCurrentDropTarget(explorerTabRowKey) }
+        assertFalse { sut.isCurrentDropTarget(editorTabRowKey1) }
+        assertTrue { sut.isCurrentDropTarget(editorTabRowKey2) }
+        assertTrue { sut.isValidDropTarget(editorTabRowKey2) }
 
         sut.setModuleState(explorer)
 
         //drop target is no longer valid, position matches bounds
         sut.setPosition(DpOffset(25.dp, 25.dp))
-        assertFalse { sut.isCurrentDropTarget(explorerController) }
-        assertFalse { sut.isCurrentDropTarget(editorController1) }
-        assertFalse { sut.isCurrentDropTarget(editorController2) }
+        assertFalse { sut.isCurrentDropTarget(explorerTabRowKey) }
+        assertFalse { sut.isCurrentDropTarget(editorTabRowKey1) }
+        assertTrue { sut.isCurrentDropTarget(editorTabRowKey2) }
+        assertFalse { sut.isValidDropTarget(editorTabRowKey2) }
     }
 }

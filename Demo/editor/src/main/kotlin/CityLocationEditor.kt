@@ -1,5 +1,7 @@
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.icons.Icons
@@ -7,14 +9,11 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.awt.SwingPanel
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
-import androidx.compose.ui.zIndex
 import org.jxmapviewer.JXMapViewer
 import org.jxmapviewer.OSMTileFactoryInfo
 import org.jxmapviewer.input.PanMouseInputListener
@@ -35,8 +34,9 @@ var map: JXMapViewer? = null
 @Composable
 fun CityMapEditorUi(model: CityLocationState, onChange: ()->Unit){
     Row {
+        //This is always on top (drag animation) because of a bug see https://github.com/JetBrains/compose-jb/issues/221
         SwingPanel(
-            modifier = Modifier.weight(1f).fillMaxHeight().zIndex(-99.0f),
+            modifier = Modifier.weight(1f).fillMaxHeight(),
             background = Color.Transparent,
             factory = {
                 JPanel().apply {

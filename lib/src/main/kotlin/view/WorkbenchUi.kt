@@ -1,13 +1,19 @@
 package view
 
-import androidx.compose.foundation.layout.*
+import TAB_ROW_WIDTH
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import com.example.ui.theme.NotoSansTypography
 import controller.WorkbenchController
+import model.data.TabRowKey
 import model.data.enums.DisplayType
 import model.data.enums.ModuleType
 import org.jetbrains.compose.splitpane.ExperimentalSplitPaneApi
@@ -21,7 +27,7 @@ internal fun WorkbenchUI(controller: WorkbenchController,
     DragAndDropWindow(
         controller = controller,
         onCloseRequest = closeRequest,
-        currentWindow = controller.getMainWindow(),
+        tabRowKey = TabRowKey(displayType = DisplayType.WINDOW, ModuleType.BOTH, controller.getMainWindow()),
         windowScope = { workbenchMenuBar(controller.commandController) }
     ) {
         WorkbenchBody(controller)
@@ -38,38 +44,39 @@ private fun WorkbenchBody(controller: WorkbenchController) {
         Scaffold(
             topBar = { WorkbenchAppBar(controller) },
         ) {
-            val leftExplorerController = controller.getDisplayController(displayType = DisplayType.LEFT, moduleType = ModuleType.EXPLORER, deselectable = true)
-            val bottomExplorerController = controller.getDisplayController(displayType = DisplayType.BOTTOM, moduleType = ModuleType.EXPLORER, deselectable = true)
+            val leftExplorerTabRowKey = TabRowKey(displayType = DisplayType.LEFT, moduleType = ModuleType.EXPLORER, windowState = controller.getMainWindow())
+            val bottomExplorerTabRowKey = TabRowKey(displayType = DisplayType.BOTTOM, moduleType = ModuleType.EXPLORER, windowState = controller.getMainWindow())
+            val hasBottomTabs = controller.hasModules(bottomExplorerTabRowKey)
             Column {
-                BoxWithConstraints {
-                    Row(modifier = Modifier.height(maxHeight - bottomExplorerController.getTabRowMinDimension().second)) {
-                        DropTarget(displayController = leftExplorerController, controller = controller) {
-                            WorkbenchTabRow(leftExplorerController, controller)
-                        }
-                        WorkbenchVerticalSplitPane(splitPaneState = controller.getBottomSplitState()) {
-                            first {
-                                WorkbenchHorizontalSplitPane(splitPaneState = controller.getLeftSplitState()){
-                                    first {
-                                        WorkbenchTabBody(leftExplorerController, controller)
-                                    }
-                                    second {
-                                        WorkbenchEditorSpace(controller)
-                                    }
+                Row(modifier = Modifier.weight(if(hasBottomTabs) 0.9f else 1f)
+                ) {
+                    DropTarget(tabRowKey = leftExplorerTabRowKey, controller = controller) {
+                        WorkbenchTabRow(leftExplorerTabRowKey, controller)
+                    }
+                    WorkbenchVerticalSplitPane(splitPaneState = controller.informationState.bottomSplitState) {
+                        first {
+                            WorkbenchHorizontalSplitPane(splitPaneState = controller.informationState.leftSplitState){
+                                first {
+                                    WorkbenchTabBody(leftExplorerTabRowKey, controller)
+                                }
+                                second {
+                                    WorkbenchEditorSpace(controller)
                                 }
                             }
-                            second {
-                                WorkbenchTabBody(bottomExplorerController, controller)
-                            }
+                        }
+                        second {
+                            WorkbenchTabBody(bottomExplorerTabRowKey, controller)
                         }
                     }
                 }
-                Box(
-                    modifier = Modifier
-                        .height(bottomExplorerController.getTabRowMinDimension().second).padding(start = bottomExplorerController.getTabRowMinDimension().first)
-                        .align(Alignment.End)
+                Row(
+                    modifier = Modifier.weight(if(hasBottomTabs) 0.1f else 0.001f)
+                        .padding(start = TAB_ROW_WIDTH.dp),
+                    verticalAlignment = Alignment.Bottom,
+                    horizontalArrangement = Arrangement.Start
                 ) {
-                    DropTarget(displayController = bottomExplorerController, controller = controller) {
-                        WorkbenchTabRow(bottomExplorerController, controller)
+                    DropTarget(tabRowKey = bottomExplorerTabRowKey, controller = controller) {
+                        WorkbenchTabRow(bottomExplorerTabRowKey, controller)
                     }
                 }
             }
