@@ -19,7 +19,7 @@ fun main() = application {
 }
 
 @Composable
-fun CityEditorUi(model: CityState, onChange: (field: String, value: String)->Unit) {
+fun CityEditorUi(model: CityState) {
     with(model) {
         Box(
             modifier = Modifier.fillMaxSize()

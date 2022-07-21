@@ -46,7 +46,7 @@ class WorkbenchControllerTest {
     fun registerAndRequestExplorer(){
         val explorerModule = WorkbenchModule<String>(ModuleType.EXPLORER,"type", title ={"title"}) {_,_->}
         sut.registerExplorer("type", explorerModule)
-        val moduleState = sut.requestExplorerState(id = 0, moduleType = "type", explorerModel = "model1", DisplayType.LEFT)
+        val moduleState = sut.requestExplorerState(id = 0, moduleType = "type", explorerController = "model1", DisplayType.LEFT)
 
         val tabRowKey = TabRowKey(displayType = moduleState.displayType, moduleType = ModuleType.EXPLORER, windowState = sut.getMainWindow())
         assertEquals(1, sut.getModulesFiltered(tabRowKey).size)

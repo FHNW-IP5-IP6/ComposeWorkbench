@@ -21,7 +21,6 @@ class ExplorerController {
 
     private fun update(id: Int, field: String, valueAsText: String){
         println("update explorer $id, $field")
-
     }
 
     private fun create(){

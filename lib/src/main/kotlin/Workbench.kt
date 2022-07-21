@@ -34,7 +34,7 @@ class Workbench(appTitle: String = "", enableMQ: Boolean = false) {
             }
 
             // subscribe for available topics to log
-            val logMQClient = MQClient("workbench-log", 0)
+            val logMQClient = MQClient
             logMQClient.subscribe("$MQ_INTERNAL_TOPIC_PATH_EDITOR/#", ::logMQ, Executors.newSingleThreadExecutor())
         }
     }
@@ -46,20 +46,22 @@ class Workbench(appTitle: String = "", enableMQ: Boolean = false) {
      * Add an explorer for a given Type to the Workbench
      *
      *
-     * @param M: Type of the Model which the explorer uses to manage and display data
+     * @param C: Type of the Controller which the explorer uses to manage and display data
      * @param type: the type of data this explorer can be used for
      * @param title: Callback to get the explorers title from a given Model
      * @param content: Composable function that defines the displayed content of this explorer
      */
-    fun <M> registerExplorer(
+    fun <C> registerExplorer(
         type: String,
-        title: (M) -> String,
-        content: @Composable (M, MQClient) -> Unit,
+        title: (C) -> String,
+        initMessaging: (C, MQClient) -> Unit,
+        content: @Composable (C) -> Unit,
     ) {
         val explorer = WorkbenchModule(
             moduleType = ModuleType.EXPLORER,
             modelType = type,
             content = content,
+            initMessaging = initMessaging,
             title = title,
             onClose = {_,_ ->},
             onSave = {_,_ -> true}
@@ -70,7 +72,7 @@ class Workbench(appTitle: String = "", enableMQ: Boolean = false) {
     /**
      * Add an editor for a given Type to the Workbench
      *
-     * @param C: Type of the Model which the editor uses to manage and display data
+     * @param C: Type of the Controller which the editor uses to manage and display data
      * @param type: the type of data this editor can be used for
      * @param controller: callback to load model from id
      * @param icon: Icon for this Editor. This is used in case multiple editors are registered for the same type
@@ -82,17 +84,17 @@ class Workbench(appTitle: String = "", enableMQ: Boolean = false) {
     fun <C> registerEditor(
         type: String,
         title: (C) -> String,
-        controller: (Int, MQClient) -> C,
+        loader: (Int, MQClient) -> C,
         icon: ImageVector = WorkbenchDefaultIcon,
         onClose: (C, MQClient) -> Unit = {_,_ ->},
         onSave: (C, MQClient) -> Boolean = {_,_ -> true},
-        content: @Composable (C, MQClient) -> Unit
+        content: @Composable (C) -> Unit
     ) {
         val editor = WorkbenchModule(
             moduleType = ModuleType.EDITOR,
             modelType = type,
             icon = icon,
-            loader = controller,
+            loader = loader,
             content = content,
             title = title,
             onClose = onClose,
@@ -102,29 +104,29 @@ class Workbench(appTitle: String = "", enableMQ: Boolean = false) {
     }
 
     /**
-     * Explore given Model with explorer of given type
+     * Explore given Controller with explorer of given type
      *
-     * @param M: Model which the explorer uses to manage and display data
+     * @param C: Controller which the explorer uses to manage and display data
      * @param type: The type of data which the Explorer is used for
      * @param default: if Explorer with its Model is runnable as Default explorer
      * @param location: The Drawer Location where the Explorer will be displayed
      * @param shown: if the Explorer is shown on the Startup of the Workbench
      */
-    fun <M : Any> requestExplorer(
+    fun <C : Any> requestExplorer(
         type: String,
-        m: M,
+        c: C,
         default: Boolean = false,
         location: ExplorerLocation = ExplorerLocation.LEFT,
         shown: Boolean = true
     ) {
         val id = controller.getNextKey()
         if(shown){
-            controller.requestExplorerState(id = id, moduleType = type, explorerModel = m, displayType =  toDisplayType(location))
+            controller.requestExplorerState(id = id, modelType = type, explorerController = c, displayType =  toDisplayType(location))
         }
         if (default) {
-            controller.addDefaultExplorer(id = id, key = type, explorerModel = m)
+            controller.addDefaultExplorer(id = id, key = type, explorerModel = c)
             controller.commandController.addCommand(Command(
-                text = controller.getRegisteredExplorer<M>(type).title(m),
+                text = controller.getRegisteredExplorer<C>(type).title(c),
                 paths = mutableListOf(
                     "${MenuType.MenuBar.name}.View.Default Explorers",
                     "${MenuType.MenuAppBar.name}.Default Explorers"
@@ -135,18 +137,18 @@ class Workbench(appTitle: String = "", enableMQ: Boolean = false) {
     }
 
     /**
-     * Edit given Model with editor of given type
+     * Edit given Controller with editor of given type
      *
-     * @param M: Model which the editor uses to manage and display data
+     * @param C: Controller which the editor uses to manage and display data
      * @param id: id of the specific data which is to be edited
      * @param type: The type of data which the Editor is used for
      */
     @Suppress("UNCHECKED_CAST")
-    fun <M> requestEditor(
+    fun <C> requestEditor(
         type: String,
         id: Int
     ) {
-        controller.requestEditorState<M>(moduleType = type, dataId = id)
+        controller.requestEditorState<C>(modelType = type, dataId = id)
     }
 
     /**

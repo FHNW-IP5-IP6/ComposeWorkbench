@@ -234,6 +234,7 @@ internal class WorkbenchController(appTitle: String) {
         var newInformationState = updateSelection(informationState, TabRowKey(moduleState), moduleState)
         newInformationState = showDrawer(newInformationState, moduleState.displayType)
         informationState = newInformationState.copy(modules = modules)
+        moduleState.selected()
     }
 
     fun removeModuleState(moduleState: WorkbenchModuleState<*>){
@@ -269,19 +270,26 @@ internal class WorkbenchController(appTitle: String) {
             hideDrawer(newInformationState, tabRowKey.displayType)
         } else {
             val newInformationState = updateSelection(informationState, tabRowKey, moduleState)
+            moduleState?.selected()
             showDrawer(newInformationState, tabRowKey.displayType)
         }
+
     }
 
-    fun <M>requestEditorState(moduleType: String, dataId: Int): WorkbenchModuleState<M> {
-        val editors = getRegisteredEditors<M>(moduleType)
+    fun <C>requestEditorState(modelType: String, dataId: Int) : WorkbenchModuleState<*>{
+        val existingModule = informationState.modules.find {it.dataId == dataId && it.module.modelType==modelType}
+        if (existingModule != null) {
+            moduleStateSelectorPressed(TabRowKey(existingModule), existingModule)
+            return existingModule
+        }
+        val editors = getRegisteredEditors<C>(modelType)
         val editor = editors[0]
-        val mqtt =  MQClient(editor.modelType, dataId ?: dataId)
+        val mqtt =  MQClient
         val moduleState = WorkbenchModuleState(
             id = getNextKey(),
             window = model.mainWindow,
             dataId = dataId,
-            model = editor.loader!!.invoke(dataId, mqtt),
+            controller = editor.loader!!.invoke(dataId, mqtt),
             module = editor,
             close = { removeModuleState(it) },
             displayType = informationState.currentTabSpace,
@@ -290,16 +298,23 @@ internal class WorkbenchController(appTitle: String) {
         return moduleState
     }
 
-    fun  <M>requestExplorerState(id: Int, moduleType: String, explorerModel: M, displayType: DisplayType): WorkbenchModuleState<M> {
-        val explorer = getRegisteredExplorer<M>(moduleType)
+    fun  <C>requestExplorerState(id: Int, modelType: String, explorerController: C, displayType: DisplayType): WorkbenchModuleState<*> {
+        val existingModule = informationState.modules.find {it.controller == explorerController && it.module.modelType==modelType}
+        if (existingModule != null) {
+            moduleStateSelectorPressed(TabRowKey(existingModule), existingModule)
+            return existingModule
+        }
+        val explorer = getRegisteredExplorer<C>(modelType)
         val moduleState = WorkbenchModuleState(
             id = id,
-            model = explorerModel,
+            controller = explorerController,
             window = model.mainWindow,
             module = explorer,
             close = { removeModuleState(it) },
             displayType = displayType
         )
+        // TODO: implement messaging initialization in WorkbenchModuleState
+        explorer.initMessaging?.invoke(explorerController, MQClient)
         addModuleState(moduleState)
         return moduleState
     }
@@ -307,7 +322,12 @@ internal class WorkbenchController(appTitle: String) {
     fun createExplorerFromDefault (id: Int) {
         val defaultState = if(model.registeredDefaultExplorers[id] != null) model.registeredDefaultExplorers[id]!!as WorkbenchDefaultState<Any> else return
         val explorer = model.registeredExplorers[defaultState.type] as WorkbenchModule<Any>
-        val moduleState = WorkbenchModuleState(id = id, model = defaultState.model, module = explorer, window = model.mainWindow, close = { removeModuleState(it) }, displayType = DisplayType.LEFT)
+        val existingModule = informationState.modules.find {it.controller == defaultState.controller}
+        if (existingModule != null) {
+            moduleStateSelectorPressed(TabRowKey(existingModule), existingModule)
+            return
+        }
+        val moduleState = WorkbenchModuleState(id = id, controller = defaultState.controller, module = explorer, window = model.mainWindow, close = { removeModuleState(it) }, displayType = DisplayType.LEFT)
         addModuleState(moduleState)
     }
 
@@ -328,23 +348,23 @@ internal class WorkbenchController(appTitle: String) {
         model.registeredExplorers[moduleType] = explorer
     }
 
-    fun <M>addDefaultExplorer(key: String, id: Int, explorerModel: M){
-        val explorer = getRegisteredExplorer<M>(key)
+    fun <C>addDefaultExplorer(key: String, id: Int, explorerModel: C){
+        val explorer = getRegisteredExplorer<C>(key)
         model.registeredDefaultExplorers[id] = WorkbenchDefaultState(explorer.modelType, explorerModel, explorer.title)
     }
 
-    fun <M>getRegisteredExplorer(key: String): WorkbenchModule<M> {
+    fun <C>getRegisteredExplorer(key: String): WorkbenchModule<C> {
         val explorer = model.registeredExplorers[key]
             ?: throw IllegalStateException("Could not find registered Explorer of type $key")
-        return explorer as WorkbenchModule<M>
+        return explorer as WorkbenchModule<C>
     }
 
-    fun <M>getRegisteredEditors(key: String): List<WorkbenchModule<M>> {
+    fun <C>getRegisteredEditors(key: String): List<WorkbenchModule<C>> {
         val editors = model.registeredEditors[key]
         if (editors == null || editors.isEmpty()) {
             throw IllegalStateException("Could not find registered Editor of type $key")
         }
-        return editors as MutableList<WorkbenchModule<M>>
+        return editors as MutableList<WorkbenchModule<C>>
     }
 
     fun getRegisteredEditors(moduleState: WorkbenchModuleState<*>?): List<WorkbenchModule<*>> {

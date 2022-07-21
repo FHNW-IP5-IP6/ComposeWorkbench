@@ -10,7 +10,7 @@ import java.util.concurrent.Executors
 
 internal class WorkbenchMQDispatcher (val model: WorkbenchStaticState, private val controller: WorkbenchController)
 {
-    private var mqClient: MQClient = MQClient("workbench-editors-dispatcher", 0)
+    private var mqClient: MQClient = MQClient
 
     init {
         mqClient.subscribe("$MQ_INTERNAL_TOPIC_PATH_EDITOR/#", ::dispatchEditorMessages, Executors.newSingleThreadExecutor())
