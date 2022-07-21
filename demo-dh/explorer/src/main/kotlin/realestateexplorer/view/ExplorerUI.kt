@@ -3,7 +3,6 @@ package realestateexplorer.view
 import androidx.compose.foundation.VerticalScrollbar
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -63,18 +62,18 @@ fun Body(realEstates: List<ExplorerData>, onClick: (id: Int) -> Unit, paddingVal
         Box(modifier = Modifier.padding(paddingValues).fillMaxSize()){
             val lazyListState = rememberLazyListState()
 
-                LazyColumn(state = lazyListState,
-                        modifier = Modifier.align(Alignment.TopStart)
-                                           .padding(end = scrollBarWidth)) {
-                    items(realEstates, key= { it.id }) {
-                        ListItem( text = { Text("${it.street} ${it.streetNumber}") },
-                          overlineText = { Text("${it.zipCode}, ${it.city}") },
-                              modifier = Modifier.clickable(onClick = { onClick(it.id) })
-                        )
-                        Divider()
-                    }
+            LazyColumn(state = lazyListState,
+                    modifier = Modifier.align(Alignment.TopStart)
+                                       .padding(end = scrollBarWidth)) {
+                items(items = realEstates,
+                        key = { it.id }) {
+                    ListItem( text = { Text("${it.street} ${it.streetNumber}") },
+                      overlineText = { Text("${it.zipCode}, ${it.city}") },
+                          modifier = Modifier.clickable(onClick = { onClick(it.id) })
+                    )
+                    Divider()
                 }
-
+            }
 
             VerticalScrollbar(modifier = Modifier.align(Alignment.CenterEnd)
                                                  .width(scrollBarWidth)
