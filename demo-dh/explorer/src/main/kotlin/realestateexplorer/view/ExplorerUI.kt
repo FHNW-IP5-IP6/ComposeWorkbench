@@ -1,11 +1,17 @@
 package realestateexplorer.view
 
+import androidx.compose.foundation.VerticalScrollbar
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollbarAdapter
 import androidx.compose.material.Divider
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.FloatingActionButton
@@ -18,6 +24,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 import allpurpose.view.ActionIcon
 import realestateexplorer.controller.ExplorerAction
 import realestateexplorer.data.ExplorerData
@@ -32,7 +39,7 @@ fun ExplorerUI(realEstates: List<ExplorerData>, trigger: (action: ExplorerAction
               background = Color(0xFFFFFFFC),
                onPrimary = Color(0xFF343434)),
                  content = { Scaffold(floatingActionButton = { FAB(trigger) },
-                                                   content = { Body(realEstates, onClick) })
+                                                   content = { Body(realEstates, onClick, it) })
                            })
 }
 
@@ -44,7 +51,7 @@ fun FAB(trigger: (action: ExplorerAction) -> Unit) {
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun Body(realEstates: List<ExplorerData>, onClick: (id: Int) -> Unit) {
+fun Body(realEstates: List<ExplorerData>, onClick: (id: Int) -> Unit, paddingValues: PaddingValues) {
 
     if (realEstates.isEmpty()) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -52,17 +59,28 @@ fun Body(realEstates: List<ExplorerData>, onClick: (id: Int) -> Unit) {
         }
 
     } else {
-        Column(Modifier.fillMaxSize()) {
-            LazyColumn {
-                items(realEstates) {
-                    ListItem(
-                        text = { Text("${it.street} ${it.streetNumber}") },
-                        overlineText = { Text("${it.zipCode}, ${it.city}") },
-                        modifier = Modifier.clickable(onClick = { onClick(it.id) })
-                    )
-                    Divider()
+        val scrollBarWidth = 15.dp
+        Box(modifier = Modifier.padding(paddingValues).fillMaxSize()){
+            val lazyListState = rememberLazyListState()
+
+                LazyColumn(state = lazyListState,
+                        modifier = Modifier.align(Alignment.TopStart)
+                                           .padding(end = scrollBarWidth)) {
+                    items(realEstates, key= { it.id }) {
+                        ListItem( text = { Text("${it.street} ${it.streetNumber}") },
+                          overlineText = { Text("${it.zipCode}, ${it.city}") },
+                              modifier = Modifier.clickable(onClick = { onClick(it.id) })
+                        )
+                        Divider()
+                    }
                 }
-            }
+
+
+            VerticalScrollbar(modifier = Modifier.align(Alignment.CenterEnd)
+                                                 .width(scrollBarWidth)
+                                                 .padding(start = 3.dp, end = 3.dp, top = 3.dp, bottom =  3.dp),
+                               adapter = rememberScrollbarAdapter(scrollState = lazyListState)
+            )
         }
     }
 }
