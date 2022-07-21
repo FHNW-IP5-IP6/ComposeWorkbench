@@ -37,7 +37,7 @@ class WorkbenchDragControllerTest {
     @Test
     fun reset() {
         val editorModule =
-            WorkbenchModule(ModuleType.EDITOR, "type", title = { "title" }, loader = { "model" }) { _, _ -> }
+            WorkbenchModule(ModuleType.EDITOR, "type", title = { "title" }, loader = { c, m -> "model" }) { _, _ -> }
         controller.registerEditor("type", editorModule)
         val moduleState = controller.requestEditorState<String>("type", 1)
 
@@ -96,7 +96,7 @@ class WorkbenchDragControllerTest {
 
     @Test
     fun dropTargets() {
-        val editorModule = WorkbenchModule(ModuleType.EDITOR, "type", title = { "title" }, loader = { "model $it" }) { _, _ -> }
+        val editorModule = WorkbenchModule(ModuleType.EDITOR, "type", title = { "title" }, loader = {c, m ->  "model $c" }) { _, _ -> }
         val explorerModule = WorkbenchModule<String>(ModuleType.EXPLORER, "type", title = { "title" }) { _, _ -> }
         controller.registerExplorer("type", explorerModule)
         controller.registerEditor("type", editorModule)

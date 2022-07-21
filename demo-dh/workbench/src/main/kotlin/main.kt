@@ -1,9 +1,7 @@
-package estateagent
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
 
-import Workbench
 import realestateeditor.controller.ApplicationController
 import realestateeditor.controller.RealEstateAction
 import realestateeditor.controller.RealEstateController
@@ -15,7 +13,7 @@ import realestateexplorer.view.ExplorerUI
 
 fun main() {
 
-    val workbench = Workbench("Estate Agent Workbench", true)
+    val workbench = Workbench("Estate Agent Workbench", false)
 
     val repo = RealEstateRepository("/data/scratchDB".URL())
 

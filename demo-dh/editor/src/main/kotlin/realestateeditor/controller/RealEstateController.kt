@@ -1,6 +1,6 @@
 package realestateeditor.controller
 
-import realestateeditor.allpurpose.controller.EditorController
+import allpurpose.controller.EditorController
 import realestateeditor.controller.RealEstateAction.Close
 import realestateeditor.controller.RealEstateAction.Delete
 import realestateeditor.controller.RealEstateAction.New

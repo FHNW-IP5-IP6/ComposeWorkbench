@@ -5,7 +5,7 @@ import java.sql.ResultSet
 import java.sql.SQLException
 import java.sql.Statement
 import java.util.logging.Logger
-import realestateeditor.allpurpose.data.CrudRepository
+import allpurpose.data.CrudRepository
 
 class RealEstateRepository(private val url : String) : CrudRepository<RealEstateData> {
     private val LOGGER: Logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME)

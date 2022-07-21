@@ -5,7 +5,7 @@ import androidx.compose.material.icons.filled.AddCircleOutline
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.OpenInNew
 import androidx.compose.ui.graphics.vector.ImageVector
-import realestateeditor.allpurpose.controller.Action
+import allpurpose.controller.Action
 
 sealed class ApplicationAction(
     override val name: String,

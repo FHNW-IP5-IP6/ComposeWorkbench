@@ -31,7 +31,7 @@ class WorkbenchControllerTest {
 
     @Test
     fun registerAndRequestEditor(){
-        val editorModule = WorkbenchModule(ModuleType.EDITOR,"type", title ={"title"}, loader = {"model"} ) {_,_->}
+        val editorModule = WorkbenchModule(ModuleType.EDITOR,"type", title ={"title"}, loader = {c, m -> "model"} ) {_,_->}
         sut.registerEditor("type", editorModule)
         val moduleState = sut.requestEditorState<String>("type", 666)
 
@@ -56,7 +56,7 @@ class WorkbenchControllerTest {
 
     @Test
     fun convertEditorToWindow() {
-        val editorModule = WorkbenchModule(ModuleType.EDITOR,"type", title ={"title"}, loader = {"model"} ) {_,_->}
+        val editorModule = WorkbenchModule(ModuleType.EDITOR,"type", title ={"title"}, loader = {c, m -> "model"} ) {_,_->}
         sut.registerEditor("type", editorModule)
         sut.requestEditorState<String>("type", 666)
 

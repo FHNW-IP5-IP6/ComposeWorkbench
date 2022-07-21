@@ -23,3 +23,5 @@ include(":demo-dh:editor")
 include(":demo-dh:explorer")
 include("demo-dh:db")
 findProject(":demo-dh:db")?.name = "db"
+include("demo-dh:AllPurpose")
+findProject(":demo-dh:AllPurpose")?.name = "AllPurpose"

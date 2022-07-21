@@ -5,8 +5,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.WindowPosition
 import androidx.compose.ui.window.WindowState
-import realestateeditor.allpurpose.model.EditorState
-import realestateeditor.allpurpose.model.UndoState
+import allpurpose.model.EditorState
+import allpurpose.model.UndoState
 import realestateeditor.data.RealEstateData
 
 data class RealEstateEditorState(override val data: RealEstateData,

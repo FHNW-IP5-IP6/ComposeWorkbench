@@ -25,10 +25,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
-import realestateeditor.allpurpose.model.UndoState
-import realestateeditor.allpurpose.view.ActionIconStrip
-import realestateeditor.allpurpose.view.AttributeField
-import realestateeditor.allpurpose.view.AttributeTextAreaField
+import allpurpose.model.UndoState
+import allpurpose.view.ActionIconStrip
+import allpurpose.view.AttributeField
+import allpurpose.view.AttributeTextAreaField
 import realestateeditor.controller.RealEstateAction
 import realestateeditor.controller.RealEstateController
 import realestateeditor.data.RealEstateData

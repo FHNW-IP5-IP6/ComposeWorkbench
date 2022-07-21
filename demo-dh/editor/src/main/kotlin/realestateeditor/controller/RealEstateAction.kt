@@ -6,7 +6,7 @@ import androidx.compose.material.icons.filled.Redo
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.Undo
 import androidx.compose.ui.graphics.vector.ImageVector
-import realestateeditor.allpurpose.controller.Action
+import allpurpose.controller.Action
 
 sealed class RealEstateAction(
     override val name: String,

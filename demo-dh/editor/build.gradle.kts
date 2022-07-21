@@ -23,22 +23,12 @@ dependencies {
     implementation("org.junit.jupiter:junit-jupiter:5.8.2")
 
     implementation(project(":demo-dh:db"))
+    implementation(project(":demo-dh:AllPurpose"))
 }
 
 
 tasks.withType<KotlinCompile> {
     kotlinOptions.jvmTarget = "11"
-}
-
-compose.desktop {
-    application {
-        mainClass = "ch.fhnw.composeWorkbench.demo.editor.MainKt"
-        nativeDistributions {
-            targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
-            packageName = "ch.fhnw.composeWorkbench.demo.editor"
-            packageVersion = "1.0.0"
-        }
-    }
 }
 
 

@@ -2,9 +2,9 @@ package realestateeditor.data
 
 
 
-import realestateeditor.allpurpose.data.Identifiable
-import realestateeditor.allpurpose.model.Attribute
-import realestateeditor.allpurpose.view.format
+import allpurpose.data.Identifiable
+import allpurpose.model.Attribute
+import allpurpose.view.format
 
 data class RealEstateData(
     override val id: Int,

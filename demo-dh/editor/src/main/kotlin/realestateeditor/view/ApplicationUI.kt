@@ -28,7 +28,7 @@ import androidx.compose.ui.window.WindowPosition
 import androidx.compose.ui.window.rememberDialogState
 import androidx.compose.ui.window.rememberTrayState
 import realestateeditor.controller.ApplicationAction
-import realestateeditor.allpurpose.view.ActionMenuItem
+import allpurpose.view.ActionMenuItem
 import realestateeditor.controller.RealEstateController
 import realestateeditor.data.ApplicationState
 

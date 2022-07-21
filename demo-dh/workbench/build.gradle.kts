@@ -16,7 +16,10 @@ dependencies {
     implementation(compose.desktop.currentOs)
 
     implementation(project(":demo-dh:editor"))
+
     implementation(project(":demo-dh:explorer"))
+
+    implementation(project(":demo-dh:AllPurpose")) //dont't understand why this is necessary, should be recognized as transitive dependency
 
     implementation(project(":lib"))
 
@@ -29,10 +32,10 @@ tasks.withType<KotlinCompile> {
 
 compose.desktop {
     application {
-        mainClass = "ch.fhnw.composeWorkbench.demo.explorer.MainKt"
+        mainClass = "MainKt"
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
-            packageName = "ch.fhnw.composeWorkbench.demo.explorer"
+            packageName = "ch.fhnw.estateagentworkbench"
             packageVersion = "1.0.0"
         }
     }

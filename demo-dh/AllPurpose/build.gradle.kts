@@ -10,17 +10,12 @@ plugins {
 group = "ch.fhnw"
 version = "1.0.0"
 
-val sqliteVersion: String by project
 
 dependencies {
     implementation(compose.desktop.currentOs)
     implementation("org.jetbrains.compose.material:material-icons-extended:1.1.1")
 
-    implementation("org.xerial:sqlite-jdbc:$sqliteVersion")
     implementation("org.junit.jupiter:junit-jupiter:5.8.2")
-
-    implementation(project(":demo-dh:db"))
-    implementation(project(":demo-dh:AllPurpose"))
 }
 
 tasks.withType<KotlinCompile> {
