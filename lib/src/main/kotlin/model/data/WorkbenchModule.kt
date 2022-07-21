@@ -10,7 +10,7 @@ internal class WorkbenchModule<M>(
     val modelType: String,
     val title: (M) -> String,
     val icon: ImageVector = WorkbenchDefaultIcon,
-    val loader: ((Int) -> M)? = null,
+    val loader: ((Int, MQClient) -> M)? = null,
     val onClose: (M, MQClient) -> Unit = { _: M, _: MQClient -> },
     val onSave: (M, MQClient) -> Boolean = { _: M, _: MQClient -> true},
     val content: @Composable (M, MQClient) -> Unit,

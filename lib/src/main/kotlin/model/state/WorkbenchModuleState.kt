@@ -13,9 +13,10 @@ internal class WorkbenchModuleState <M> (
     var window: WorkbenchWindowState,
     var close: (WorkbenchModuleState<*>) -> Unit = {},
     var displayType: DisplayType,
+    val client: MQClient = MQClient(module.modelType, dataId ?: id),
     var isPreview: Boolean = false
 ){
-    private var client: MQClient = MQClient(module.modelType, dataId ?: id)
+
 
     init {
         client.publishCreated()
@@ -24,7 +25,7 @@ internal class WorkbenchModuleState <M> (
     fun updateModule(module: WorkbenchModule<*>){
         module as WorkbenchModule<M>
         this.module = module
-        model = module.loader!!.invoke(dataId!!)
+        model = module.loader!!.invoke(dataId!!, client)
     }
 
     fun onClose() {

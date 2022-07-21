@@ -9,39 +9,48 @@ import realestateeditor.controller.RealEstateAction
 import realestateeditor.controller.RealEstateController
 import realestateeditor.data.RealEstateRepository
 import realestateeditor.view.RealEstateEditor
-import realestateeditor.view.RealEstateEditorWindow
 import realestateexplorer.controller.ExplorerController
 import realestateexplorer.view.ExplorerUI
 
 
 fun main() {
 
-    val workbench = Workbench("Estate Agent Workbench", false)
+    val workbench = Workbench("Estate Agent Workbench", true)
 
     val repo = RealEstateRepository("/data/scratchDB".URL())
-    repo.create()
+
 
     workbench.registerEditor(
         type = "RealEstate",
-        loader = { RealEstateController(repo.read(it), repo) },
+        controller = { id, mqtt ->  RealEstateController(data = repo.read(id),
+                                                        repo = repo,
+                                                    onChange = { field, value ->
+                                                        println("$field changed to $value")
+                                                        mqtt.publish("""RealEstate/$id/$field/$value""")
+                                                    }) },
         icon = Icons.Default.Edit,
-        title = { "$it.editorState.data.id" },
+        title = { "${it.editorState.data.id}" },
         onClose = {controller, mqtt  ->  },
         onSave = { controller, mqtt ->
             controller.triggerAction(RealEstateAction.Save())
             mqtt.publishSaved()
             true
+        },
+        content = { controller, mqtt ->
+            RealEstateEditor(editorState = controller.editorState,
+                trigger = { controller.triggerAction(it) })
         }
-    ){m, c ->
-        RealEstateEditor(m.editorState, {m.triggerAction(it)})
-    }
+    )
 
     workbench.registerExplorer<ExplorerController>(
-        type = "RealEstates",
-        title = {"Real Estates"}){m, c ->
-        ExplorerUI(m.allRealEstates)
+        type    = "RealEstates",
+        title   = { "Real Estates" },
+        content = { controller, mqtt ->
+            ExplorerUI(realEstates = controller.allRealEstates,
+                           trigger = { controller.triggerAction(it) },
+                           onClick = { workbench.requestEditor<RealEstateController>("RealEstate", it)})
 
-    }
+        })
 
     workbench.requestExplorer("RealEstates", ExplorerController(), true, ExplorerLocation.LEFT)
 
@@ -55,10 +64,8 @@ fun main() {
 //            workbench.requestEditor<CityState>("City", it)
 //        }
 //    }
-//
-//    workbench.requestExplorer("Cities", getSwissCities(), true, ExplorerLocation.LEFT)
 
-    workbench.requestEditor<RealEstateController>("RealEstate", 1)
+
 
     workbench.run { println("Exit my Compose Workbench App") }
 }

@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.WindowState
+import model.data.MQClient
 import model.data.TabRowKey
 import model.data.WorkbenchModule
 import model.data.enums.DisplayType
@@ -275,11 +276,12 @@ internal class WorkbenchController(appTitle: String) {
     fun <M>requestEditorState(moduleType: String, dataId: Int): WorkbenchModuleState<M> {
         val editors = getRegisteredEditors<M>(moduleType)
         val editor = editors[0]
+        val mqtt =  MQClient(editor.modelType, dataId ?: dataId)
         val moduleState = WorkbenchModuleState(
             id = getNextKey(),
             window = model.mainWindow,
             dataId = dataId,
-            model = editor.loader!!.invoke(dataId),
+            model = editor.loader!!.invoke(dataId, mqtt),
             module = editor,
             close = { removeModuleState(it) },
             displayType = informationState.currentTabSpace,

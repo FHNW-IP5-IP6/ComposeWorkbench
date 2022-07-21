@@ -11,12 +11,16 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
 import androidx.compose.material.TopAppBar
+import androidx.compose.material.lightColors
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -48,10 +52,17 @@ fun RealEstateEditorWindow(controller: RealEstateController){
 
 @Composable
 fun RealEstateEditor(editorState: RealEstateEditorState, trigger: (RealEstateAction) -> Unit){
-    with(editorState){
-        Scaffold(topBar = { Bar(isChanged, undoState, trigger) },
-            content = { Body(data, trigger) })
-    }
+    MaterialTheme(colors = lightColors(primary = Color(0xFFEBE8DF),
+          primaryVariant = Color(0xFF6A6A6A),
+               secondary = Color(0xFFFBBA00),
+        secondaryVariant = Color(0xFFA6572),
+              background = Color(0xFFFFFFFC),
+               onPrimary = Color(0xFF343434)),
+                 content = { with(editorState) {
+                              Scaffold(topBar = { Bar(isChanged, undoState, trigger) },
+                                      content = { Body(data, trigger) })
+                           }})
+
 }
 
 

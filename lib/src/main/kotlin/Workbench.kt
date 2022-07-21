@@ -70,35 +70,35 @@ class Workbench(appTitle: String = "", enableMQ: Boolean = false) {
     /**
      * Add an editor for a given Type to the Workbench
      *
-     * @param M: Type of the Model which the editor uses to manage and display data
+     * @param C: Type of the Model which the editor uses to manage and display data
      * @param type: the type of data this editor can be used for
-     * @param loader: callback to load model from id
+     * @param controller: callback to load model from id
      * @param icon: Icon for this Editor. This is used in case multiple editors are registered for the same type
      * @param title: Callback to get the editors title from a given Model
      * @param onClose: The callback to be invoked when an editor of this type is closed
      * @param onSave: The callback to be invoked when an editor of this type is saved
      * @param content: Composable function that defines the displayed content of this explorer
      */
-    fun <M> registerEditor(
+    fun <C> registerEditor(
         type: String,
-        title: (M) -> String,
-        loader: (Int) -> M,
+        title: (C) -> String,
+        controller: (Int, MQClient) -> C,
         icon: ImageVector = WorkbenchDefaultIcon,
-        onClose: (M, MQClient) -> Unit = {_,_ ->},
-        onSave: (M, MQClient) -> Boolean = {_,_ -> true},
-        content: @Composable (M, MQClient) -> Unit
+        onClose: (C, MQClient) -> Unit = {_,_ ->},
+        onSave: (C, MQClient) -> Boolean = {_,_ -> true},
+        content: @Composable (C, MQClient) -> Unit
     ) {
         val editor = WorkbenchModule(
             moduleType = ModuleType.EDITOR,
             modelType = type,
             icon = icon,
-            loader = loader,
+            loader = controller,
             content = content,
             title = title,
             onClose = onClose,
             onSave =  onSave
         )
-        controller.registerEditor(type, editor)
+        this.controller.registerEditor(type, editor)
     }
 
     /**

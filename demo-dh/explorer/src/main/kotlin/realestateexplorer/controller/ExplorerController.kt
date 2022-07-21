@@ -5,20 +5,31 @@ import realestateexplorer.data.ExplorerData
 import realestateexplorer.data.Repository
 
 class ExplorerController {
-    val repository = Repository("/data/scratchDB".URL())
+    private val repository = Repository("/data/scratchDB".URL())
 
     var allRealEstates = mutableStateListOf<ExplorerData>().apply {
         addAll(repository.readAll())
     }
 
 
-    private fun String.URL() : String =
-        "jdbc:sqlite:${ExplorerController::class.java.getResource(this)!!.toExternalForm()}"
+    fun triggerAction(action: ExplorerAction){
+        when(action){
+            is ExplorerAction.New -> create()
+            is ExplorerAction.Update -> update(action.id, action.field, action.value)
+        }
+    }
 
-
-    fun create(){
-        allRealEstates.add(ExplorerData(id = repository.create()))
+    private fun update(id: Int, field: String, valueAsText: String){
+        println("update explorer $id, $field")
 
     }
+
+    private fun create(){
+        allRealEstates.add(ExplorerData(id = repository.create()))
+    }
+
+
+    private fun String.URL() : String =
+        "jdbc:sqlite:${ExplorerController::class.java.getResource(this)!!.toExternalForm()}"
 
 }

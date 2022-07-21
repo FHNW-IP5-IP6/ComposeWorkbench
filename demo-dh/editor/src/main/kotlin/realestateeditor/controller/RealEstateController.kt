@@ -22,6 +22,7 @@ import realestateeditor.model.RealEstateEditorState
 class RealEstateController(
     data: RealEstateData,
     repo: RealEstateRepository,
+    val onChange: (field: String, value: String) -> Unit = {_, _ -> },
     private val applicationController: ApplicationController? = null
 ) :
     EditorController<RealEstateData, RealEstateAction, RealEstateEditorState>(initialState = RealEstateEditorState(data = data),
@@ -60,8 +61,10 @@ class RealEstateController(
         return result
     }
 
-    private fun updateStreet(valueAsString: String, data: RealEstateData) : RealEstateData =
-        data.copy(street = data.street.copyString(valueAsText = valueAsString))
+    private fun updateStreet(valueAsString: String, data: RealEstateData) : RealEstateData {
+        onChange("STREET", valueAsString)
+        return data.copy(street = data.street.copyString(valueAsText = valueAsString))
+    }
 
 
     private fun updateStreetNumber(valueAsText: String, data: RealEstateData) : RealEstateData =

@@ -11,21 +11,17 @@ import realestateexplorer.view.ExplorerUI
 
 fun main() {
     val controller = ExplorerController()
-    controller.create()
-    controller.create()
-    controller.create()
 
     application {
-        Window(
-            title = "Real Estates",
-            state = rememberWindowState(
-                width = 450.dp,
-                height = 400.dp,
-                position = WindowPosition(Alignment.Center)
-            ),
-            onCloseRequest = ::exitApplication
-        ) {
-            ExplorerUI(controller.allRealEstates)
+        Window(    title = "Real Estates",
+                   state = rememberWindowState(width = 250.dp,
+                                              height = 400.dp,
+                                            position = WindowPosition(Alignment.Center)),
+          onCloseRequest = ::exitApplication)
+        {
+            ExplorerUI(realEstates = controller.allRealEstates,
+                           trigger = { controller.triggerAction(it) },
+                           onClick = { println("$it selected") })
         }
 
     }

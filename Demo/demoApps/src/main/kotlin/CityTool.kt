@@ -13,7 +13,7 @@ fun main() {
 
     workbench.registerEditor<CityState>(
         type = "City",
-        loader = {getCityState(it)},
+        controller = {controller, mqtt -> getCityState(controller)},
         icon = Icons.Default.Edit,
         title = { it.name },
         onClose = {m, c ->  },
@@ -31,7 +31,7 @@ fun main() {
 
     workbench.registerEditor<CityLocationState>(
         type = "City",
-        loader = {getCityLocationState(it)},
+        controller = {controller, mqtt -> getCityLocationState(controller)},
         icon = Icons.Default.Home,
         title = { it.name },
         onClose = { m, c ->  },
