@@ -24,10 +24,16 @@ fun main() {
         type = TYPE_REAL_ESTATE,
         loader = { id, mqtt ->  RealEstateController(data = repo.read(id),
                                                     repo = repo,
-                                                    onChange = { field, value ->
+                                                    onChange = { field, value, someDataChanged ->
                                                         println("$field changed to $value")
-                                                        mqtt.publish("""$TYPE_REAL_ESTATE/$id/$field/$value""", "")
-                                                        mqtt.publishUnsaved(TYPE_REAL_ESTATE, id)
+                                                        mqtt.publish("""$TYPE_REAL_ESTATE/$id/$field""", value)
+                                                        if(someDataChanged){
+                                                            mqtt.publishUnsaved(TYPE_REAL_ESTATE, id)
+                                                        }
+                                                        else {
+                                                            mqtt.publishSaved(TYPE_REAL_ESTATE, id)
+                                                        }
+
                                                     }) },
         icon = Icons.Default.Edit,
         title = { "${it.editorState.data.id}" },
@@ -39,7 +45,7 @@ fun main() {
         },
         content = { controller ->
             RealEstateEditor(editorState = controller.editorState,
-                trigger = { controller.triggerAction(it) })
+                                 trigger = { controller.triggerAction(it) })
         }
     )
 
@@ -77,13 +83,12 @@ fun main() {
     workbench.run { println("Exit my Compose Workbench App") }
 }
 
-private fun updateTempChanges(c: ExplorerController) = { topic: String, msg: String ->
+private fun updateTempChanges(c: ExplorerController) = { topic: String, value: String ->
     val topicSplit = topic.split("/")
     if (topicSplit.size == 4) {
         val id = topicSplit[1].toIntOrNull()
         if (id != null) {
             val field = topicSplit[2]
-            val value = topicSplit[3]
             c.triggerAction(ExplorerAction.Update(id, field, value))
         }
     }

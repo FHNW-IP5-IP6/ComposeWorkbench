@@ -86,6 +86,8 @@ abstract class EditorController<D : Identifiable, A: Action, S: EditorState<D>>(
      */
     protected abstract fun executeAction(action: A, currentState: S): S?
 
+    protected open fun sendUpdateNotifications(oldData: D, newData: D, someDataChanged: Boolean) = Unit
+
     protected fun save(state: S): S {
         val data = state.data
         ioScope.launch {
@@ -142,6 +144,8 @@ abstract class EditorController<D : Identifiable, A: Action, S: EditorState<D>>(
 
 
     private fun setNewState(newEditorState: S){
+        sendUpdateNotifications(beforeActionState.data, newEditorState.data, newEditorState.data != editorState.savedData)
+
         editorState = newEditorState
         beforeActionState = newEditorState
     }
