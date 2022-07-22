@@ -21,8 +21,6 @@ internal class WorkbenchDragController(private val controller: WorkbenchControll
         private set
 
     //Model accessor functions
-    fun getModuleType() = dragState.module?.module?.moduleType
-
     fun isCurrentDropTarget(tabRowKey: TabRowKey): Boolean {
         val reverseDropTarget = getCurrentReverseDopTarget() ?: return false //If there is no reverse target active the drop target is outside any window
         val dropTarget = getCurrentDopTarget(reverseDropTarget.tabRowKey.windowState)
@@ -40,10 +38,6 @@ internal class WorkbenchDragController(private val controller: WorkbenchControll
         }
     }
 
-    fun getCurrentDopTarget(windowState: WorkbenchWindowState): DropTarget? {
-        return dragState.dropTargets.find { !it.isReverse && it.bounds.contains(dragState.positionOnScreen.toOffset()) && it.tabRowKey.windowState == windowState }
-    }
-
     fun toOffset(windowState: WorkbenchWindowState): Offset {
         val x = dragState.positionOnScreen.x - windowState.windowState.position.x
         val y = dragState.positionOnScreen.y - windowState.windowState.position.y
@@ -54,6 +48,9 @@ internal class WorkbenchDragController(private val controller: WorkbenchControll
         return WindowPosition(x = dragState.positionOnScreen.x, y = dragState.positionOnScreen.y)
     }
 
+    private fun getCurrentDopTarget(windowState: WorkbenchWindowState): DropTarget? {
+        return dragState.dropTargets.find { !it.isReverse && it.bounds.contains(dragState.positionOnScreen.toOffset()) && it.tabRowKey.windowState == windowState }
+    }
     //Model state update
     fun addReverseDropTarget(tabRowKey: TabRowKey, bounds: Rect){
         val dropTargets = dragState.dropTargets.toMutableList()
@@ -109,8 +106,8 @@ internal class WorkbenchDragController(private val controller: WorkbenchControll
     }
 
     fun isValidDropTarget(tabRowKey: TabRowKey): Boolean {
-        if (getModuleType() == null) return false
-        return (ModuleType.BOTH == getModuleType() || ModuleType.BOTH == tabRowKey.moduleType || getModuleType() == tabRowKey.moduleType) && !controller.getModulesFiltered(tabRowKey).contains(dragState.module!!)
+        val moduleType = dragState.module?.module?.moduleType ?: return false
+        return (ModuleType.BOTH == moduleType || ModuleType.BOTH == tabRowKey.moduleType || moduleType == tabRowKey.moduleType) && !controller.getModulesFiltered(tabRowKey).contains(dragState.module!!)
     }
 
 }
