@@ -17,7 +17,6 @@ import androidx.compose.material.Text
 import androidx.compose.material.TopAppBar
 import androidx.compose.material.lightColors
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -28,21 +27,23 @@ import androidx.compose.ui.window.Window
 import allpurpose.model.UndoState
 import allpurpose.view.ActionIconStrip
 import allpurpose.view.AttributeField
+import allpurpose.view.AttributeRadioButtonGroup
 import allpurpose.view.AttributeTextAreaField
 import realestateeditor.controller.RealEstateAction
 import realestateeditor.controller.RealEstateController
 import realestateeditor.data.RealEstateData
+import realestateeditor.data.RealEstateType
 import realestateeditor.model.RealEstateEditorState
 
 
 @Composable
-fun RealEstateEditorWindow(controller: RealEstateController){
+fun RealEstateEditorWindow(controller: RealEstateController, onClose: (id: Int) -> Unit){
     val trigger : (RealEstateAction) -> Unit = { controller.triggerAction(it) }
 
     with(controller.editorState){
         Window(    title = "${data.street.value} ${data.streetNumber.value}, ${data.city.value}",
                    state = windowState,
-          onCloseRequest = { trigger(RealEstateAction.Close()) },
+          onCloseRequest = { onClose(data.id) },
                  content = { //WindowMenuBar(trigger)
 
                              RealEstateEditor(this@with, trigger)
@@ -83,6 +84,10 @@ private fun Bar(saveEnabled : Boolean, undoState: UndoState, trigger: (RealEstat
 @Composable
 private fun Body(info: RealEstateData, trigger: (RealEstateAction) -> Unit) {
     Column(Modifier.padding(20.dp).fillMaxSize().width(IntrinsicSize.Max), verticalArrangement = Arrangement.spacedBy(5.dp)) {
+        AttributeRadioButtonGroup(attribute = info.type,
+            options = RealEstateType.values(),
+            onSelection = { trigger(RealEstateAction.UpdateType(it)) })
+
         FormRow("Adresse") {
             AttributeField(attribute = info.street,
                        onValueChange = { trigger(RealEstateAction.UpdateStreet(it)) },

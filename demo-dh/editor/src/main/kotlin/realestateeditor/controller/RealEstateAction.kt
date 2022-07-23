@@ -7,6 +7,7 @@ import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.Undo
 import androidx.compose.ui.graphics.vector.ImageVector
 import allpurpose.controller.Action
+import realestateeditor.data.RealEstateType
 
 sealed class RealEstateAction(
     override val name: String,
@@ -15,12 +16,10 @@ sealed class RealEstateAction(
     override val undoable: Boolean
 ) : Action {
 
-    class Close : RealEstateAction("Close", null, true, false)
-    class New   : RealEstateAction("New", null, true, false)
-
     class Save(enabled: Boolean = true) : RealEstateAction("Save", Icons.Filled.Save, enabled, false)
     class Delete() : RealEstateAction("Delete", Icons.Filled.Delete, true, false)
 
+    class UpdateType(val newValue: RealEstateType)       : RealEstateAction("Update Type", null, true, true)
     class UpdateStreet(val newValue: String)             : RealEstateAction("Update Street", null, true, true)
     class UpdateStreetNumber(val newValue: String)       : RealEstateAction("Update Street Number", null, true, true)
     class UpdateZipCode(val newValue: String)            : RealEstateAction("Update Zip-Code", null, true, true)

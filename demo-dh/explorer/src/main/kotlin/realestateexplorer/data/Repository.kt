@@ -24,17 +24,19 @@ class Repository(private val url : String) {
         }
     }
 
-    private fun ResultSet.asRealEstate(): ExplorerData = ExplorerData(
-        id = getInt(1),
-        type = getString(2),
-        street = getString(3),
-        streetNumber = getString(4),
-        zipCode = getInt(5),
-        city = getString(6)
+    private fun ResultSet.asRealEstate(): ExplorerData =
+        ExplorerData(id = getInt(1),
+                   type = getString(2),
+                 street = getString(3),
+           streetNumber = getString(4),
+                zipCode = getInt(5),
+                   city = getString(6)
     )
 
     fun create() : Int {
-        val sql = "INSERT INTO REAL_ESTATE (ID, TYPE, STREET, STREET_NUMBER, ZIP_CODE, CITY, YEAR_OF_CONSTRUCTION, MARKET_VALUE, DESCRIPTION) VALUES (null, 'APPARTEMENT_BUILDING', '', '', '', '', '', '', '')"
+        val initial = ExplorerData(0)
+        val sql = """INSERT INTO REAL_ESTATE (ID, TYPE, STREET, STREET_NUMBER, ZIP_CODE, CITY, YEAR_OF_CONSTRUCTION, MARKET_VALUE, DESCRIPTION) 
+            |            VALUES (null, '${initial.type}', '${initial.street}', '${initial.streetNumber}', '${initial.zipCode}', '${initial.city}', '', '', '')""".trimMargin()
 
         val connection = DriverManager.getConnection(url)
 

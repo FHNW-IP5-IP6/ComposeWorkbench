@@ -69,6 +69,7 @@ fun Body(realEstates: List<ExplorerData>, onClick: (id: Int) -> Unit, paddingVal
                         key = { it.id }) {
                     ListItem( text = { Text("${it.street} ${it.streetNumber}") },
                       overlineText = { Text("${it.zipCode}, ${it.city}") },
+                     secondaryText = { Text(it.type) },
                           modifier = Modifier.clickable(onClick = { onClick(it.id) })
                     )
                     Divider()

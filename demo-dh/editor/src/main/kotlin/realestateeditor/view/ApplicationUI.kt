@@ -47,7 +47,7 @@ fun ApplicationScope.ApplicationUI(
                                      onPrimary = Color(0xFF343434)),
                                        content = { realEstateControllers.forEach {
                                                       key(it){
-                                                         RealEstateEditorWindow(it)
+                                                         RealEstateEditorWindow(it, {trigger(ApplicationAction.Close(it))})
                                                       }}
 
                                                    OpenDialog(applicationState, trigger)

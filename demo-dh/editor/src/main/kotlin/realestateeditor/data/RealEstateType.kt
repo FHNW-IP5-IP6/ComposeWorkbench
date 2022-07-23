@@ -1,6 +1,8 @@
 package realestateeditor.data
 
-enum class RealEstateType(val translation: String) {
+import allpurpose.data.Translatable
+
+enum class RealEstateType(override val translation: String) : Translatable {
     FAMILY_HOUSE("Einfamilienhaus"),
     APPARTEMENT_BUILDING("Mehrfamilienhaus"),
     COMMERCIAL_BUILDING("Gewerblich")

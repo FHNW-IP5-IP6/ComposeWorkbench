@@ -60,8 +60,7 @@ class ApplicationController {
         ioScope.launch {
             realEstateControllers.add(
                 RealEstateController(data = data,
-                                     repo = repo,
-                    applicationController = this@ApplicationController)
+                                     repo = repo)
             )
         }
 

@@ -12,85 +12,80 @@ import realestateexplorer.controller.ExplorerController
 import realestateexplorer.view.ExplorerUI
 
 const val TYPE_REAL_ESTATE = "RealEstate"
+const val TYPE_ALL_REAL_ESTATES = "AllRealEstates"
 
 
 fun main() {
+    with(Workbench("Estate Agent Workbench", true)){
 
-    val workbench = Workbench("Estate Agent Workbench", true)
+        val repo = RealEstateRepository("/data/scratchDB".URL())
 
-    val repo = RealEstateRepository("/data/scratchDB".URL())
+        registerEditor(
+              type = TYPE_REAL_ESTATE,
+            //rename to 'editorController'?
+            loader = { id, mqtt ->  RealEstateController(data = repo.read(id),
+                                                         repo = repo,
+                                                     onChange = { field, value, someDataChanged ->
+                                                                    mqtt.publish("""$TYPE_REAL_ESTATE/$id/$field""", value)
+                                                                    if(someDataChanged){
+                                                                        //rename to 'publishIsChanged(TYPE_REAL_ESTATE, id, someDataChanged)'?
+                                                                        mqtt.publishUnsaved(TYPE_REAL_ESTATE, id)
+                                                                    }
+                                                                    else {
+                                                                        mqtt.publishSaved(TYPE_REAL_ESTATE, id)
+                                                                    }
 
-    workbench.registerEditor(
-        type = TYPE_REAL_ESTATE,
-        loader = { id, mqtt ->  RealEstateController(data = repo.read(id),
-                                                    repo = repo,
-                                                    onChange = { field, value, someDataChanged ->
-                                                        println("$field changed to $value")
-                                                        mqtt.publish("""$TYPE_REAL_ESTATE/$id/$field""", value)
-                                                        if(someDataChanged){
-                                                            mqtt.publishUnsaved(TYPE_REAL_ESTATE, id)
-                                                        }
-                                                        else {
-                                                            mqtt.publishSaved(TYPE_REAL_ESTATE, id)
-                                                        }
+                                                                 })},
+             icon = Icons.Default.Edit,
+            title = { "${it.editorState.data.street.value} ${it.editorState.data.streetNumber.value}" },
+          onClose = { controller, mqtt  ->  println("close")},
+           onSave = { controller, mqtt ->
+                        controller.triggerAction(RealEstateAction.Save())
+                        //should be done by WorkbenchController
+                        mqtt.publishSaved(TYPE_REAL_ESTATE, controller.editorState.data.id)
+                        //what does 'true' mean
+                        true
+                    },
+          //rename to 'editorView'?
+          content = { controller ->
+                        RealEstateEditor(editorState = controller.editorState,
+                                             trigger = { controller.triggerAction(it) })
+                    }
+        )
 
-                                                    }) },
-        icon = Icons.Default.Edit,
-        title = { "${it.editorState.data.id}" },
-        onClose = {controller, mqtt  ->  },
-        onSave = { controller, mqtt ->
-            controller.triggerAction(RealEstateAction.Save())
-            mqtt.publishSaved(TYPE_REAL_ESTATE, controller.editorState.data.id)
-            true
-        },
-        content = { controller ->
-            RealEstateEditor(editorState = controller.editorState,
-                                 trigger = { controller.triggerAction(it) })
-        }
-    )
+        registerExplorer<ExplorerController>(
+                     type = TYPE_ALL_REAL_ESTATES,
+            // how about that?: explorerController = { ExplorerController() }
+                    title = { "Real Estates" },
+            initMessaging = { controller, mqtt ->
+                                mqtt.subscribe("$TYPE_REAL_ESTATE/#", updateTempChanges(controller) )
+                                mqtt.subscribeForSelectedEditor(TYPE_REAL_ESTATE) { id ->
+                                    println("Selected Editor for type $TYPE_REAL_ESTATE with id $id")
+                                }
+                            },
+                  //rename to 'explorerView'?
+                  content = { controller ->
+                                ExplorerUI(realEstates = controller.allRealEstates,
+                                               trigger = { controller.triggerAction(it) },
+                                               onClick = { requestEditor<RealEstateController>(TYPE_REAL_ESTATE, it)})
 
-    workbench.registerExplorer<ExplorerController>(
-        type    = "RealEstates",
-        title   = { "Real Estates" },
-        initMessaging = {controller, mqtt ->
-            mqtt.subscribe("$TYPE_REAL_ESTATE/#", updateTempChanges(controller) )
-            mqtt.subscribeForSelectedEditor(TYPE_REAL_ESTATE) { id ->
-                println("Selected Editor for type $TYPE_REAL_ESTATE with id $id")
-            }
-        },
-        content = { controller ->
-            ExplorerUI(realEstates = controller.allRealEstates,
-                           trigger = { controller.triggerAction(it) },
-                           onClick = { workbench.requestEditor<RealEstateController>("RealEstate", it)})
+                            })
 
-        })
+        // if a 'explorerController' is available
+        //requestExplorer(TYPE_ALL_REAL_ESTATES,  true, ExplorerLocation.LEFT)
+        requestExplorer(TYPE_ALL_REAL_ESTATES, ExplorerController(), true, ExplorerLocation.LEFT)
 
-    workbench.requestExplorer("RealEstates", ExplorerController(), true, ExplorerLocation.LEFT)
+        run { println("Exit my Compose Workbench App") }
+    }
 
-//    workbench.registerExplorer<CitiesState>(type = "Cities", title = { it.title() }
-//    ) { m, c ->
-//        c.subscribeForUpdates("City") { id, msg ->
-//            if (msg == "saved" || msg == "closed") m.reload(id)
-//        }
-//        //c.subscribe("$CITY_MQ_TOPIC/city/#", updateTempChanges(m))
-//        CitiesExplorerUi(m) {
-//            workbench.requestEditor<CityState>("City", it)
-//        }
-//    }
-
-
-
-    workbench.run { println("Exit my Compose Workbench App") }
 }
 
 private fun updateTempChanges(c: ExplorerController) = { topic: String, value: String ->
     val topicSplit = topic.split("/")
-    if (topicSplit.size == 4) {
-        val id = topicSplit[1].toIntOrNull()
-        if (id != null) {
-            val field = topicSplit[2]
-            c.triggerAction(ExplorerAction.Update(id, field, value))
-        }
+    if (topicSplit.size == 3) {
+        val id = topicSplit[1].toInt()
+        val field = topicSplit[2]
+        c.triggerAction(ExplorerAction.Update(id, field, value))
     }
 }
 

@@ -2,9 +2,7 @@ package realestateeditor.controller
 
 import allpurpose.controller.EditorController
 import allpurpose.model.Attribute
-import realestateeditor.controller.RealEstateAction.Close
 import realestateeditor.controller.RealEstateAction.Delete
-import realestateeditor.controller.RealEstateAction.New
 import realestateeditor.controller.RealEstateAction.Redo
 import realestateeditor.controller.RealEstateAction.Save
 import realestateeditor.controller.RealEstateAction.Undo
@@ -13,10 +11,12 @@ import realestateeditor.controller.RealEstateAction.UpdateDescription
 import realestateeditor.controller.RealEstateAction.UpdateMarketValue
 import realestateeditor.controller.RealEstateAction.UpdateStreet
 import realestateeditor.controller.RealEstateAction.UpdateStreetNumber
+import realestateeditor.controller.RealEstateAction.UpdateType
 import realestateeditor.controller.RealEstateAction.UpdateYearOfConstruction
 import realestateeditor.controller.RealEstateAction.UpdateZipCode
 import realestateeditor.data.RealEstateData
 import realestateeditor.data.RealEstateRepository
+import realestateeditor.data.RealEstateType
 import realestateeditor.model.RealEstateEditorState
 
 
@@ -24,7 +24,7 @@ class RealEstateController(
     data: RealEstateData,
     repo: RealEstateRepository,
     val onChange: (field: String, value: String, someDataChanged: Boolean) -> Unit = {_, _, _ -> },
-    private val applicationController: ApplicationController? = null
+    val onDelete: () -> Unit = {}
 ) :
     EditorController<RealEstateData, RealEstateAction, RealEstateEditorState>(initialState = RealEstateEditorState(data = data),
                                                                                       repo = repo) {
@@ -35,6 +35,7 @@ class RealEstateController(
         val data = currentState.data
 
         return when (action) {
+            is UpdateType               -> updateType(action.newValue, data)              ?.insertInto(currentState)
             is UpdateStreet             -> updateStreet(action.newValue, data)            .insertInto(currentState)
             is UpdateStreetNumber       -> updateStreetNumber(action.newValue, data)      .insertInto(currentState)
             is UpdateZipCode            -> updateZipCode(action.newValue, data)           .insertInto(currentState)
@@ -48,21 +49,19 @@ class RealEstateController(
 
             is Save                     -> save(currentState)
             is Delete                   -> delete(data)
-
-            is Close                    -> delegateAction(ApplicationAction.Close(data.id))
-            is New                      -> delegateAction(ApplicationAction.New())
         }
     }
 
 
     override fun delete(data: RealEstateData): RealEstateEditorState? {
         val result = super.delete(data)
-        delegateAction(ApplicationAction.Close(data.id))
+        onDelete()
 
         return result
     }
 
     override fun sendUpdateNotifications(oldData: RealEstateData, newData: RealEstateData, someDataChanged: Boolean) {
+        sendAttributeChange(oldData.type,               newData.type,               someDataChanged)
         sendAttributeChange(oldData.street,             newData.street,             someDataChanged)
         sendAttributeChange(oldData.streetNumber,       newData.streetNumber,       someDataChanged)
         sendAttributeChange(oldData.city,               newData.city,               someDataChanged)
@@ -77,6 +76,9 @@ class RealEstateController(
             onChange(newAttribute.dbName, newAttribute.valueAsText, someDataChanged)
         }
     }
+
+    private fun updateType(value: RealEstateType, data: RealEstateData) : RealEstateData? =
+        if (data.type.value != value) data.copy(type = data.type.copy(value = value, valueAsText = value.translation)) else null
 
     private fun updateStreet(valueAsString: String, data: RealEstateData): RealEstateData =
         data.copy(street = data.street.copyString(valueAsText = valueAsString))
@@ -124,11 +126,5 @@ class RealEstateController(
     private fun RealEstateData.insertInto(editorState: RealEstateEditorState): RealEstateEditorState =
         editorState.copy(data = this)
 
-
-    private fun delegateAction(action: ApplicationAction) : RealEstateEditorState? {
-        applicationController?.triggerAction(action)
-
-        return null
-    }
 
 }

@@ -3,6 +3,7 @@ package allpurpose.view
 import java.awt.Cursor
 import java.util.*
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.IntrinsicSize
@@ -19,6 +20,7 @@ import androidx.compose.material.IconButton
 import androidx.compose.material.LocalTextStyle
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.OutlinedTextField
+import androidx.compose.material.RadioButton
 import androidx.compose.material.Text
 import androidx.compose.material.TextFieldDefaults
 import androidx.compose.runtime.Composable
@@ -30,9 +32,11 @@ import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.MenuScope
 import allpurpose.controller.Action
+import allpurpose.data.Translatable
 import allpurpose.model.Attribute
 
 
@@ -111,6 +115,31 @@ fun AttributeTextAreaField(attribute: Attribute<*>, onValueChange : (String) -> 
                  onValueChange = onValueChange)
 }
 
+@Composable
+fun<T: Translatable> AttributeRadioButtonGroup(attribute: Attribute<T>, options: Array<T>, onSelection : (T) -> Unit ){
+    Row(horizontalArrangement = Arrangement.SpaceEvenly,
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.fillMaxWidth()
+            .padding(top = 5.dp, bottom = 20.dp)){
+
+        options.forEach {
+            Row(verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(end= 25.dp)){
+
+                RadioButton(selected = attribute.value == it,
+                    onClick = { onSelection(it) },
+                    modifier = Modifier.cursor(Cursor.HAND_CURSOR))
+
+                Text( text = it.translation,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.clickable { onSelection(it) }
+                        .cursor(Cursor.HAND_CURSOR)
+                )
+            }
+        }
+    }
+}
 @Composable
 fun VerticalDivider(){
     Box(modifier = Modifier.fillMaxHeight()

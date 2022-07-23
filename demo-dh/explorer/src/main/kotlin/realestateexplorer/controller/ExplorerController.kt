@@ -19,8 +19,22 @@ class ExplorerController {
         }
     }
 
-    private fun update(id: Int, field: String, valueAsText: String){
-        println("update explorer $id, $field, $valueAsText")
+    private fun update(id: Int, field: String, valueAsText: String) {
+        val idx = allRealEstates.indexOfFirst { it.id == id }
+        val old = allRealEstates.get(idx)
+        val new = when (field) {
+            "TYPE"          -> old.copy(type = valueAsText)
+            "STREET"        -> old.copy(street = valueAsText)
+            "STREET_NUMBER" -> old.copy(streetNumber = valueAsText)
+            "ZIP_CODE"      -> old.copy(zipCode = valueAsText.toInt())
+            "CITY"          -> old.copy(city = valueAsText)
+            else            -> null
+        }
+
+        if (null != new) {
+            allRealEstates.removeAt(idx)
+            allRealEstates.add(idx, new)
+        }
     }
 
     private fun create(){
