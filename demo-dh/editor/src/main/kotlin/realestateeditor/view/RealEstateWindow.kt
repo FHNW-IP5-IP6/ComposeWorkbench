@@ -38,6 +38,7 @@ import realestateeditor.model.RealEstateEditorState
 
 @Composable
 fun RealEstateEditorWindow(controller: RealEstateController, onClose: (id: Int) -> Unit){
+
     val trigger : (RealEstateAction) -> Unit = { controller.triggerAction(it) }
 
     with(controller.editorState){
@@ -45,7 +46,6 @@ fun RealEstateEditorWindow(controller: RealEstateController, onClose: (id: Int) 
                    state = windowState,
           onCloseRequest = { onClose(data.id) },
                  content = { //WindowMenuBar(trigger)
-
                              RealEstateEditor(this@with, trigger)
                            })
     }
@@ -63,7 +63,6 @@ fun RealEstateEditor(editorState: RealEstateEditorState, trigger: (RealEstateAct
                               Scaffold(topBar = { Bar(isChanged, undoState, trigger) },
                                       content = { Body(data, trigger) })
                            }})
-
 }
 
 

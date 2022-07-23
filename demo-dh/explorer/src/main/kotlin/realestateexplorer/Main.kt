@@ -19,9 +19,10 @@ fun main() {
                                             position = WindowPosition(Alignment.Center)),
           onCloseRequest = ::exitApplication)
         {
-            ExplorerUI(realEstates = controller.allRealEstates,
-                           trigger = { controller.triggerAction(it) },
-                           onClick = { println("$it selected") })
+            ExplorerUI(selectedId = controller.selectedId,
+                      realEstates = controller.allRealEstates,
+                          trigger = { controller.triggerAction(it) },
+                          onClick = { println("$it selected") })
         }
 
     }

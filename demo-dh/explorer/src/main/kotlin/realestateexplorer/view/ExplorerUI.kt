@@ -1,6 +1,7 @@
 package realestateexplorer.view
 
 import androidx.compose.foundation.VerticalScrollbar
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -30,7 +31,7 @@ import realestateexplorer.data.ExplorerData
 
 
 @Composable
-fun ExplorerUI(realEstates: List<ExplorerData>, trigger: (action: ExplorerAction) -> Unit, onClick: (id: Int) -> Unit) {
+fun ExplorerUI(selectedId: Int?, realEstates: List<ExplorerData>, trigger: (action: ExplorerAction) -> Unit, onClick: (id: Int) -> Unit) {
     MaterialTheme(colors = lightColors(primary = Color(0xFFEBE8DF),
           primaryVariant = Color(0xFF6A6A6A),
                secondary = Color(0xFFFBBA00),
@@ -38,7 +39,7 @@ fun ExplorerUI(realEstates: List<ExplorerData>, trigger: (action: ExplorerAction
               background = Color(0xFFFFFFFC),
                onPrimary = Color(0xFF343434)),
                  content = { Scaffold(floatingActionButton = { FAB(trigger) },
-                                                   content = { Body(realEstates, onClick, it) })
+                                                   content = { Body(selectedId, realEstates, onClick, it) })
                            })
 }
 
@@ -50,7 +51,7 @@ fun FAB(trigger: (action: ExplorerAction) -> Unit) {
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun Body(realEstates: List<ExplorerData>, onClick: (id: Int) -> Unit, paddingValues: PaddingValues) {
+fun Body(selectedId: Int?, realEstates: List<ExplorerData>, onClick: (id: Int) -> Unit, paddingValues: PaddingValues) {
 
     if (realEstates.isEmpty()) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -71,6 +72,7 @@ fun Body(realEstates: List<ExplorerData>, onClick: (id: Int) -> Unit, paddingVal
                       overlineText = { Text("${it.zipCode}, ${it.city}") },
                      secondaryText = { Text(it.type) },
                           modifier = Modifier.clickable(onClick = { onClick(it.id) })
+                                             .background(if(it.id == selectedId) MaterialTheme.colors.primary else MaterialTheme.colors.background)
                     )
                     Divider()
                 }

@@ -35,10 +35,12 @@ fun main() {
                                                                         mqtt.publishSaved(TYPE_REAL_ESTATE, id)
                                                                     }
 
-                                                                 })},
+                                                                 },
+                                                     onDelete = { println("Entity was deleted, close Editor") } //missing functionality on workbench
+                                                         )},
              icon = Icons.Default.Edit,
             title = { "${it.editorState.data.street.value} ${it.editorState.data.streetNumber.value}" },
-          onClose = { controller, mqtt  ->  println("close")},
+          onClose = { controller, mqtt  ->  println("close ${controller.editorState.data.id}")},
            onSave = { controller, mqtt ->
                         controller.triggerAction(RealEstateAction.Save())
                         //should be done by WorkbenchController
@@ -60,14 +62,17 @@ fun main() {
             initMessaging = { controller, mqtt ->
                                 mqtt.subscribe("$TYPE_REAL_ESTATE/#", updateTempChanges(controller) )
                                 mqtt.subscribeForSelectedEditor(TYPE_REAL_ESTATE) { id ->
+                                    //isn't called if editor is closed
                                     println("Selected Editor for type $TYPE_REAL_ESTATE with id $id")
+                                    controller.selectedId = id
                                 }
                             },
                   //rename to 'explorerView'?
                   content = { controller ->
-                                ExplorerUI(realEstates = controller.allRealEstates,
-                                               trigger = { controller.triggerAction(it) },
-                                               onClick = { requestEditor<RealEstateController>(TYPE_REAL_ESTATE, it)})
+                                ExplorerUI(selectedId = controller.selectedId,
+                                          realEstates = controller.allRealEstates,
+                                              trigger = { controller.triggerAction(it) },
+                                              onClick = { requestEditor<RealEstateController>(TYPE_REAL_ESTATE, it)})
 
                             })
 

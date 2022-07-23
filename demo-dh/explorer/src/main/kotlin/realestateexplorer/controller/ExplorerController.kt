@@ -1,6 +1,9 @@
 package realestateexplorer.controller
 
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import realestateexplorer.data.ExplorerData
 import realestateexplorer.data.Repository
 
@@ -11,6 +14,7 @@ class ExplorerController {
         addAll(repository.readAll())
     }
 
+    var selectedId: Int? by mutableStateOf(null)
 
     fun triggerAction(action: ExplorerAction){
         when(action){
@@ -38,7 +42,7 @@ class ExplorerController {
     }
 
     private fun create(){
-        allRealEstates.add(ExplorerData(id = repository.create()))
+        allRealEstates.add(ExplorerData(id = repository.create(), type = "Gewerblich"))
     }
 
 

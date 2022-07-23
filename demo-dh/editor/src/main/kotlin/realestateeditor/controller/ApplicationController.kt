@@ -25,12 +25,12 @@ class ApplicationController {
 
     fun triggerAction(action: ApplicationAction){
         when(action){
-            is ApplicationAction.New        -> create()
-            is ApplicationAction.Open       -> open(action.id)
-            is ApplicationAction.Close      -> close(action.id)
-            is ApplicationAction.OpenDialog -> openDialog()
+            is ApplicationAction.New         -> create()
+            is ApplicationAction.Open        -> open(action.id)
+            is ApplicationAction.Close       -> close(action.id)
+            is ApplicationAction.OpenDialog  -> openDialog()
             is ApplicationAction.CloseDialog -> closeDialog()
-            is ApplicationAction.Exit -> {} //todo: should be done here, not in UI
+            is ApplicationAction.Exit        -> {} //todo: should be done here, not in UI
         }
     }
 
@@ -60,7 +60,9 @@ class ApplicationController {
         ioScope.launch {
             realEstateControllers.add(
                 RealEstateController(data = data,
-                                     repo = repo)
+                                     repo = repo,
+                                 onDelete = { close(data.id) }
+                )
             )
         }
 

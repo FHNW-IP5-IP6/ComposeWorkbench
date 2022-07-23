@@ -36,7 +36,7 @@ class Repository(private val url : String) {
     fun create() : Int {
         val initial = ExplorerData(0)
         val sql = """INSERT INTO REAL_ESTATE (ID, TYPE, STREET, STREET_NUMBER, ZIP_CODE, CITY, YEAR_OF_CONSTRUCTION, MARKET_VALUE, DESCRIPTION) 
-            |            VALUES (null, '${initial.type}', '${initial.street}', '${initial.streetNumber}', '${initial.zipCode}', '${initial.city}', '', '', '')""".trimMargin()
+            |            VALUES (null, '${initial.type}', '${initial.street}', '${initial.streetNumber}', '${initial.zipCode}', '${initial.city}', '2014', '1000000', '')""".trimMargin()
 
         val connection = DriverManager.getConnection(url)
 
