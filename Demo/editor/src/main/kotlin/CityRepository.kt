@@ -57,17 +57,7 @@ class CityState(private val city: City) {
     var latitude by mutableStateOf(city.latitude)
     var longitude by mutableStateOf(city.longitude)
 
-    fun persist() {
-        transaction(DbSettings.citiesDb) {
-            city.name = name
-            city.countryCode = countryCode
-            city.population = population
-            city.elevation = elevation
-            city.timeZone = timeZone
-            city.longitude = longitude
-            city.latitude = latitude
-        }
-    }
+
 }
 
 class CityLocationState(private val city: City) {

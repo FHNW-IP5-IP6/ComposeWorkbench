@@ -25,14 +25,14 @@ import javax.swing.JPanel
 
 fun main() = application {
     Window(onCloseRequest = ::exitApplication) {
-        CityMapEditorUi(findById(2661374).toCityLocationState())
+        CityMapEditorUi(CityRepository.getCityState(2661374)) {_, _ -> }
     }
 }
 
 var map: JXMapViewer? = null
 
 @Composable
-fun CityMapEditorUi(model: CityLocationState){
+fun CityMapEditorUi(model: CityState, onChange: (String, String)->Unit){
     Row {
         //This is always on top (drag animation) because of a bug see https://github.com/JetBrains/compose-jb/issues/221
         SwingPanel(
@@ -60,8 +60,8 @@ fun CityMapEditorUi(model: CityLocationState){
             }
             IconButton(onClick = {
                 val center = map!!.centerPosition
-                model.longitude = center.longitude
-                model.latitude = center.latitude
+                onChange("longitude", center.longitude.toString())
+                onChange("latitude", center.latitude.toString())
             },
             ){
                 Icon(Icons.Filled.Refresh, "")
