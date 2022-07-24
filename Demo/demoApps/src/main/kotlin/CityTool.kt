@@ -8,75 +8,74 @@ const val CITY_MQ_TOPIC = "city-tool"
 fun main() {
 
     val workbench = Workbench("Cities App", true)
-    val explorerModel: List<CitiesState> = listOf(getSwissCities(),getSmallCities(), getBigCities(),  getGermanCities())
 
 
-    workbench.registerEditor<CityState>(
+    workbench.registerEditor<CityController>(
         type = "City",
-        controller = {controller, mqtt -> getCityState(controller)},
+        loader = {id, mqtt -> CityController(id) { id, field, value ->
+            mqtt.publish("$CITY_MQ_TOPIC/city/$id/$field", value)
+            mqtt.publishUnsaved("City", id)
+        } },
         icon = Icons.Default.Edit,
-        title = { it.name },
+        title = { controller ->  controller.cityState.name },
         onClose = {controller, mqtt ->  },
         onSave = { controller, mqtt ->
             controller.persist()
-            mqtt.publishSaved("City", controller.id)
+            mqtt.publishSaved("City", controller.cityState.id)
             true
         }
     ){controller ->
-        CityEditorUi(controller)
+        CityEditorUi(controller.cityState, controller::onFieldChanged)
     }
 
-    workbench.registerEditor<CityLocationState>(
+    workbench.registerEditor<CityController>(
         type = "City",
-        loader = {controller, mqtt -> getCityLocationState(controller)},
+        loader = {id, mqtt -> CityController(id){ id, field, value ->
+            mqtt.publish("$CITY_MQ_TOPIC/city/$id/$field", value)
+            mqtt.publishUnsaved("City", id)
+        } },
         icon = Icons.Default.Home,
-        title = { it.name },
+        title = { controller -> controller.cityState.name },
         onClose = { controller, mqtt ->  },
         onSave = { controller, mqtt ->
             controller.persist()
-            mqtt.publishSaved("City", controller.id.value)
+            mqtt.publishSaved("City", controller.cityState.id)
             true
         }
-    ){ c ->
-        CityMapEditorUi(c)
+    ){ controller ->
+        CityMapEditorUi(controller.cityState, controller::onFieldChanged)
     }
 
-    workbench.registerExplorer<CitiesState>(type = "Cities", title = { it.title() }
-    ) { m, c ->
-        c.subscribeForUpdates("City") { id, msg ->
-            if (msg == "saved" || msg == "closed") m.reload(id)
-        }
-        c.subscribe("$CITY_MQ_TOPIC/city/#", updateTempChanges(m))
-        CitiesExplorerUi(m) {
+    workbench.registerExplorer<CitiesController>(
+        type = "Cities",
+        title = { it.title() },
+        initMessaging = { controller, mqtt ->
+            mqtt.subscribeForUpdates("City") { _, msg ->
+                if (msg == "saved" || msg == "closed") controller.reload()
+            }
+            mqtt.subscribe("$CITY_MQ_TOPIC/city/#", updateTempChanges(controller))
+        },
+    ) { controller ->
+        CitiesExplorerUi(controller.citiesState) {
             workbench.requestEditor<CityState>("City", it)
         }
     }
 
-    workbench.requestExplorer("Cities", explorerModel[1], true, ExplorerLocation.LEFT)
-    workbench.requestExplorer("Cities", explorerModel[0], true, ExplorerLocation.LEFT)
-    workbench.requestExplorer("Cities", explorerModel[2], false, ExplorerLocation.BOTTOM)
-    workbench.requestExplorer("Cities", explorerModel[3], true, ExplorerLocation.BOTTOM, false)
+    workbench.requestExplorer("Cities", CitiesController(CitiesRepository::getSmallCities), true, ExplorerLocation.LEFT)
+    workbench.requestExplorer("Cities", CitiesController(CitiesRepository::getSwissCities), true, ExplorerLocation.LEFT)
+    workbench.requestExplorer("Cities", CitiesController(CitiesRepository::getBigCities), false, ExplorerLocation.BOTTOM)
+    workbench.requestExplorer("Cities", CitiesController(CitiesRepository::getGermanCities), true, ExplorerLocation.BOTTOM, false)
     workbench.run { println("Exit my Compose Workbench App") }
 
 }
 
-private fun updateTempChanges(m: CitiesState) = { topic: String, msg: String ->
+private fun updateTempChanges(controller: CitiesController) = { topic: String, msg: String ->
     val topicSplit = topic.split("/")
     if (topicSplit.size == 4) {
-        val id = topicSplit[2]
-        val city = m.state.find { it.id.toString() == id }
-        if (city != null) {
-            when (topicSplit[3]) {
-                "name" -> city.name = msg
-                "country" -> city.countryCode = msg
-                "population" -> {
-                    val pop = msg.toIntOrNull()
-                    if (pop != null) {
-                        city.population = pop
-                    }
-                }
-            }
+        val id = topicSplit[2].toIntOrNull()
+        if (id != null) {
+            val field = topicSplit[3]
+            controller.updateField(id, field, msg)
         }
     }
-
 }

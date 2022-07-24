@@ -37,7 +37,7 @@ class WorkbenchDragControllerTest {
     @Test
     fun reset() {
         val editorModule =
-            WorkbenchModule(ModuleType.EDITOR, "type", title = { "title" }, loader = { c, m -> "model" }) { _, _ -> }
+            WorkbenchModule(ModuleType.EDITOR, "type", title = { "title" }, loader = { id, mqtt -> "model" }) { }
         controller.registerEditor("type", editorModule)
         val moduleState = controller.requestEditorState<String>("type", 1)
 
@@ -76,10 +76,10 @@ class WorkbenchDragControllerTest {
 
     @Test
     fun isValidDropTarget() {
-        val explorerModule = WorkbenchModule<String>(ModuleType.EXPLORER, "type", title = { "title" }) { _, _ -> }
+        val explorerModule = WorkbenchModule<String>(ModuleType.EXPLORER, "type", title = { "title" }) { }
         controller.registerExplorer("type", explorerModule)
-        val explorerLeft = controller.requestExplorerState(id = 1, moduleType = "type", explorerController = "model1", displayType = DisplayType.LEFT)
-        val explorerBottom = controller.requestExplorerState(id = 2, moduleType = "type", explorerController = "model2", displayType = DisplayType.BOTTOM)
+        val explorerLeft = controller.requestExplorerState(id = 1, modelType = "type", explorerController = "model1", displayType = DisplayType.LEFT)
+        val explorerBottom = controller.requestExplorerState(id = 2, modelType = "type", explorerController = "model2", displayType = DisplayType.BOTTOM)
 
         val tabRowKeyBottom = TabRowKey(DisplayType.BOTTOM, ModuleType.EXPLORER, controller.getMainWindow())
         val target = DropTarget(false, tabRowKeyBottom, Rect(0f, 50f, 100f, 100f))
@@ -96,15 +96,15 @@ class WorkbenchDragControllerTest {
 
     @Test
     fun dropTargets() {
-        val editorModule = WorkbenchModule(ModuleType.EDITOR, "type", title = { "title" }, loader = {c, m ->  "model $c" }) { _, _ -> }
-        val explorerModule = WorkbenchModule<String>(ModuleType.EXPLORER, "type", title = { "title" }) { _, _ -> }
+        val editorModule = WorkbenchModule(ModuleType.EDITOR, "type", title = { "title" }, loader = {id, mqtt ->  "model $id" }) { }
+        val explorerModule = WorkbenchModule<String>(ModuleType.EXPLORER, "type", title = { "title" }) { }
         controller.registerExplorer("type", explorerModule)
         controller.registerEditor("type", editorModule)
         controller.registerEditor("type", editorModule)
         val editor1 = controller.requestEditorState<String>("type", 1)
         val editor2 = controller.requestEditorState<String>("type", 2)
         editor2.displayType = DisplayType.TAB2
-        val explorer = controller.requestExplorerState(id = 1, moduleType = "type", explorerController = "model", displayType = DisplayType.LEFT)
+        val explorer = controller.requestExplorerState(id = 1, modelType = "type", explorerController = "model", displayType = DisplayType.LEFT)
         val editorTabRowKey1 = TabRowKey(DisplayType.TAB1, ModuleType.EDITOR, controller.getMainWindow())
         val editorTabRowKey2 = TabRowKey(DisplayType.TAB2, ModuleType.EDITOR, controller.getMainWindow())
         val explorerTabRowKey = TabRowKey(DisplayType.LEFT, ModuleType.EXPLORER, controller.getMainWindow())

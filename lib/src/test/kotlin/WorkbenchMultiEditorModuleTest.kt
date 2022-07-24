@@ -25,8 +25,8 @@ class WorkbenchMultiEditorModuleTest {
         val type = "editorType"
         val id = 456
         val controller = sut.getWorkbenchController()
-        sut.registerEditor(type = type, title = {it.title}, controller = { c, m -> TestModel(c) }){ _, _->}
-        sut.registerEditor(type = type, title = {it.title}, controller = { c, m ->TestModel(c) }){ _, _->}
+        sut.registerEditor(type = type, title = {it.title}, loader = { id, mqtt -> TestModel(id) }){ }
+        sut.registerEditor(type = type, title = {it.title}, loader = { id, mqtt ->TestModel(id) }){ }
         assertEquals(2, controller.getRegisteredEditors<TestModel>(type).size)
 
         sut.requestEditor<TestModel>(type = type, id = id)
@@ -34,14 +34,14 @@ class WorkbenchMultiEditorModuleTest {
         assertEquals(1, controller.getModulesFiltered(tabRowKey).size)
 
         var moduleState: WorkbenchModuleState<TestModel> = controller.getSelectedModule(tabRowKey) as WorkbenchModuleState<TestModel>
-        assertEquals(id, moduleState.model.id)
+        assertEquals(id, moduleState.controller.id)
         assertEquals(controller.getRegisteredEditors<TestModel>(type)[0], moduleState.module)
 
         controller.updateModule(moduleState, controller.getRegisteredEditors<TestModel>(type)[1])
 
         assertEquals(1, controller.getModulesFiltered(tabRowKey).size)
         moduleState = controller.getSelectedModule(tabRowKey) as WorkbenchModuleState<TestModel>
-        assertEquals(id, moduleState.model.id)
+        assertEquals(id, moduleState.controller.id)
         assertEquals(controller.getRegisteredEditors<TestModel>(type)[1], moduleState.module)
     }
 
@@ -51,8 +51,8 @@ class WorkbenchMultiEditorModuleTest {
         val controller = sut.getWorkbenchController()
         val type = "editorType"
         val id = 456
-        sut.registerEditor(type = type, title = {it.title}, controller = {c, m ->  TestModel(c) }){ _, _->}
-        sut.registerEditor(type = type, title = {it.title}, controller = {c, m ->  TestModel2(c) }){ _, _->}
+        sut.registerEditor(type = type, title = {it.title}, loader = {id, mqtt ->  TestModel(id) }){ }
+        sut.registerEditor(type = type, title = {it.title}, loader = {id, mqtt ->  TestModel2(id) }){ }
         assertEquals(2, controller.getRegisteredEditors<TestModel>(type).size)
 
         sut.requestEditor<TestModel>(type = type, id = id)
@@ -60,14 +60,14 @@ class WorkbenchMultiEditorModuleTest {
 
         assertEquals(1, controller.getModulesFiltered(tabRowKey).size)
         val moduleState1: WorkbenchModuleState<TestModel> = controller.getSelectedModule(tabRowKey) as WorkbenchModuleState<TestModel>
-        assertEquals(id, moduleState1.model.id)
+        assertEquals(id, moduleState1.controller.id)
         assertEquals(controller.getRegisteredEditors<TestModel>(type)[0], moduleState1.module)
 
         controller.updateModule(moduleState1, controller.getRegisteredEditors<TestModel2>(type)[1])
 
         assertEquals(1, controller.getModulesFiltered(tabRowKey).size)
         val module2: WorkbenchModuleState<TestModel2> = controller.getSelectedModule(tabRowKey) as WorkbenchModuleState<TestModel2>
-        assertEquals(id, module2.model.id)
+        assertEquals(id, module2.controller.id)
         assertEquals(controller.getRegisteredEditors<TestModel2>(type)[1], module2.module)
     }
 }

@@ -18,8 +18,8 @@ object Cities: IntIdTable() {
     val longitude = double("LONGITUDE")
 }
 
-class City(id: EntityID<Int>) : IntEntity(id) {
-    companion object : IntEntityClass<City>(Cities)
+class DataCity(id: EntityID<Int>) : IntEntity(id) {
+    companion object : IntEntityClass<DataCity>(Cities)
 
     var name by Cities.name
     var countryCode by Cities.countryCode
@@ -30,47 +30,56 @@ class City(id: EntityID<Int>) : IntEntity(id) {
     var longitude by Cities.longitude
 }
 
-fun getCityState(id: Int) = findById(id).toCityState()
-fun getCityLocationState(id: Int) = findById(id).toCityLocationState()
-
-internal fun findById(id: Int): City{
-    return transaction(DbSettings.citiesDb) {
-        City.findById(id)!!
-    }
+data class CityState(
+    val id: Int = -1,
+    val name: String = "",
+    val countryCode: String = "",
+    val population: Int = 0,
+    val elevation: Double?  = null,
+    val timeZone: String = "",
+    val latitude: Double = 0.0,
+    val longitude: Double = 0.0,
+){
+    constructor(dataCity: DataCity) : this(
+        dataCity.id.value,
+        dataCity.name,
+        dataCity.countryCode,
+        dataCity.population,
+        dataCity.elevation,
+        dataCity.timeZone,
+        dataCity.latitude,
+        dataCity.longitude,
+    )
 }
 
-internal fun City.toCityState() : CityState {
-    return CityState(this)
-}
 
-internal fun City.toCityLocationState(): CityLocationState {
-    return CityLocationState(this)
-}
+class CityRepository {
 
-class CityState(private val city: City) {
-    val id = city.id.value
-    var name by mutableStateOf(city.name)
-    var countryCode by mutableStateOf(city.countryCode)
-    var population by mutableStateOf(city.population)
-    var elevation by mutableStateOf(city.elevation)
-    var timeZone by mutableStateOf(city.timeZone)
-    var latitude by mutableStateOf(city.latitude)
-    var longitude by mutableStateOf(city.longitude)
+    companion object {
+        fun getCityState(id: Int) = findById(id).toCityState()
 
-
-}
-
-class CityLocationState(private val city: City) {
-    val id = city.id
-    var name by mutableStateOf(city.name)
-    var latitude by mutableStateOf(city.latitude)
-    var longitude by mutableStateOf(city.longitude)
-
-    fun persist() {
-        transaction(DbSettings.citiesDb) {
-            city.name = name
-            city.longitude = longitude
-            city.latitude = latitude
+        fun persist(cityState: CityState) {
+            val dataCity = findById(cityState.id)!!
+            transaction(DbSettings.citiesDb) {
+                dataCity.name = cityState.name
+                dataCity.countryCode = cityState.countryCode
+                dataCity.population = cityState.population
+                dataCity.elevation = cityState.elevation
+                dataCity.timeZone = cityState.timeZone
+                dataCity.longitude = cityState.longitude
+                dataCity.latitude = cityState.latitude
+            }
         }
+
+        fun findById(id: Int): DataCity {
+            return transaction(DbSettings.citiesDb) {
+                DataCity.findById(id)!!
+            }
+        }
+
+        fun DataCity.toCityState(): CityState {
+            return CityState(this)
+        }
+
     }
 }

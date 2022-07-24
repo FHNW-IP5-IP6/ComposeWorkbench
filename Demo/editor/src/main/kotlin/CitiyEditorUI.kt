@@ -5,7 +5,6 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.material.TextField
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -39,31 +38,31 @@ fun CityEditorUi(state: CityState, onChange: (String, String)->Unit) {
                     Column {
                         Row {
                             EditableField(label = "Name",
-                                onValueChange = { onChange.invoke("name", name) },
+                                onValueChange = { onChange.invoke("name", it) },
                                 getValue = { name })
                             EditableField(label = "Country",
-                                onValueChange = { onChange.invoke("country", countryCode) },
+                                onValueChange = { onChange.invoke("country", it) },
                                 getValue = { countryCode })
                         }
                         Row {
                             EditableField(label = "Population",
-                                onValueChange = { onChange("population", population.toString()) },
+                                onValueChange = { onChange("population", it) },
                                 getValue = { population.toString() })
                             EditableField(label = "Elevation",
-                                onValueChange = { onChange("elevation", elevation.toString()) },
+                                onValueChange = { onChange("elevation", it) },
                                 getValue = { elevation.toString() })
                         }
                         Row {
                             EditableField(label = "Timezone",
-                                onValueChange = { onChange("timezone", timeZone) },
+                                onValueChange = { onChange("timezone", it) },
                                 getValue = { timeZone })
                         }
                         Row {
                             EditableField(label = "Longitude",
-                                onValueChange = { onChange("longitude", longitude.toString()) },
+                                onValueChange = { onChange("longitude", it) },
                                 getValue = { longitude.toString() })
                             EditableField(label = "Latitude",
-                                onValueChange = { onChange("latitude", latitude.toString()) },
+                                onValueChange = { onChange("latitude", it) },
                                 getValue = { latitude.toString() })
                         }
                     }
