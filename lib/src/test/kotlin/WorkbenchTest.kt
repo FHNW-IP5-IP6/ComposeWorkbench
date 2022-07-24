@@ -26,7 +26,7 @@ internal class WorkbenchTest{
 
     @Test
     fun registerEditor() {
-        sut.registerEditor<String>(type = "String", loader = {"test"}, title = { "title" }){_,_->}
+        sut.registerEditor<String>(type = "String", controller = {c, m -> "test"}, title = { "title" }){ _, _->}
         assertEquals(1, sut.getWorkbenchController().getRegisteredEditors<Any>("String").size)
     }
 
@@ -51,7 +51,7 @@ internal class WorkbenchTest{
 
     @Test
     fun requestEditor() {
-        sut.registerEditor(type = "String", loader = {"test"}, title = { "title" }){_,_->}
+        sut.registerEditor(type = "String", controller = {c, m -> "test"}, title = { "title" }){ _, _->}
         sut.requestEditor<String>("String", 0)
         val tabRowKey = TabRowKey(displayType = DisplayType.TAB1, moduleType = ModuleType.EDITOR, windowState = sut.getWorkbenchController().getMainWindow())
 

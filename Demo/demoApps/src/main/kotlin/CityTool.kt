@@ -13,35 +13,32 @@ fun main() {
 
     workbench.registerEditor<CityState>(
         type = "City",
-        loader = {getCityState(it)},
+        controller = {controller, mqtt -> getCityState(controller)},
         icon = Icons.Default.Edit,
         title = { it.name },
-        onClose = {m, c ->  },
-        onSave = { m, c ->
-            m.persist()
-            c.publishSaved()
+        onClose = {controller, mqtt ->  },
+        onSave = { controller, mqtt ->
+            controller.persist()
+            mqtt.publishSaved("City", controller.id)
             true
         }
-    ){m, c ->
-        CityEditorUi(m) { field, value ->
-            c.publishUnsaved()
-            c.publish("$CITY_MQ_TOPIC/city/${m.id}/$field", value)
-        }
+    ){controller ->
+        CityEditorUi(controller)
     }
 
     workbench.registerEditor<CityLocationState>(
         type = "City",
-        loader = {getCityLocationState(it)},
+        loader = {controller, mqtt -> getCityLocationState(controller)},
         icon = Icons.Default.Home,
         title = { it.name },
-        onClose = { m, c ->  },
-        onSave = { m, c ->
-            m.persist()
-            c.publishSaved()
+        onClose = { controller, mqtt ->  },
+        onSave = { controller, mqtt ->
+            controller.persist()
+            mqtt.publishSaved("City", controller.id.value)
             true
         }
-    ){ m, c ->
-        CityMapEditorUi(m, c::publishUnsaved)
+    ){ c ->
+        CityMapEditorUi(c)
     }
 
     workbench.registerExplorer<CitiesState>(type = "Cities", title = { it.title() }

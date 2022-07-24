@@ -5,6 +5,7 @@ import MQ_INTERNAL_BROKER_PORT
 import MQ_INTERNAL_EDITOR_STATE_CLOSED
 import MQ_INTERNAL_EDITOR_STATE_CREATED
 import MQ_INTERNAL_EDITOR_STATE_SAVED
+import MQ_INTERNAL_EDITOR_STATE_SELECTED
 import MQ_INTERNAL_EDITOR_STATE_UNSAVED
 import MQ_INTERNAL_TOPIC_PATH_EDITOR
 import com.hivemq.client.mqtt.MqttClient
@@ -15,16 +16,15 @@ import java.net.InetSocketAddress
 import java.util.concurrent.Executor
 
 
-class MQClient(val type: String, val id: Int) {
+object MQClient {
 
     private var running = false
     private lateinit var client: Mqtt5BlockingClient
-    private var ident: String = "$type/$id"
 
     init {
         try {
             client = MqttClient.builder()
-                .identifier(ident)
+                .identifier(this.hashCode().toString())
                 .serverAddress(InetSocketAddress(MQ_INTERNAL_BROKER_IP_ADDRESS, MQ_INTERNAL_BROKER_PORT))
                 .useMqttVersion5()
                 .buildBlocking()
@@ -44,24 +44,39 @@ class MQClient(val type: String, val id: Int) {
             .send()
     }
 
-    fun publish(msg: String) {
-        publish("$MQ_INTERNAL_TOPIC_PATH_EDITOR/$ident", msg)
+    fun publish(type: String, id: Int, msg: String) {
+        publish("$MQ_INTERNAL_TOPIC_PATH_EDITOR/$type/$id", msg)
     }
 
-    internal fun publishCreated() {
-        publish(MQ_INTERNAL_EDITOR_STATE_CREATED)
+    internal fun publishCreated(type: String, id: Int) {
+        publish(type, id, MQ_INTERNAL_EDITOR_STATE_CREATED)
     }
 
-    fun publishUnsaved() {
-        publish(MQ_INTERNAL_EDITOR_STATE_UNSAVED)
+    fun publishUnsaved(type: String, id: Int) {
+        publish(type, id, MQ_INTERNAL_EDITOR_STATE_UNSAVED)
     }
 
-    fun publishSaved() {
-        publish(MQ_INTERNAL_EDITOR_STATE_SAVED)
+    fun publishSaved(type: String, id: Int) {
+        publish(type, id, MQ_INTERNAL_EDITOR_STATE_SAVED)
     }
 
-    internal fun publishClosed() {
-        publish(MQ_INTERNAL_EDITOR_STATE_CLOSED)
+    internal fun publishClosed(type: String, id: Int) {
+        publish(type, id, MQ_INTERNAL_EDITOR_STATE_CLOSED)
+    }
+
+    internal fun publishSelected(type: String, id: Int) {
+        publish("$MQ_INTERNAL_TOPIC_PATH_EDITOR/$type/$id/$MQ_INTERNAL_EDITOR_STATE_SELECTED", "")
+    }
+
+    fun subscribeForSelectedEditor(editorType: String, callBack: (Int)->Unit) {
+        val clbck: (String, String) -> Unit = {topic,_->
+            val splitTopic = topic.split("/")
+            if (splitTopic.size == 5) {
+                val dataId = splitTopic[3].toIntOrNull()
+                if (dataId != null) callBack(dataId)
+            }
+        }
+        subscribe("$MQ_INTERNAL_TOPIC_PATH_EDITOR/$editorType/+/$MQ_INTERNAL_EDITOR_STATE_SELECTED", clbck)
     }
 
     fun subscribe(topic: String, callBack: (String, String)->Unit) {
