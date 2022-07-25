@@ -50,6 +50,7 @@ internal fun WorkbenchTabRow(tabRowKey: TabRowKey, controller: WorkbenchControll
            HorizontalWorkbenchTabRow(tabRowKey, controller, onSelect)
         }
     }
+    handlePopUps(controller, tabRowKey)
 }
 
 /**
@@ -82,7 +83,7 @@ internal fun WorkbenchEditorSelector(tabRowKey: TabRowKey, controller: Workbench
             IconButton(
                 onClick = {
                     if (controller.isUnsaved(moduleState)) {
-                        controller.setPopUp(PopUpType.SAVE,tabRowKey){
+                        controller.setPopUp(tabRowKey, PopUpType.SAVE){
                             controller.updateModule(controller.getSelectedModule(tabRowKey)!!, editor)
                         }
                     } else {
@@ -129,6 +130,26 @@ private fun VerticalWorkbenchTabRow(tabRowKey: TabRowKey, controller: WorkbenchC
             modifier = Modifier.align(Alignment.CenterVertically),
             adapter = rememberScrollbarAdapter(scrollState)
         )
+    }
+}
+
+@Composable
+private fun handlePopUps(controller: WorkbenchController, tabRowKey: TabRowKey){
+    if (controller.isShowPopUp(tabRowKey)) {
+        val selected = controller.getSelectedModule(tabRowKey)!!
+        val popUpState = controller.informationState.tabRowState[tabRowKey]!!.popUpState!!
+        when (popUpState.type) {
+            PopUpType.SAVE ->  WorkbenchPopupSave({resp ->
+                when (resp) {
+                    OnCloseResponse.DISCARD -> popUpState.action.invoke()
+                    OnCloseResponse.SAVE -> controller.save(selected, popUpState.action)
+                    OnCloseResponse.CANCEL -> controller.removePopUp(tabRowKey)
+                }
+            }, false)
+            PopUpType.SAVE_FAILED -> WorkbenchPopupActionFailed(controller,"save", popUpState, tabRowKey)
+            PopUpType.CLOSE_FAILED -> WorkbenchPopupActionFailed(controller,"close", popUpState, tabRowKey)
+            else -> throw UnsupportedOperationException()
+        }
     }
 }
 
@@ -180,30 +201,13 @@ private fun WorkbenchTab(moduleState: WorkbenchModuleState<*>, controller: Workb
         }) {
             WorkbenchTab(writerModifier, moduleState.getTitle()) {
                 if (controller.isUnsaved(moduleState)) {
-                    controller.setPopUp(PopUpType.SAVE, tabRowKey) {
-                        moduleState.onClose()
+                    controller.setPopUp(type = PopUpType.SAVE, tabRowKey = tabRowKey) {
+                        controller.close(moduleState)
                     }
                 } else {
-                    moduleState.onClose()
+                    controller.close(moduleState)
                 }
             }
-        }
-    }
-
-    if (controller.isShowPopUp(tabRowKey)) {
-        val popUpState = controller.informationState.tabRowState[tabRowKey]!!.popUpState!!
-        when (popUpState.type) {
-            PopUpType.SAVE ->  WorkbenchPopupSave({resp ->
-                if (resp == OnCloseResponse.DISCARD) {
-                    popUpState.action.invoke()
-                } else if (resp == OnCloseResponse.SAVE) {
-                    if (moduleState.onSave()) {
-                        popUpState.action.invoke()
-                    }
-                }
-                controller.removePopUp(tabRowKey)
-            }, false)
-            else -> throw UnsupportedOperationException()
         }
     }
 }

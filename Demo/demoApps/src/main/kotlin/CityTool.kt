@@ -18,11 +18,14 @@ fun main() {
         } },
         icon = Icons.Default.Edit,
         title = { controller ->  controller.cityState.name },
-        onClose = {controller, mqtt ->  },
+        onClose = {controller, mqtt ->  success},
         onSave = { controller, mqtt ->
-            controller.persist()
-            mqtt.publishSaved("City", controller.cityState.id)
-            true
+            if(controller.cityState.name.length > 2) {
+                controller.persist()
+                success
+            } else{
+                ActionResult(false, "City name cannot be <= 2 chars")
+            }
         }
     ){controller ->
         CityEditorUi(controller.cityState, controller::onFieldChanged)
@@ -36,11 +39,11 @@ fun main() {
         } },
         icon = Icons.Default.Home,
         title = { controller -> controller.cityState.name },
-        onClose = { controller, mqtt ->  },
+        onClose = { controller, mqtt ->  success},
         onSave = { controller, mqtt ->
             controller.persist()
             mqtt.publishSaved("City", controller.cityState.id)
-            true
+            success
         }
     ){ controller ->
         CityMapEditorUi(controller.cityState, controller::onFieldChanged)

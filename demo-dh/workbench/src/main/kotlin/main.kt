@@ -40,13 +40,13 @@ fun main() {
                                                          )},
              icon = Icons.Default.Edit,
             title = { "${it.editorState.data.street.value} ${it.editorState.data.streetNumber.value}" },
-          onClose = { controller, mqtt  ->  println("close ${controller.editorState.data.id}")},
+          onClose = { controller, mqtt  ->
+                        println("close ${controller.editorState.data.id}")
+                        ActionResult(false, "cannot close du schlingel")
+                    },
            onSave = { controller, mqtt ->
                         controller.triggerAction(RealEstateAction.Save())
-                        //should be done by WorkbenchController
-                        mqtt.publishSaved(TYPE_REAL_ESTATE, controller.editorState.data.id)
-                        //what does 'true' mean
-                        true
+                        success
                     },
           //rename to 'editorView'?
           editorView = { controller ->

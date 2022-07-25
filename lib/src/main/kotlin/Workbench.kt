@@ -63,8 +63,6 @@ class Workbench(appTitle: String = "", enableMQ: Boolean = false) {
             content = explorerView,
             init = init,
             title = title,
-            onClose = {_,_ ->},
-            onSave = {_,_ -> true}
         )
         controller.registerExplorer(type, explorer)
     }
@@ -78,7 +76,9 @@ class Workbench(appTitle: String = "", enableMQ: Boolean = false) {
      * @param icon: Icon for this Editor. This is used in case multiple editors are registered for the same type
      * @param title: Callback to get the editors title from a given Model
      * @param onClose: The callback to be invoked when an editor of this type is closed
-     * @param onSave: The callback to be invoked when an editor of this type is saved
+     * @param onSave: The callback to be invoked when an editor of this type is saved.
+     *                Return true if successful otherwise false.
+     *                Will publish a saved message in case of success
      * @param editorView: Composable function that defines the displayed content of this explorer
      */
     fun <C> registerEditor(
@@ -86,8 +86,8 @@ class Workbench(appTitle: String = "", enableMQ: Boolean = false) {
         title: (C) -> String,
         initController: (Int, MQClient) -> C,
         icon: ImageVector = WorkbenchDefaultIcon,
-        onClose: (C, MQClient) -> Unit = {_,_ ->},
-        onSave: (C, MQClient) -> Boolean = {_,_ -> true},
+        onClose: (C, MQClient) -> ActionResult = {_,_ -> success},
+        onSave: (C, MQClient) -> ActionResult = {_,_ -> success},
         editorView: @Composable (C) -> Unit
     ) {
         val editor = WorkbenchModule(

@@ -1,5 +1,6 @@
 package controller
 
+import ActionResult
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.neverEqualPolicy
@@ -72,10 +73,10 @@ internal class WorkbenchController(appTitle: String) {
     }
 
     //Information state update
-    fun setPopUp(type: PopUpType, tabRowKey: TabRowKey, action: () -> Unit){
+    fun setPopUp( tabRowKey: TabRowKey, type: PopUpType, message: String = "", action: () -> Unit){
         val tabRowStates = informationState.tabRowState.toMutableMap()
         if (informationState.tabRowState[tabRowKey] != null) {
-            tabRowStates[tabRowKey] = informationState.tabRowState[tabRowKey]!!.copy(popUpState = PopUpState(type, action))
+            tabRowStates[tabRowKey] = informationState.tabRowState[tabRowKey]!!.copy(popUpState = PopUpState(type, action, message))
         }
         informationState =  informationState.copy(tabRowState = tabRowStates)
     }
@@ -121,12 +122,39 @@ internal class WorkbenchController(appTitle: String) {
             informationState.unsavedEditors.forEach { entry ->
                 if (it.module.modelType == entry.key) {
                     if (entry.value.contains(it.dataId ?: it.id)) {
-                        it.onSave()
+                        save(it) {}
                     }
                 }
             }
         }
         refreshSaveState(informationState.unsavedEditors.toMutableMap())
+    }
+
+    fun close(moduleState: WorkbenchModuleState<*>){
+        val onSuccess = {
+            MQClient.publishClosed(moduleState.module.modelType, moduleState.dataId ?: moduleState.id)
+            removePopUp(TabRowKey(moduleState))}
+        executeAction({ moduleState.onClose() }, onSuccess){
+            setPopUp(TabRowKey(moduleState), PopUpType.CLOSE_FAILED, it.message, action = {})
+        }
+    }
+
+    fun save(moduleState: WorkbenchModuleState<*>, action: () -> Unit){
+        val onSuccess = {
+            MQClient.publishSaved(moduleState.module.modelType, moduleState.dataId ?: moduleState.id)
+            action.invoke()
+            removePopUp(TabRowKey(moduleState))
+        }
+        executeAction({ moduleState.onSave() }, onSuccess) { setPopUp(TabRowKey(moduleState), PopUpType.SAVE_FAILED, it.message, action = {}) }
+    }
+
+    private fun executeAction(action: () -> ActionResult, onSuccess: () -> Unit, onFailure: (ActionResult) -> Unit) {
+        val actionResult = action.invoke()
+        if (actionResult.successful) {
+            onSuccess.invoke()
+        } else {
+            onFailure.invoke(actionResult)
+        }
     }
 
     fun verifySplitViewMde(tab1: TabRowKey, tab2: TabRowKey) {

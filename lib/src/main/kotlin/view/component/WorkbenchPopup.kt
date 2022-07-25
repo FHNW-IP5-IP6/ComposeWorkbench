@@ -15,8 +15,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.focus.focusTarget
 import androidx.compose.ui.unit.dp
+import controller.WorkbenchController
+import model.data.TabRowKey
 import model.data.enums.OnCloseResponse
-
+import model.state.PopUpState
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
@@ -55,6 +57,39 @@ internal fun WorkbenchPopupSave (onAction: (OnCloseResponse) -> Unit, dismissibl
                         onClick = { openDialog.value = false; onAction(OnCloseResponse.SAVE) }
                     ) {
                         Text("Save")
+                    }
+                }
+            },
+            shape = RoundedCornerShape(20.dp),
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterialApi::class)
+@Composable
+internal fun WorkbenchPopupActionFailed ( controller: WorkbenchController, action: String, popUpState: PopUpState, tabRowKey: TabRowKey) {
+    val openDialog = remember { mutableStateOf(true) }
+    if (openDialog.value) {
+        AlertDialog(
+            onDismissRequest = {
+                openDialog.value = false
+                controller.removePopUp(tabRowKey)
+            },
+            title = {
+                Text(text = "Can not $action")
+            },
+            text = {
+                Text(popUpState.message)
+            },
+            buttons = {
+                Row( modifier = Modifier.padding(start = 40.dp, end = 40.dp) ) {
+                    Button(
+                        onClick = {
+                            openDialog.value = false
+                            controller.removePopUp(tabRowKey)
+                        }
+                    ) {
+                        Text("Ok")
                     }
                 }
             },

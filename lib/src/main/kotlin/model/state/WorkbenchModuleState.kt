@@ -1,5 +1,6 @@
 package model.state
 
+import ActionResult
 import androidx.compose.runtime.Composable
 import model.data.MQClient
 import model.data.WorkbenchModule
@@ -13,35 +14,36 @@ internal class WorkbenchModuleState <C> (
     var window: WorkbenchWindowState,
     var close: (WorkbenchModuleState<*>) -> Unit = {},
     var displayType: DisplayType,
-    val client: MQClient = MQClient,
     var isPreview: Boolean = false
 ){
 
     init {
-        client.publishCreated(module.modelType, dataId ?: id)
+        MQClient.publishCreated(module.modelType, dataId ?: id)
     }
 
     fun updateModule(module: WorkbenchModule<*>){
         module as WorkbenchModule<C>
         this.module = module
-        controller = module.loader!!.invoke(dataId!!, client)
+        controller = module.loader!!.invoke(dataId!!, MQClient)
     }
 
     fun selected() {
-        client.publishSelected(module.modelType, dataId ?: id)
-    }
-
-    fun onClose() {
-        close(this)
-        module.onClose(controller, client)
-        client.publishClosed(module.modelType, dataId ?: id)
+        MQClient.publishSelected(module.modelType, dataId ?: id)
     }
 
     fun getTitle() : String {
         return module.title(controller)
     }
 
-    fun onSave(): Boolean = module.onSave(controller, client)
+    fun onSave(): ActionResult = module.onSave(controller, MQClient)
+
+    fun onClose(): ActionResult {
+        val result =  module.onClose(controller, MQClient)
+        if(result.successful) {
+            close(this)
+        }
+        return result
+    }
 
     @Composable
     fun content() = module.content(controller)
