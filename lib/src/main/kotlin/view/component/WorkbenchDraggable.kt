@@ -167,7 +167,7 @@ private fun DragAnimation(controller: WorkbenchDragController, currentWindow: Wo
                         position = WindowPosition(dragState.positionOnScreen.x, dragState.positionOnScreen.y)
                     )
                 ) {
-                    Box() {
+                    Box {
                         dragState.module?.content()
                     }
                 }

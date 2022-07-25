@@ -136,7 +136,7 @@ private fun ScrollToSelected(tabRowKey: TabRowKey, controller: WorkbenchControll
 }
 
 private fun LazyListScope.WorkbenchTabs(selected: WorkbenchModuleState<*>?,preview: String?, moduleStates: List<WorkbenchModuleState<*>> ,tabRowKey: TabRowKey, controller: WorkbenchController, onSelect: (WorkbenchModuleState<*>) -> Unit) {
-    preview(preview, tabRowKey, controller)
+    preview(preview, tabRowKey)
     items(moduleStates){ item ->
         WorkbenchTab(
             moduleState = item,
@@ -152,11 +152,11 @@ private fun LazyListScope.WorkbenchTabs(selected: WorkbenchModuleState<*>?,previ
 }
 
 @OptIn(ExperimentalFoundationApi::class)
-private fun LazyListScope.preview(preview: String?, tabRowKey: TabRowKey, controller: WorkbenchController) {
+private fun LazyListScope.preview(preview: String?, tabRowKey: TabRowKey) {
     stickyHeader {
         if(preview != null){
             val writerModifier = getTabModifier(tabRowKey, true) {}
-            WorkbenchTab(writerModifier, preview!!) {}
+            WorkbenchTab(writerModifier, preview) {}
         }
     }
 }

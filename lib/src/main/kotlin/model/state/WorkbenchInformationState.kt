@@ -9,6 +9,7 @@ import org.jetbrains.compose.splitpane.SplitPaneState
 /**
  * Immutable State which holds all display relevant Data that is subject to changes
  */
+@OptIn(ExperimentalSplitPaneApi::class)
 internal data class WorkbenchInformationState(
     val modules: List<WorkbenchModuleState<*>>,
     val windows: List<WorkbenchWindowState>,

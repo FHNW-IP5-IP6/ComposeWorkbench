@@ -23,7 +23,7 @@ private val contentPadding = PaddingValues(8.dp, 2.dp, 10.dp, 2.dp)
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
-fun WorkbenchMenu(menuEntry: MenuEntry, imageVector: ImageVector) {
+internal fun WorkbenchMenu(menuEntry: MenuEntry, imageVector: ImageVector) {
     val onMenu = remember { mutableStateOf(false) }
     val preventReopen = remember { mutableStateOf(false) }
 
@@ -66,7 +66,7 @@ fun WorkbenchMenu(menuEntry: MenuEntry, imageVector: ImageVector) {
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
-fun ColumnScope.WBSubMenu(menuEntry: MenuEntry) {
+private fun ColumnScope.WBSubMenu(menuEntry: MenuEntry) {
     DropdownMenuItem(
         onClick = {},
         contentPadding = contentPadding,
@@ -121,7 +121,7 @@ fun ColumnScope.WBSubMenu(menuEntry: MenuEntry) {
 }
 
 @Composable
-fun ColumnScope.WBMenuItem(command: Command) {
+private fun ColumnScope.WBMenuItem(command: Command) {
     DropdownMenuItem(
         onClick = command.action,
         contentPadding = contentPadding,

@@ -17,14 +17,12 @@ dependencies {
 
     @OptIn(org.jetbrains.compose.ExperimentalComposeLibrary::class)
     implementation (org.jetbrains.compose.ComposePlugin.DesktopDependencies.components.splitPane)
-
     implementation("com.hivemq:hivemq-community-edition-embedded:2021.3")
-
     implementation("com.github.hivemq.hivemq-mqtt-client:hivemq-mqtt-client:develop-SNAPSHOT")
 }
 
 tasks.withType<KotlinCompile> {
-    kotlinOptions.jvmTarget = "11"
+    kotlinOptions.jvmTarget = "16"
 }
 
 tasks.test {

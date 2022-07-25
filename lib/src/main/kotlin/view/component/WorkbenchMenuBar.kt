@@ -1,4 +1,4 @@
-    package view.component
+package view.component
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.window.FrameWindowScope

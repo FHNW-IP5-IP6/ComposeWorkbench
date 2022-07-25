@@ -6,7 +6,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
@@ -17,7 +20,7 @@ import model.data.enums.OnCloseResponse
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun WorkbenchPopupSave (onAction: (OnCloseResponse) -> Unit, dismissible: Boolean = true) {
+internal fun WorkbenchPopupSave (onAction: (OnCloseResponse) -> Unit, dismissible: Boolean = true) {
     val openDialog = remember { mutableStateOf(true) }
     if (openDialog.value) {
         AlertDialog(
@@ -60,23 +63,10 @@ fun WorkbenchPopupSave (onAction: (OnCloseResponse) -> Unit, dismissible: Boolea
     }
 }
 
-@Composable
-fun InputField() {
-    var text by remember { mutableStateOf("") }
-    Column() {
-        TextField(
-            value = text,
-            onValueChange = { text = it }
-        )
-        Text("Custom Text")
-        Checkbox(checked = false, onCheckedChange = {})
-    }
-}
-
 // TODO: Use this later for loading screen
 // source: https://gist.github.com/EugeneTheDev/a27664cb7e7899f964348b05883cbccd
 @Composable
-fun DotsPulsing() {
+private fun DotsPulsing() {
     val dotSize = 24.dp
     val delayUnit = 400
 

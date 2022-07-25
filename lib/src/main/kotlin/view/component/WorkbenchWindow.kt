@@ -9,7 +9,6 @@ import controller.WorkbenchController
 import model.data.TabRowKey
 import model.data.enums.DisplayType
 import model.data.enums.ModuleType
-import view.themes.DarkColors
 import view.themes.LightColors
 
 @Composable
@@ -30,7 +29,7 @@ internal fun WorkbenchWindow(controller: WorkbenchController){
             ){
                 println("recompose window $tabRowKey")
                 MaterialTheme(
-                    colors = if (false) DarkColors else LightColors,
+                    colors = LightColors,
                     typography = NotoSansTypography,
                 ) {
                     Column {
