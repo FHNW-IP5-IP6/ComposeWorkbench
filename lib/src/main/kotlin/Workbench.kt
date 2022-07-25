@@ -49,18 +49,18 @@ class Workbench(appTitle: String = "", enableMQ: Boolean = false) {
      * @param type: the type of data this explorer can be used for
      * @param title: Callback to get the explorers title from a given Model
      * @param init: callback to initialize messaging and controller
-     * @param content: Composable function that defines the displayed content of this explorer
+     * @param explorerView: Composable function that defines the displayed content of this explorer
      */
     fun <C> registerExplorer(
         type: String,
         title: (C) -> String,
         init: (C, MQClient) -> Unit,
-        content: @Composable (C) -> Unit,
+        explorerView: @Composable (C) -> Unit,
     ) {
         val explorer = WorkbenchModule(
             moduleType = ModuleType.EXPLORER,
             modelType = type,
-            content = content,
+            content = explorerView,
             init = init,
             title = title,
             onClose = {_,_ ->},
@@ -79,7 +79,7 @@ class Workbench(appTitle: String = "", enableMQ: Boolean = false) {
      * @param title: Callback to get the editors title from a given Model
      * @param onClose: The callback to be invoked when an editor of this type is closed
      * @param onSave: The callback to be invoked when an editor of this type is saved
-     * @param content: Composable function that defines the displayed content of this explorer
+     * @param editorView: Composable function that defines the displayed content of this explorer
      */
     fun <C> registerEditor(
         type: String,
@@ -88,14 +88,14 @@ class Workbench(appTitle: String = "", enableMQ: Boolean = false) {
         icon: ImageVector = WorkbenchDefaultIcon,
         onClose: (C, MQClient) -> Unit = {_,_ ->},
         onSave: (C, MQClient) -> Boolean = {_,_ -> true},
-        content: @Composable (C) -> Unit
+        editorView: @Composable (C) -> Unit
     ) {
         val editor = WorkbenchModule(
             moduleType = ModuleType.EDITOR,
             modelType = type,
             icon = icon,
             loader = initController,
-            content = content,
+            content = editorView,
             title = title,
             onClose = onClose,
             onSave =  onSave

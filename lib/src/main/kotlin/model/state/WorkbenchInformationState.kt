@@ -18,7 +18,7 @@ internal data class WorkbenchInformationState(
     val splitViewMode: SplitViewMode,
     val currentTabSpace: DisplayType,
     val bottomSplitState: SplitPaneState,
-    val leftSplitState: SplitPaneState
+    val leftSplitState: SplitPaneState,
 ) {
 
 }

@@ -17,7 +17,6 @@ internal class WorkbenchModuleState <C> (
     var isPreview: Boolean = false
 ){
 
-
     init {
         client.publishCreated(module.modelType, dataId ?: id)
     }
@@ -46,6 +45,7 @@ internal class WorkbenchModuleState <C> (
 
     @Composable
     fun content() = module.content(controller)
+
 }
 
 internal class WorkbenchDefaultState <C> (

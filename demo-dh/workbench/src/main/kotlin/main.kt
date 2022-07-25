@@ -49,7 +49,7 @@ fun main() {
                         true
                     },
           //rename to 'editorView'?
-          content = { controller ->
+          editorView = { controller ->
                         RealEstateEditor(editorState = controller.editorState,
                                              trigger = { controller.triggerAction(it) })
                     }
@@ -68,7 +68,7 @@ fun main() {
                                 }
                             },
                   //rename to 'explorerView'?
-                  content = { controller ->
+                  explorerView = { controller ->
                                 ExplorerUI(selectedId = controller.selectedId,
                                           realEstates = controller.allRealEstates,
                                               trigger = { controller.triggerAction(it) },

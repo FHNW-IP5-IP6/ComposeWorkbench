@@ -11,8 +11,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
@@ -22,8 +20,8 @@ import androidx.compose.ui.unit.dp
 import controller.WorkbenchController
 import model.data.TabRowKey
 import model.data.WorkbenchModule
-import model.data.enums.DisplayType
 import model.data.enums.OnCloseResponse
+import model.data.enums.PopUpType
 import model.state.WorkbenchModuleState
 import util.vertical
 
@@ -60,21 +58,21 @@ internal fun WorkbenchTabRow(tabRowKey: TabRowKey, controller: WorkbenchControll
 @Composable
 internal fun WorkbenchTabBody(tabRowKey: TabRowKey, controller: WorkbenchController) {
     val hasMultipleEditors = controller.getRegisteredEditors(controller.getSelectedModule(tabRowKey)).size > 1
+    val selected = controller.informationState.tabRowState[tabRowKey]?.selected
     Column {
         Box(modifier = Modifier.weight(if (hasMultipleEditors) 0.85f else 1f).fillMaxSize()) {
-            controller.getSelectedModule(tabRowKey)?.content()
+            selected?.content()
         }
-        //TODO: Enable this for windows once the recompose problem is solved
-        if(hasMultipleEditors && DisplayType.WINDOW != tabRowKey.displayType){
+        if(hasMultipleEditors && selected != null){
             Box(modifier = Modifier.weight(0.15f).fillMaxSize()) {
-                WorkbenchEditorSelector(controller = controller, tabRowKey = tabRowKey)
+                WorkbenchEditorSelector(controller = controller, tabRowKey = tabRowKey, moduleState = selected)
             }
         }
     }
 }
 
 @Composable
-internal fun WorkbenchEditorSelector(tabRowKey: TabRowKey, controller: WorkbenchController) {
+internal fun WorkbenchEditorSelector(tabRowKey: TabRowKey, controller: WorkbenchController, moduleState: WorkbenchModuleState<*>) {
     val editors = controller.getRegisteredEditors(controller.getSelectedModule(tabRowKey))
     Row(modifier = Modifier.fillMaxSize(),
         horizontalArrangement = Arrangement.Start,
@@ -83,7 +81,13 @@ internal fun WorkbenchEditorSelector(tabRowKey: TabRowKey, controller: Workbench
         for (editor: WorkbenchModule<*> in editors){
             IconButton(
                 onClick = {
-                    controller.updateModule(controller.getSelectedModule(tabRowKey)!!, editor)
+                    if (controller.isUnsaved(moduleState)) {
+                        controller.setPopUp(PopUpType.SAVE,tabRowKey){
+                            controller.updateModule(controller.getSelectedModule(tabRowKey)!!, editor)
+                        }
+                    } else {
+                        controller.updateModule(controller.getSelectedModule(tabRowKey)!!, editor)
+                    }
                 }
             ){
                 Icon(editor.icon, "")
@@ -165,7 +169,6 @@ private fun LazyListScope.preview(preview: String?, tabRowKey: TabRowKey) {
 @Composable
 private fun WorkbenchTab(moduleState: WorkbenchModuleState<*>, controller: WorkbenchController, tabRowKey: TabRowKey, selected: Boolean, onClick: ()->Unit) {
     val writerModifier = getTabModifier(tabRowKey, selected, onClick)
-    val displayOnSave = remember { mutableStateOf(false) }
 
     DragTarget(module = moduleState, controller = controller) {
         ContextMenuArea(items = {
@@ -177,7 +180,9 @@ private fun WorkbenchTab(moduleState: WorkbenchModuleState<*>, controller: Workb
         }) {
             WorkbenchTab(writerModifier, moduleState.getTitle()) {
                 if (controller.isUnsaved(moduleState)) {
-                    displayOnSave.value = true
+                    controller.setPopUp(PopUpType.SAVE, tabRowKey) {
+                        moduleState.onClose()
+                    }
                 } else {
                     moduleState.onClose()
                 }
@@ -185,17 +190,21 @@ private fun WorkbenchTab(moduleState: WorkbenchModuleState<*>, controller: Workb
         }
     }
 
-    if (displayOnSave.value) {
-        WorkbenchPopupSave({resp ->
-            if (resp == OnCloseResponse.DISCARD) {
-                moduleState.onClose()
-            } else if (resp == OnCloseResponse.SAVE) {
-                if (moduleState.onSave()) {
-                    moduleState.onClose()
+    if (controller.isShowPopUp(tabRowKey)) {
+        val popUpState = controller.informationState.tabRowState[tabRowKey]!!.popUpState!!
+        when (popUpState.type) {
+            PopUpType.SAVE ->  WorkbenchPopupSave({resp ->
+                if (resp == OnCloseResponse.DISCARD) {
+                    popUpState.action.invoke()
+                } else if (resp == OnCloseResponse.SAVE) {
+                    if (moduleState.onSave()) {
+                        popUpState.action.invoke()
+                    }
                 }
-            }
-            displayOnSave.value = false
-        }, false)
+                controller.removePopUp(tabRowKey)
+            }, false)
+            else -> throw UnsupportedOperationException()
+        }
     }
 }
 

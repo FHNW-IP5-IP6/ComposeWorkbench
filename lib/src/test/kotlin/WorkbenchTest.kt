@@ -20,7 +20,7 @@ internal class WorkbenchTest{
 
     @Test
     fun registerExplorer() {
-        sut.registerExplorer<String>(type = "String", title = { "title" }, init = { _, _->}, content = {})
+        sut.registerExplorer<String>(type = "String", title = { "title" }, init = { _, _->}, explorerView = {})
         assertNotNull(sut.getWorkbenchController().getRegisteredExplorer<String>("String"))
     }
 

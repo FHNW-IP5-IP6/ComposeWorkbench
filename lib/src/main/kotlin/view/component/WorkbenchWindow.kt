@@ -27,7 +27,6 @@ internal fun WorkbenchWindow(controller: WorkbenchController){
                     controller.removeWindow(tabRowKey) },
                 tabRowKey = tabRowKey
             ){
-                println("recompose window $tabRowKey")
                 MaterialTheme(
                     colors = LightColors,
                     typography = NotoSansTypography,

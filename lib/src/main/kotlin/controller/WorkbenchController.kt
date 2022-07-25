@@ -2,16 +2,14 @@ package controller
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.neverEqualPolicy
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.WindowState
 import model.data.MQClient
 import model.data.TabRowKey
 import model.data.WorkbenchModule
-import model.data.enums.DisplayType
-import model.data.enums.ModuleType
-import model.data.enums.SplitViewMode
-import model.data.enums.isUnsplit
+import model.data.enums.*
 import model.state.*
 import org.jetbrains.compose.splitpane.ExperimentalSplitPaneApi
 import org.jetbrains.compose.splitpane.SplitPaneState
@@ -25,7 +23,7 @@ internal class WorkbenchController(appTitle: String) {
     val mqController = WorkbenchMQDispatcher(model, this)
     val dragController = WorkbenchDragController(this)
 
-    var informationState by mutableStateOf(getDefaultWorkbenchDisplayInformation())
+    var informationState by mutableStateOf(getDefaultWorkbenchDisplayInformation(), policy = neverEqualPolicy())
         private set
 
     //Information and model accessor functions
@@ -40,6 +38,8 @@ internal class WorkbenchController(appTitle: String) {
     fun getScrollToIndex(tabRowKey: TabRowKey) = getIndex(informationState.tabRowState[tabRowKey]?.selected, tabRowKey)
 
     fun getSelectedModule(tabRowKey: TabRowKey) = informationState.tabRowState[tabRowKey]?.selected
+
+    fun isShowPopUp(tabRowKey: TabRowKey) = informationState.tabRowState[tabRowKey]?.popUpState != null
 
     fun getPreviewTitle(tabRowKey: TabRowKey) = informationState.tabRowState[tabRowKey]?.preview
 
@@ -72,6 +72,22 @@ internal class WorkbenchController(appTitle: String) {
     }
 
     //Information state update
+    fun setPopUp(type: PopUpType, tabRowKey: TabRowKey, action: () -> Unit){
+        val tabRowStates = informationState.tabRowState.toMutableMap()
+        if (informationState.tabRowState[tabRowKey] != null) {
+            tabRowStates[tabRowKey] = informationState.tabRowState[tabRowKey]!!.copy(popUpState = PopUpState(type, action))
+        }
+        informationState =  informationState.copy(tabRowState = tabRowStates)
+    }
+
+    fun removePopUp(tabRowKey: TabRowKey){
+        val tabRowStates = informationState.tabRowState.toMutableMap()
+        if (informationState.tabRowState[tabRowKey] != null) {
+            tabRowStates[tabRowKey] = informationState.tabRowState[tabRowKey]!!.copy(popUpState = null)
+        }
+        informationState =  informationState.copy(tabRowState = tabRowStates)
+    }
+
     fun updateCurrentTabSpace(currentTabSpace: DisplayType) {
         informationState = informationState.copy(currentTabSpace = currentTabSpace)
     }
@@ -181,7 +197,6 @@ internal class WorkbenchController(appTitle: String) {
             hasFocus = true,
             windowHeaderOffset = 0.dp)
 
-        //TODO: ModuleState should be immutable
         moduleState.displayType = DisplayType.WINDOW
         moduleState.window = window
 
@@ -195,7 +210,7 @@ internal class WorkbenchController(appTitle: String) {
     fun updatePreviewTitle(tabRowKey: TabRowKey, title: String?){
         val tabRowStates = informationState.tabRowState.toMutableMap()
         if(informationState.tabRowState[tabRowKey] == null){
-            tabRowStates[tabRowKey] = WorkbenchTabRowState(tabRowKey = tabRowKey, selected = null, preview = title)
+            tabRowStates[tabRowKey] = WorkbenchTabRowState(tabRowKey = tabRowKey, selected = null, preview = title, popUpState = null)
         }else {
             tabRowStates[tabRowKey] = informationState.tabRowState[tabRowKey]!!.copy(preview = title)
         }
@@ -205,7 +220,7 @@ internal class WorkbenchController(appTitle: String) {
     private fun updateSelection(newInformationState: WorkbenchInformationState, tabRowKey: TabRowKey, moduleState: WorkbenchModuleState<*>?): WorkbenchInformationState {
         val tabRowStates = newInformationState.tabRowState.toMutableMap()
         if (informationState.tabRowState[tabRowKey] == null) {
-            tabRowStates[tabRowKey] = WorkbenchTabRowState(tabRowKey = tabRowKey, selected = moduleState, preview = null)
+            tabRowStates[tabRowKey] = WorkbenchTabRowState(tabRowKey = tabRowKey, selected = moduleState, preview = null, popUpState = null)
         } else {
             tabRowStates[tabRowKey] = informationState.tabRowState[tabRowKey]!!.copy(selected = moduleState)
         }
@@ -260,7 +275,6 @@ internal class WorkbenchController(appTitle: String) {
         val modules = informationState.modules.toMutableList()
         val windows = informationState.windows.toMutableList()
         moduleState.updateModule(module)
-        //copy to ensure correct recompose
         informationState = informationState.copy(modules = modules, windows = windows)
     }
 
