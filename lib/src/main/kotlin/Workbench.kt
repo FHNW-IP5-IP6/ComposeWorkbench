@@ -45,23 +45,23 @@ class Workbench(appTitle: String = "", enableMQ: Boolean = false) {
     /**
      * Add an explorer for a given Type to the Workbench
      *
-     *
      * @param C: Type of the Controller which the explorer uses to manage and display data
      * @param type: the type of data this explorer can be used for
      * @param title: Callback to get the explorers title from a given Model
+     * @param init: callback to initialize messaging and controller
      * @param content: Composable function that defines the displayed content of this explorer
      */
     fun <C> registerExplorer(
         type: String,
         title: (C) -> String,
-        initMessaging: (C, MQClient) -> Unit,
+        init: (C, MQClient) -> Unit,
         content: @Composable (C) -> Unit,
     ) {
         val explorer = WorkbenchModule(
             moduleType = ModuleType.EXPLORER,
             modelType = type,
             content = content,
-            initMessaging = initMessaging,
+            init = init,
             title = title,
             onClose = {_,_ ->},
             onSave = {_,_ -> true}
@@ -74,7 +74,7 @@ class Workbench(appTitle: String = "", enableMQ: Boolean = false) {
      *
      * @param C: Type of the Controller which the editor uses to manage and display data
      * @param type: the type of data this editor can be used for
-     * @param controller: callback to load model from id
+     * @param initController: callback to load model from id
      * @param icon: Icon for this Editor. This is used in case multiple editors are registered for the same type
      * @param title: Callback to get the editors title from a given Model
      * @param onClose: The callback to be invoked when an editor of this type is closed
@@ -84,7 +84,7 @@ class Workbench(appTitle: String = "", enableMQ: Boolean = false) {
     fun <C> registerEditor(
         type: String,
         title: (C) -> String,
-        loader: (Int, MQClient) -> C,
+        initController: (Int, MQClient) -> C,
         icon: ImageVector = WorkbenchDefaultIcon,
         onClose: (C, MQClient) -> Unit = {_,_ ->},
         onSave: (C, MQClient) -> Boolean = {_,_ -> true},
@@ -94,7 +94,7 @@ class Workbench(appTitle: String = "", enableMQ: Boolean = false) {
             moduleType = ModuleType.EDITOR,
             modelType = type,
             icon = icon,
-            loader = loader,
+            loader = initController,
             content = content,
             title = title,
             onClose = onClose,

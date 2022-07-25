@@ -20,19 +20,19 @@ internal class WorkbenchTest{
 
     @Test
     fun registerExplorer() {
-        sut.registerExplorer<String>(type = "String", title = { "title" }, initMessaging = {_,_->}, content = {})
+        sut.registerExplorer<String>(type = "String", title = { "title" }, init = { _, _->}, content = {})
         assertNotNull(sut.getWorkbenchController().getRegisteredExplorer<String>("String"))
     }
 
     @Test
     fun registerEditor() {
-        sut.registerEditor<String>(type = "String", loader = {id, mqtt -> "test"}, title = { "title" }){}
+        sut.registerEditor<String>(type = "String", initController = { _, _ -> "test"}, title = { "title" }){}
         assertEquals(1, sut.getWorkbenchController().getRegisteredEditors<Any>("String").size)
     }
 
     @Test
     fun requestExplorer() {
-        sut.registerExplorer<String>(type = "String", title = { "title" }, initMessaging = {_,_->}){}
+        sut.registerExplorer<String>(type = "String", title = { "title" }, init = { _, _->}){}
         val model = "value"
         sut.requestExplorer("String", model)
         val tabRowKey = TabRowKey(displayType = DisplayType.LEFT, moduleType = ModuleType.EXPLORER, windowState = sut.getWorkbenchController().getMainWindow())
@@ -42,7 +42,7 @@ internal class WorkbenchTest{
 
     @Test
     fun requestExplorer_typeDoesNotExist() {
-        sut.registerExplorer<String>(type = "String", title = { "title" }, initMessaging = {_,_->}){}
+        sut.registerExplorer<String>(type = "String", title = { "title" }, init = { _, _->}){}
         val model = "value"
         assertThrows<IllegalStateException> {
             sut.requestExplorer("Other", model)
@@ -51,7 +51,7 @@ internal class WorkbenchTest{
 
     @Test
     fun requestEditor() {
-        sut.registerEditor(type = "String", loader = {id, mqtt -> "test"}, title = { "title" }){}
+        sut.registerEditor(type = "String", initController = { _, _ -> "test"}, title = { "title" }){}
         sut.requestEditor<String>("String", 0)
         val tabRowKey = TabRowKey(displayType = DisplayType.TAB1, moduleType = ModuleType.EDITOR, windowState = sut.getWorkbenchController().getMainWindow())
 

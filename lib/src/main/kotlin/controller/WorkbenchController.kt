@@ -314,7 +314,7 @@ internal class WorkbenchController(appTitle: String) {
             displayType = displayType
         )
         // TODO: implement messaging initialization in WorkbenchModuleState
-        explorer.initMessaging?.invoke(explorerController, MQClient)
+        explorer.init?.invoke(explorerController, MQClient)
         addModuleState(moduleState)
         return moduleState
     }

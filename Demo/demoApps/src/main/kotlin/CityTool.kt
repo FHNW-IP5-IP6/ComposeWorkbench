@@ -12,7 +12,7 @@ fun main() {
 
     workbench.registerEditor<CityController>(
         type = "City",
-        loader = {id, mqtt -> CityController(id) { id, field, value ->
+        initController = { id, mqtt -> CityController(id) { id, field, value ->
             mqtt.publish("$CITY_MQ_TOPIC/city/$id/$field", value)
             mqtt.publishUnsaved("City", id)
         } },
@@ -30,7 +30,7 @@ fun main() {
 
     workbench.registerEditor<CityController>(
         type = "City",
-        loader = {id, mqtt -> CityController(id){ id, field, value ->
+        initController = { id, mqtt -> CityController(id){ id, field, value ->
             mqtt.publish("$CITY_MQ_TOPIC/city/$id/$field", value)
             mqtt.publishUnsaved("City", id)
         } },
@@ -49,7 +49,7 @@ fun main() {
     workbench.registerExplorer<CitiesController>(
         type = "Cities",
         title = { it.title() },
-        initMessaging = { controller, mqtt ->
+        init = { controller, mqtt ->
             mqtt.subscribeForUpdates("City") { _, msg ->
                 if (msg == "saved" || msg == "closed") controller.reload()
             }

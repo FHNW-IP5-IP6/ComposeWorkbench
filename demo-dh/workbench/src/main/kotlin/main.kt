@@ -23,7 +23,7 @@ fun main() {
         registerEditor(
               type = TYPE_REAL_ESTATE,
             //rename to 'editorController'?
-            loader = { id, mqtt ->  RealEstateController(data = repo.read(id),
+            initController = { id, mqtt ->  RealEstateController(data = repo.read(id),
                                                          repo = repo,
                                                      onChange = { field, value, someDataChanged ->
                                                                     mqtt.publish("""$TYPE_REAL_ESTATE/$id/$field""", value)
@@ -59,7 +59,7 @@ fun main() {
                      type = TYPE_ALL_REAL_ESTATES,
             // how about that?: explorerController = { ExplorerController() }
                     title = { "Real Estates" },
-            initMessaging = { controller, mqtt ->
+            init = { controller, mqtt ->
                                 mqtt.subscribe("$TYPE_REAL_ESTATE/#", updateTempChanges(controller) )
                                 mqtt.subscribeForSelectedEditor(TYPE_REAL_ESTATE) { id ->
                                     //isn't called if editor is closed
