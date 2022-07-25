@@ -32,7 +32,7 @@ internal fun getDefaultWorkbenchDisplayInformation(): WorkbenchInformationState 
         unsavedEditors = mapOf(),
         splitViewMode = SplitViewMode.UNSPLIT,
         currentTabSpace = DisplayType.TAB1,
-        bottomSplitState = SplitPaneState(moveEnabled = true, initialPositionPercentage = 0.7f),
-        leftSplitState =  SplitPaneState(moveEnabled = true, initialPositionPercentage = 0.25f)
+        bottomSplitState = SplitPaneState(moveEnabled = true, initialPositionPercentage = 1f),
+        leftSplitState =  SplitPaneState(moveEnabled = true, initialPositionPercentage = 0f)
     )
 }

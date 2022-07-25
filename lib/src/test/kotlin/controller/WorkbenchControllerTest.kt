@@ -20,6 +20,23 @@ class WorkbenchControllerTest {
     }
 
     @Test
+    fun drawer() {
+        assertEquals(1f, sut.informationState.bottomSplitState.positionPercentage)
+        assertEquals(0f, sut.informationState.leftSplitState.positionPercentage)
+        var informationState = sut.informationState
+
+        informationState = sut.showDrawer(informationState, DisplayType.BOTTOM)
+        assertEquals(0.7f, informationState.bottomSplitState.positionPercentage)
+        informationState = sut.showDrawer(informationState, DisplayType.LEFT)
+        assertEquals(0.25f, informationState.leftSplitState.positionPercentage)
+
+        informationState = sut.hideDrawer(informationState, DisplayType.BOTTOM)
+        assertEquals(1f, informationState.bottomSplitState.positionPercentage)
+        informationState = sut.hideDrawer(informationState, DisplayType.LEFT)
+        assertEquals(0f, informationState.leftSplitState.positionPercentage)
+    }
+
+    @Test
     fun getNextKey() {
         assertFalse { sut.getNextKey() == sut.getNextKey() }
     }

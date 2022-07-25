@@ -212,7 +212,7 @@ internal class WorkbenchController(appTitle: String) {
         return newInformationState.copy(tabRowState = tabRowStates)
     }
 
-    private fun hideDrawer(newInformationState: WorkbenchInformationState, displayType: DisplayType): WorkbenchInformationState {
+    fun hideDrawer(newInformationState: WorkbenchInformationState, displayType: DisplayType): WorkbenchInformationState {
         return when(displayType) {
             DisplayType.LEFT -> newInformationState.copy(leftSplitState = SplitPaneState(moveEnabled = false, initialPositionPercentage = 0f))
             DisplayType.BOTTOM -> newInformationState.copy(bottomSplitState = SplitPaneState(moveEnabled = false, initialPositionPercentage = 1f))
@@ -220,7 +220,7 @@ internal class WorkbenchController(appTitle: String) {
         }
     }
 
-    private fun showDrawer(newInformationState: WorkbenchInformationState, displayType: DisplayType): WorkbenchInformationState {
+    fun showDrawer(newInformationState: WorkbenchInformationState, displayType: DisplayType): WorkbenchInformationState {
         return when(displayType) {
             DisplayType.LEFT -> newInformationState.copy(leftSplitState = SplitPaneState(moveEnabled = true, initialPositionPercentage = 0.25f))
             DisplayType.BOTTOM -> newInformationState.copy(bottomSplitState = SplitPaneState(moveEnabled = true, initialPositionPercentage = 0.7f))
