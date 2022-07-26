@@ -86,8 +86,8 @@ class Workbench(appTitle: String = "", enableMQ: Boolean = false) {
         title: (C) -> String,
         initController: (Int, MQClient) -> C,
         icon: ImageVector = WorkbenchDefaultIcon,
-        onClose: (C, MQClient) -> ActionResult = {_,_ -> success},
-        onSave: (C, MQClient) -> ActionResult = {_,_ -> success},
+        onClose: (C, MQClient) -> ActionResult = {_,_ -> success()},
+        onSave: (C, MQClient) -> ActionResult = {_,_ -> success()},
         editorView: @Composable (C) -> Unit
     ) {
         val editor = WorkbenchModule(
@@ -108,14 +108,14 @@ class Workbench(appTitle: String = "", enableMQ: Boolean = false) {
      *
      * @param C: Controller which the explorer uses to manage and display data
      * @param type: The type of data which the Explorer is used for
-     * @param default: if Explorer with its Model is runnable as Default explorer
+     * @param listed: if Explorer with its Model is listed and accessible through menu
      * @param location: The Drawer Location where the Explorer will be displayed
      * @param shown: if the Explorer is shown on the Startup of the Workbench
      */
     fun <C : Any> requestExplorer(
         type: String,
         c: C,
-        default: Boolean = false,
+        listed: Boolean = false,
         location: ExplorerLocation = ExplorerLocation.LEFT,
         shown: Boolean = true
     ) {
@@ -123,7 +123,7 @@ class Workbench(appTitle: String = "", enableMQ: Boolean = false) {
         if(shown){
             controller.requestExplorerState(id = id, modelType = type, explorerController = c, displayType =  toDisplayType(location))
         }
-        if (default) {
+        if (listed) {
             controller.addDefaultExplorer(id = id, key = type, explorerModel = c)
             controller.commandController.addCommand(Command(
                 text = controller.getRegisteredExplorer<C>(type).title(c),

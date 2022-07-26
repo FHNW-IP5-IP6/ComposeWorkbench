@@ -18,7 +18,6 @@ import model.data.enums.DisplayType
 import model.data.enums.ModuleType
 import org.jetbrains.compose.splitpane.ExperimentalSplitPaneApi
 import view.component.*
-import view.themes.DarkColors
 import view.themes.LightColors
 
 @Composable
@@ -38,7 +37,7 @@ internal fun WorkbenchUI(controller: WorkbenchController,
 @OptIn(ExperimentalSplitPaneApi::class)
 private fun WorkbenchBody(controller: WorkbenchController) {
     MaterialTheme(
-        colors = if (false) DarkColors else LightColors,
+        colors = LightColors,
         typography = NotoSansTypography,
     ) {
         Scaffold(

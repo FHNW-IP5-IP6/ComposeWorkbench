@@ -4,4 +4,5 @@ data class ActionResult(
 ) {
 }
 
-val success = ActionResult(true, "")
+fun success() = ActionResult(true, "")
+fun failure(message: String) = ActionResult(false, message)

@@ -46,7 +46,7 @@ fun main() {
                     },
            onSave = { controller, mqtt ->
                         controller.triggerAction(RealEstateAction.Save())
-                        success
+                        success()
                     },
           //rename to 'editorView'?
           editorView = { controller ->
