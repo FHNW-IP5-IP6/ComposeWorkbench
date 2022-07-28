@@ -2,7 +2,7 @@ package model.state
 
 import ActionResult
 import androidx.compose.runtime.Composable
-import model.data.MQClient
+import model.data.MQClientImpl
 import model.data.WorkbenchModule
 import model.data.enums.DisplayType
 
@@ -18,27 +18,27 @@ internal class WorkbenchModuleState <C> (
 ){
 
     init {
-        MQClient.publishCreated(module.modelType, dataId ?: id)
+        MQClientImpl.publishCreated(module.modelType, dataId ?: id)
     }
 
     fun updateModule(module: WorkbenchModule<*>){
         module as WorkbenchModule<C>
         this.module = module
-        controller = module.loader!!.invoke(dataId!!, MQClient)
+        controller = module.loader!!.invoke(dataId!!, MQClientImpl)
     }
 
     fun selected() {
-        MQClient.publishSelected(module.modelType, dataId ?: id)
+        MQClientImpl.publishSelected(module.modelType, dataId ?: id)
     }
 
     fun getTitle() : String {
         return module.title(controller)
     }
 
-    fun onSave(): ActionResult = module.onSave(controller, MQClient)
+    fun onSave(): ActionResult = module.onSave(controller, MQClientImpl)
 
     fun onClose(): ActionResult {
-        val result =  module.onClose(controller, MQClient)
+        val result =  module.onClose(controller, MQClientImpl)
         if(result.successful) {
             close(this)
         }

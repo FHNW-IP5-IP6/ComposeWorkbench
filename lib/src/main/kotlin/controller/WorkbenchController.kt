@@ -7,7 +7,7 @@ import androidx.compose.runtime.neverEqualPolicy
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.WindowState
-import model.data.MQClient
+import model.data.MQClientImpl
 import model.data.TabRowKey
 import model.data.WorkbenchModule
 import model.data.enums.*
@@ -132,7 +132,7 @@ internal class WorkbenchController(appTitle: String) {
 
     fun close(moduleState: WorkbenchModuleState<*>){
         val onSuccess = {
-            MQClient.publishClosed(moduleState.module.modelType, moduleState.dataId ?: moduleState.id)
+            MQClientImpl.publishClosed(moduleState.module.modelType, moduleState.dataId ?: moduleState.id)
             removePopUp(TabRowKey(moduleState))}
         executeAction({ moduleState.onClose() }, onSuccess){
             setPopUp(TabRowKey(moduleState), PopUpType.CLOSE_FAILED, it.message, action = {})
@@ -141,7 +141,7 @@ internal class WorkbenchController(appTitle: String) {
 
     fun save(moduleState: WorkbenchModuleState<*>, action: () -> Unit){
         val onSuccess = {
-            MQClient.publishSaved(moduleState.module.modelType, moduleState.dataId ?: moduleState.id)
+            MQClientImpl.publishSaved(moduleState.module.modelType, moduleState.dataId ?: moduleState.id)
             action.invoke()
             removePopUp(TabRowKey(moduleState))
         }
@@ -326,7 +326,7 @@ internal class WorkbenchController(appTitle: String) {
         }
         val editors = getRegisteredEditors<C>(modelType)
         val editor = editors[0]
-        val mqtt =  MQClient
+        val mqtt =  MQClientImpl
         val moduleState = WorkbenchModuleState(
             id = getNextKey(),
             window = model.mainWindow,
@@ -356,7 +356,7 @@ internal class WorkbenchController(appTitle: String) {
             displayType = displayType
         )
         // TODO: implement messaging initialization in WorkbenchModuleState
-        explorer.init?.invoke(explorerController, MQClient)
+        explorer.init?.invoke(explorerController, MQClientImpl)
         addModuleState(moduleState)
         return moduleState
     }
@@ -374,7 +374,7 @@ internal class WorkbenchController(appTitle: String) {
     }
 
     //Registry specific stuff
-    fun getNextKey():Int = model.uniqueKey++
+    fun getNextKey():Int = model.uniqueKey.getAndIncrement()
 
     fun registerEditor(moduleType: String, editor: WorkbenchModule<*>){
         when (val editors = model.registeredEditors[moduleType]) {

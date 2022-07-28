@@ -12,10 +12,10 @@ internal class WorkbenchModule<C>(
     val modelType: String,
     val title: (C) -> String,
     val icon: ImageVector = WorkbenchDefaultIcon,
-    val loader: ((Int, MQClient) -> C)? = null,
-    val init: ((C, MQClient) -> Unit)? = null,
-    val onClose: (C, MQClient) -> ActionResult = { _: C, _: MQClient -> success()},
-    val onSave: (C, MQClient) -> ActionResult = { _: C, _: MQClient -> success()},
+    val loader: ((Int, MQClientImpl) -> C)? = null,
+    val init: ((C, MQClientImpl) -> Unit)? = null,
+    val onClose: (C, MQClientImpl) -> ActionResult = { _: C, _: MQClientImpl -> success()},
+    val onSave: (C, MQClientImpl) -> ActionResult = { _: C, _: MQClientImpl -> success()},
     val content: @Composable (C) -> Unit,
     )
 {

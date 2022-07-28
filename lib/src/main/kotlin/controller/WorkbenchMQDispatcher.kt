@@ -5,12 +5,12 @@ import MQ_INTERNAL_EDITOR_STATE_SAVED
 import MQ_INTERNAL_EDITOR_STATE_UNSAVED
 import MQ_INTERNAL_TOPIC_PATH_EDITOR
 import model.state.WorkbenchStaticState
-import model.data.MQClient
+import model.data.MQClientImpl
 import java.util.concurrent.Executors
 
 internal class WorkbenchMQDispatcher (val model: WorkbenchStaticState, private val controller: WorkbenchController)
 {
-    private var mqClient: MQClient = MQClient
+    private var mqClient: MQClientImpl = MQClientImpl
 
     init {
         mqClient.subscribe("$MQ_INTERNAL_TOPIC_PATH_EDITOR/#", ::dispatchEditorMessages, Executors.newSingleThreadExecutor())

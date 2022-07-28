@@ -6,6 +6,7 @@ import model.data.MenuEntry
 import model.data.WorkbenchModule
 import model.data.enums.MenuType
 import org.jetbrains.compose.splitpane.ExperimentalSplitPaneApi
+import java.util.concurrent.atomic.AtomicInteger
 
 /**
  * State which holds all static workbench Data which do not change
@@ -24,7 +25,7 @@ internal class WorkbenchStaticState(val appTitle: String = "") {
 
     var mainWindow = getMainWorkbenchWindowState() // keeps track of the default window position
 
-    var uniqueKey = 0
+    var uniqueKey: AtomicInteger = AtomicInteger(0)
 
     init {
         MenuType.values().forEach {

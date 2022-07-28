@@ -6,7 +6,7 @@ import com.hivemq.embedded.EmbeddedHiveMQ
 import com.hivemq.embedded.EmbeddedHiveMQBuilder
 import controller.WorkbenchController
 import model.data.Command
-import model.data.MQClient
+import model.data.MQClientImpl
 import model.data.WorkbenchModule
 import model.data.enums.MenuType
 import model.data.enums.ModuleType
@@ -34,7 +34,7 @@ class Workbench(appTitle: String = "", enableMQ: Boolean = false) {
             }
 
             // subscribe for available topics to log
-            val logMQClient = MQClient
+            val logMQClient = MQClientImpl
             logMQClient.subscribe("$MQ_INTERNAL_TOPIC_PATH_EDITOR/#", ::logMQ, Executors.newSingleThreadExecutor())
         }
     }
@@ -54,7 +54,7 @@ class Workbench(appTitle: String = "", enableMQ: Boolean = false) {
     fun <C> registerExplorer(
         type: String,
         title: (C) -> String,
-        init: (C, MQClient) -> Unit,
+        init: (C, MqClient) -> Unit,
         explorerView: @Composable (C) -> Unit,
     ) {
         val explorer = WorkbenchModule(
@@ -84,10 +84,10 @@ class Workbench(appTitle: String = "", enableMQ: Boolean = false) {
     fun <C> registerEditor(
         type: String,
         title: (C) -> String,
-        initController: (Int, MQClient) -> C,
+        initController: (Int, MqClient) -> C,
         icon: ImageVector = WorkbenchDefaultIcon,
-        onClose: (C, MQClient) -> ActionResult = {_,_ -> success()},
-        onSave: (C, MQClient) -> ActionResult = {_,_ -> success()},
+        onClose: (C, MqClient) -> ActionResult = { _, _ -> success()},
+        onSave: (C, MqClient) -> ActionResult = { _, _ -> success()},
         editorView: @Composable (C) -> Unit
     ) {
         val editor = WorkbenchModule(
