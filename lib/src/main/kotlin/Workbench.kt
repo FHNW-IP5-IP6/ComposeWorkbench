@@ -193,9 +193,10 @@ class Workbench(appTitle: String = "", private val enableMQ: Boolean = false) {
             workbenchState = WorkbenchState.TERMINATING
             try {
                 hiveMQ?.stop()?.join()
-                applicationScope.exitApplication()
             } catch (ex: Exception ) {
                 ex.printStackTrace()
+            }finally {
+                applicationScope.exitApplication()
             }
     }
 
