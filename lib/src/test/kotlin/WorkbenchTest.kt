@@ -37,7 +37,7 @@ internal class WorkbenchTest{
         sut.requestExplorer("String", model)
         val tabRowKey = TabRowKey(displayType = DisplayType.LEFT, moduleType = ModuleType.EXPLORER, windowState = sut.getWorkbenchController().getMainWindow())
 
-        assertEquals(1, sut.getWorkbenchController().getModulesFiltered(tabRowKey).size)
+        assertEquals(0, sut.getWorkbenchController().getModulesFiltered(tabRowKey).size)
     }
 
     @Test
