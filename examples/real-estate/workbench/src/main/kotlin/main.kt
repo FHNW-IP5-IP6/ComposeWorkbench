@@ -42,7 +42,7 @@ fun main() {
             title = { "${it.editorState.data.street.value} ${it.editorState.data.streetNumber.value}" },
           onClose = { controller, mqtt  ->
                         println("close ${controller.editorState.data.id}")
-                        ActionResult(false, "cannot close du schlingel")
+                        ActionResult(true, "All good, my friend.")
                     },
            onSave = { controller, mqtt ->
                         controller.triggerAction(RealEstateAction.Save())
@@ -80,7 +80,10 @@ fun main() {
         //requestExplorer(TYPE_ALL_REAL_ESTATES,  true, ExplorerLocation.LEFT)
         requestExplorer(TYPE_ALL_REAL_ESTATES, ExplorerController(), true, ExplorerLocation.LEFT)
 
-        run { println("Exit my Compose Workbench App") }
+        run {
+            println("Exit my Compose Workbench App")
+            success()
+        }
     }
 
 }

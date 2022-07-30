@@ -252,6 +252,7 @@ internal class WorkbenchController(appTitle: String) {
         } else {
             tabRowStates[tabRowKey] = informationState.tabRowState[tabRowKey]!!.copy(selected = moduleState)
         }
+        moduleState?.selected()
         return newInformationState.copy(tabRowState = tabRowStates)
     }
 
@@ -277,7 +278,6 @@ internal class WorkbenchController(appTitle: String) {
         var newInformationState = updateSelection(informationState, TabRowKey(moduleState), moduleState)
         newInformationState = showDrawer(newInformationState, moduleState.displayType)
         informationState = newInformationState.copy(modules = modules)
-        moduleState.selected()
     }
 
     fun removeModuleState(moduleState: WorkbenchModuleState<*>){
@@ -312,10 +312,8 @@ internal class WorkbenchController(appTitle: String) {
             hideDrawer(newInformationState, tabRowKey.displayType)
         } else {
             val newInformationState = updateSelection(informationState, tabRowKey, moduleState)
-            moduleState?.selected()
             showDrawer(newInformationState, tabRowKey.displayType)
         }
-
     }
 
     fun <C>requestEditorState(modelType: String, dataId: Int) : WorkbenchModuleState<*>{
