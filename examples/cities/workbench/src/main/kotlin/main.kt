@@ -68,7 +68,10 @@ fun main() {
     workbench.requestExplorer("Cities", CitiesController(CitiesRepository::getSwissCities), true, ExplorerLocation.LEFT)
     workbench.requestExplorer("Cities", CitiesController(CitiesRepository::getBigCities), false, ExplorerLocation.BOTTOM)
     workbench.requestExplorer("Cities", CitiesController(CitiesRepository::getGermanCities), true, ExplorerLocation.BOTTOM, false)
-    workbench.run { println("Exit my Compose Workbench App") }
+    workbench.run {
+        println("Exit my Compose Workbench App")
+        success()
+    }
 
 }
 

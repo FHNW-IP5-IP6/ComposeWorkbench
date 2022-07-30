@@ -4,6 +4,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.window.ApplicationScope
 import androidx.compose.ui.window.application
 import com.hivemq.embedded.EmbeddedHiveMQ
 import com.hivemq.embedded.EmbeddedHiveMQBuilder
@@ -53,16 +54,13 @@ class Workbench(appTitle: String = "", private val enableMQ: Boolean = false) {
 
                 // init internal MQDispatcher after broker is
                 mqController = WorkbenchMQDispatcher(controller)
-
-                // on successfully init
-                controller.initExplorers()
-                workbenchState = WorkbenchState.RUNNING
-                controller.commandController.dispatchCommands()
-
             } catch (ex: Exception) {
                 ex.printStackTrace()
             }
         }
+        controller.initExplorers()
+        workbenchState = WorkbenchState.RUNNING
+        controller.commandController.dispatchCommands()
     }
 
 
@@ -176,28 +174,29 @@ class Workbench(appTitle: String = "", private val enableMQ: Boolean = false) {
     /**
      * Run the Workbench
      */
-    fun run(onExit: () -> Unit) = application {
+    fun run(onExit: () -> ActionResult) = application {
         // init main window
         WorkbenchUI(
             controller = controller,
             workbenchState = workbenchState,
         ) {
-            workbenchState = WorkbenchState.TERMINATING
-            onExit.invoke()
-            stopMQBroker()
-            exitApplication()
+            if (onExit.invoke().successful) {
+                terminatingWorkbenchAsync(this)
+            }
         }
 
         // init separated windows
         WorkbenchWindow(controller = controller, workbenchState = workbenchState)
     }
 
-    private fun stopMQBroker() {
-        try {
-            hiveMQ?.stop()?.join()
-        } catch (ex: Exception ) {
-            ex.printStackTrace()
-        }
+    private fun terminatingWorkbenchAsync(applicationScope: ApplicationScope) = GlobalScope.async {
+            workbenchState = WorkbenchState.TERMINATING
+            try {
+                hiveMQ?.stop()?.join()
+                applicationScope.exitApplication()
+            } catch (ex: Exception ) {
+                ex.printStackTrace()
+            }
     }
 
     private fun logMQ(topic: String, msg: String) {
