@@ -1,45 +1,70 @@
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.window.application
 import com.hivemq.embedded.EmbeddedHiveMQ
 import com.hivemq.embedded.EmbeddedHiveMQBuilder
 import controller.WorkbenchController
+import controller.WorkbenchMQDispatcher
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
 import model.data.Command
 import model.data.MQClientImpl
 import model.data.WorkbenchModule
 import model.data.enums.MenuType
 import model.data.enums.ModuleType
-import model.data.enums.toDisplayType
+import model.data.enums.WorkbenchState
 import util.WorkbenchDefaultIcon
 import view.WorkbenchUI
 import view.component.WorkbenchWindow
 import java.util.concurrent.Executors
 
 
-class Workbench(appTitle: String = "", enableMQ: Boolean = false) {
+class Workbench(appTitle: String = "", private val enableMQ: Boolean = false) {
+
+    private val controller = WorkbenchController(appTitle)
+
+    private var workbenchState by mutableStateOf(WorkbenchState.STARTING)
+
 
     // HiveMQ infrastructure
     // IMPORTANT!!! has to be first instance to initiate, otherwise early clients won't connect to broker
     // TODO: reconnect of clients after not reaching client?
     private var hiveMQ: EmbeddedHiveMQ? = null
+    private var mqController: WorkbenchMQDispatcher? = null
+
     init {
+        initMQInfrastructureAsync()
+    }
+
+    private fun initMQInfrastructureAsync() = GlobalScope.async {
         if (enableMQ) {
             try {
                 val embeddedHiveMQBuilder: EmbeddedHiveMQBuilder = EmbeddedHiveMQ.builder()
                 hiveMQ = embeddedHiveMQBuilder.build()
                 hiveMQ!!.start().join()
+
+                // subscribe for available topics to log
+                val logMQClient = MQClientImpl
+                logMQClient.subscribe("$MQ_INTERNAL_TOPIC_PATH_EDITOR/#", ::logMQ, Executors.newSingleThreadExecutor())
+
+                // init internal MQDispatcher after broker is
+                mqController = WorkbenchMQDispatcher(controller)
+
+                // on successfully init
+                controller.initExplorers()
+                workbenchState = WorkbenchState.RUNNING
+                controller.commandController.dispatchCommands()
+
             } catch (ex: Exception) {
                 ex.printStackTrace()
             }
-
-            // subscribe for available topics to log
-            val logMQClient = MQClientImpl
-            logMQClient.subscribe("$MQ_INTERNAL_TOPIC_PATH_EDITOR/#", ::logMQ, Executors.newSingleThreadExecutor())
         }
     }
 
-    private val controller = WorkbenchController(appTitle)
 
 
     /**
@@ -120,11 +145,8 @@ class Workbench(appTitle: String = "", enableMQ: Boolean = false) {
         shown: Boolean = true
     ) {
         val id = controller.getNextKey()
-        if(shown){
-            controller.requestExplorerState(id = id, modelType = type, explorerController = c, displayType =  toDisplayType(location))
-        }
+        controller.addDefaultExplorer(id = id, key = type, explorerModel = c, location = location, shown = shown, listed = listed)
         if (listed) {
-            controller.addDefaultExplorer(id = id, key = type, explorerModel = c)
             controller.commandController.addCommand(Command(
                 text = controller.getRegisteredExplorer<C>(type).title(c),
                 paths = mutableListOf(
@@ -155,20 +177,19 @@ class Workbench(appTitle: String = "", enableMQ: Boolean = false) {
      * Run the Workbench
      */
     fun run(onExit: () -> Unit) = application {
-        // pre processing
-        controller.commandController.dispatchCommands()
-
         // init main window
         WorkbenchUI(
-            controller = controller
+            controller = controller,
+            workbenchState = workbenchState,
         ) {
+            workbenchState = WorkbenchState.TERMINATING
             onExit.invoke()
             stopMQBroker()
             exitApplication()
         }
 
         // init separated windows
-        WorkbenchWindow(controller = controller)
+        WorkbenchWindow(controller = controller, workbenchState = workbenchState)
     }
 
     private fun stopMQBroker() {

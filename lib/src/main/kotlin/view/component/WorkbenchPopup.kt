@@ -98,10 +98,9 @@ internal fun WorkbenchPopupActionFailed ( controller: WorkbenchController, actio
     }
 }
 
-// TODO: Use this later for loading screen
 // source: https://gist.github.com/EugeneTheDev/a27664cb7e7899f964348b05883cbccd
 @Composable
-private fun DotsPulsing() {
+internal fun DotsPulsing() {
     val dotSize = 24.dp
     val delayUnit = 400
 

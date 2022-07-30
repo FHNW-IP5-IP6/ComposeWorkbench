@@ -16,67 +16,90 @@ import controller.WorkbenchController
 import model.data.TabRowKey
 import model.data.enums.DisplayType
 import model.data.enums.ModuleType
+import model.data.enums.WorkbenchState
 import org.jetbrains.compose.splitpane.ExperimentalSplitPaneApi
 import view.component.*
 import view.themes.LightColors
 
 @Composable
-internal fun WorkbenchUI(controller: WorkbenchController,
-                         closeRequest: ()->Unit) {
-    DragAndDropWindow(
-        controller = controller,
-        onCloseRequest = closeRequest,
-        tabRowKey = TabRowKey(displayType = DisplayType.WINDOW, ModuleType.BOTH, controller.getMainWindow()),
-        windowScope = { workbenchMenuBar(controller.commandController) }
+internal fun WorkbenchUI(controller: WorkbenchController, workbenchState: WorkbenchState, closeRequest: ()->Unit) {
+    MaterialTheme(
+        colors = LightColors,
+        typography = NotoSansTypography,
     ) {
-        WorkbenchBody(controller)
+        DragAndDropWindow(
+            controller = controller,
+            onCloseRequest = closeRequest,
+            tabRowKey = TabRowKey(
+                displayType = DisplayType.WINDOW,
+                ModuleType.BOTH,
+                controller.getMainWindow()
+            ),
+            windowScope = { workbenchMenuBar(controller.commandController) }
+        ) {
+            when (workbenchState) {
+                WorkbenchState.RUNNING -> {
+                    WorkbenchBody(controller)
+                }
+                WorkbenchState.STARTING -> {
+                    WorkbenchStateInfo("Application is starting.")
+                }
+                WorkbenchState.TERMINATING -> {
+                    WorkbenchStateInfo("Application is terminating.")
+                }
+            }
+        }
     }
 }
 
 @Composable
 @OptIn(ExperimentalSplitPaneApi::class)
 private fun WorkbenchBody(controller: WorkbenchController) {
-    MaterialTheme(
-        colors = LightColors,
-        typography = NotoSansTypography,
+    Scaffold(
+        topBar = { WorkbenchAppBar(controller) },
     ) {
-        Scaffold(
-            topBar = { WorkbenchAppBar(controller) },
-        ) {
-            val leftExplorerTabRowKey = TabRowKey(displayType = DisplayType.LEFT, moduleType = ModuleType.EXPLORER, windowState = controller.getMainWindow())
-            val bottomExplorerTabRowKey = TabRowKey(displayType = DisplayType.BOTTOM, moduleType = ModuleType.EXPLORER, windowState = controller.getMainWindow())
-            val hasBottomTabs = controller.hasModules(bottomExplorerTabRowKey)
-            Column {
-                Row(modifier = Modifier.weight(if(hasBottomTabs) 0.9f else 1f)
-                ) {
-                    DropTarget(tabRowKey = leftExplorerTabRowKey, controller = controller) {
-                        WorkbenchTabRow(leftExplorerTabRowKey, controller)
-                    }
-                    WorkbenchVerticalSplitPane(splitPaneState = controller.informationState.bottomSplitState) {
-                        first {
-                            WorkbenchHorizontalSplitPane(splitPaneState = controller.informationState.leftSplitState){
-                                first {
-                                    WorkbenchTabBody(leftExplorerTabRowKey, controller)
-                                }
-                                second {
-                                    WorkbenchEditorSpace(controller)
-                                }
+        val leftExplorerTabRowKey = TabRowKey(
+            displayType = DisplayType.LEFT,
+            moduleType = ModuleType.EXPLORER,
+            windowState = controller.getMainWindow()
+        )
+        val bottomExplorerTabRowKey = TabRowKey(
+            displayType = DisplayType.BOTTOM,
+            moduleType = ModuleType.EXPLORER,
+            windowState = controller.getMainWindow()
+        )
+        val hasBottomTabs = controller.hasModules(bottomExplorerTabRowKey)
+        Column {
+            Row(
+                modifier = Modifier.weight(if (hasBottomTabs) 0.9f else 1f)
+            ) {
+                DropTarget(tabRowKey = leftExplorerTabRowKey, controller = controller) {
+                    WorkbenchTabRow(leftExplorerTabRowKey, controller)
+                }
+                WorkbenchVerticalSplitPane(splitPaneState = controller.informationState.bottomSplitState) {
+                    first {
+                        WorkbenchHorizontalSplitPane(splitPaneState = controller.informationState.leftSplitState) {
+                            first {
+                                WorkbenchTabBody(leftExplorerTabRowKey, controller)
+                            }
+                            second {
+                                WorkbenchEditorSpace(controller)
                             }
                         }
-                        second {
-                            WorkbenchTabBody(bottomExplorerTabRowKey, controller)
-                        }
+                    }
+                    second {
+                        WorkbenchTabBody(bottomExplorerTabRowKey, controller)
                     }
                 }
-                Row(
-                    modifier = Modifier.weight(if(hasBottomTabs) 0.1f else 0.001f)
-                        .padding(start = TAB_ROW_WIDTH.dp),
-                    verticalAlignment = Alignment.Bottom,
-                    horizontalArrangement = Arrangement.Start
-                ) {
-                    DropTarget(tabRowKey = bottomExplorerTabRowKey, controller = controller) {
-                        WorkbenchTabRow(bottomExplorerTabRowKey, controller)
-                    }
+            }
+            Row(
+                modifier = Modifier.weight(if (hasBottomTabs) 0.1f else 0.001f)
+                    .padding(start = TAB_ROW_WIDTH.dp),
+                verticalAlignment = Alignment.Bottom,
+                horizontalArrangement = Arrangement.Start
+            ) {
+                DropTarget(tabRowKey = bottomExplorerTabRowKey, controller = controller) {
+                    WorkbenchTabRow(bottomExplorerTabRowKey, controller)
                 }
             }
         }

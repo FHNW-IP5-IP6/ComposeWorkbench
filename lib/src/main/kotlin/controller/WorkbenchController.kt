@@ -1,6 +1,7 @@
 package controller
 
 import ActionResult
+import ExplorerLocation
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.neverEqualPolicy
@@ -21,7 +22,6 @@ internal class WorkbenchController(appTitle: String) {
 
     private val model: WorkbenchStaticState = WorkbenchStaticState(appTitle)
     val commandController = WorkbenchCommandController(model, this)
-    val mqController = WorkbenchMQDispatcher(model, this)
     val dragController = WorkbenchDragController(this)
 
     var informationState by mutableStateOf(getDefaultWorkbenchDisplayInformation(), policy = neverEqualPolicy())
@@ -361,6 +361,16 @@ internal class WorkbenchController(appTitle: String) {
         return moduleState
     }
 
+    fun initExplorers() {
+        model.registeredDefaultExplorers.forEach { (t, u) ->
+            if (u.shown) {
+                createExplorerFromDefault (t)
+            }
+        }
+        val toRemove = model.registeredDefaultExplorers.filter { !it.value.listed }.keys
+        toRemove.map { model.registeredDefaultExplorers.remove(it) }
+    }
+
     fun createExplorerFromDefault (id: Int) {
         val defaultState = if(model.registeredDefaultExplorers[id] != null) model.registeredDefaultExplorers[id]!!as WorkbenchDefaultState<Any> else return
         val explorer = model.registeredExplorers[defaultState.type] as WorkbenchModule<Any>
@@ -369,7 +379,14 @@ internal class WorkbenchController(appTitle: String) {
             moduleStateSelectorPressed(TabRowKey(existingModule), existingModule)
             return
         }
-        val moduleState = WorkbenchModuleState(id = id, controller = defaultState.controller, module = explorer, window = model.mainWindow, close = { removeModuleState(it) }, displayType = DisplayType.LEFT)
+        val moduleState = WorkbenchModuleState(
+            id = id,
+            controller = defaultState.controller,
+            module = explorer,
+            window = model.mainWindow,
+            close = { removeModuleState(it) },
+            displayType = if (defaultState.location == ExplorerLocation.LEFT) DisplayType.LEFT else DisplayType.BOTTOM,
+        )
         addModuleState(moduleState)
     }
 
@@ -390,9 +407,9 @@ internal class WorkbenchController(appTitle: String) {
         model.registeredExplorers[moduleType] = explorer
     }
 
-    fun <C>addDefaultExplorer(key: String, id: Int, explorerModel: C){
+    fun <C>addDefaultExplorer(key: String, id: Int, explorerModel: C, location: ExplorerLocation, shown: Boolean, listed: Boolean){
         val explorer = getRegisteredExplorer<C>(key)
-        model.registeredDefaultExplorers[id] = WorkbenchDefaultState(explorer.modelType, explorerModel, explorer.title)
+        model.registeredDefaultExplorers[id] = WorkbenchDefaultState(explorer.modelType, explorerModel, explorer.title, location, shown, listed)
     }
 
     fun <C>getRegisteredExplorer(key: String): WorkbenchModule<C> {

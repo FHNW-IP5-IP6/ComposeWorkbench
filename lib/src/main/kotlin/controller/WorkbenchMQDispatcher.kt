@@ -8,7 +8,7 @@ import model.state.WorkbenchStaticState
 import model.data.MQClientImpl
 import java.util.concurrent.Executors
 
-internal class WorkbenchMQDispatcher (val model: WorkbenchStaticState, private val controller: WorkbenchController)
+internal class WorkbenchMQDispatcher (private val controller: WorkbenchController)
 {
     private var mqClient: MQClientImpl = MQClientImpl
 

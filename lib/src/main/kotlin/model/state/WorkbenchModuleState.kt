@@ -1,6 +1,7 @@
 package model.state
 
 import ActionResult
+import ExplorerLocation
 import androidx.compose.runtime.Composable
 import model.data.MQClientImpl
 import model.data.WorkbenchModule
@@ -19,6 +20,7 @@ internal class WorkbenchModuleState <C> (
 
     init {
         MQClientImpl.publishCreated(module.modelType, dataId ?: id)
+        module.init?.invoke(controller, MQClientImpl)
     }
 
     fun updateModule(module: WorkbenchModule<*>){
@@ -53,7 +55,10 @@ internal class WorkbenchModuleState <C> (
 internal class WorkbenchDefaultState <C> (
     val type: String,
     val controller: C,
-    val title: (C) -> String
+    val title: (C) -> String,
+    val location: ExplorerLocation,
+    val shown: Boolean,
+    val listed: Boolean,
 ){
     fun getTitle() : String {
         return title(controller)
