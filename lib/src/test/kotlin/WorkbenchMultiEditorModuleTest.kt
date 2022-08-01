@@ -1,8 +1,10 @@
 
+import controller.WorkbenchController
 import model.data.TabRowKey
 import model.data.enums.DisplayType
 import model.data.enums.ModuleType
 import model.state.WorkbenchModuleState
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 
@@ -10,6 +12,11 @@ import kotlin.test.assertEquals
 class WorkbenchMultiEditorModuleTest {
 
     private var sut = Workbench()
+
+    @BeforeEach
+    fun setup(){
+        WorkbenchController.resetInformationState()
+    }
 
     class TestModel(val id: Int){
         val title = "title1"
@@ -24,50 +31,48 @@ class WorkbenchMultiEditorModuleTest {
         //editor
         val type = "editorType"
         val id = 456
-        val controller = sut.getWorkbenchController()
-        sut.registerEditor(type = type, title = {it.title}, initController = { id, mqtt -> TestModel(id) }){ }
-        sut.registerEditor(type = type, title = {it.title}, initController = { id, mqtt ->TestModel(id) }){ }
-        assertEquals(2, controller.getRegisteredEditors<TestModel>(type).size)
+        sut.registerEditor(type = type, title = {it.title}, initController = { i, _ -> TestModel(i) }){ }
+        sut.registerEditor(type = type, title = {it.title}, initController = { i, _ ->TestModel(i) }){ }
+        assertEquals(2, WorkbenchController.informationState.getRegisteredEditors<TestModel>(type).size)
 
         sut.requestEditor<TestModel>(type = type, id = id)
-        val tabRowKey = TabRowKey(displayType = DisplayType.TAB1, moduleType = ModuleType.EDITOR, windowState = sut.getWorkbenchController().getMainWindow())
-        assertEquals(1, controller.getModulesFiltered(tabRowKey).size)
+        val tabRowKey = TabRowKey(displayType = DisplayType.TAB1, moduleType = ModuleType.EDITOR, windowState = WorkbenchController.informationState.mainWindow)
+        assertEquals(1, WorkbenchController.informationState.getModulesFiltered(tabRowKey).size)
 
-        var moduleState: WorkbenchModuleState<TestModel> = controller.getSelectedModule(tabRowKey) as WorkbenchModuleState<TestModel>
+        var moduleState: WorkbenchModuleState<TestModel> = WorkbenchController.informationState.getSelectedModule(tabRowKey) as WorkbenchModuleState<TestModel>
         assertEquals(id, moduleState.controller.id)
-        assertEquals(controller.getRegisteredEditors<TestModel>(type)[0], moduleState.module)
+        assertEquals(WorkbenchController.informationState.getRegisteredEditors<TestModel>(type)[0], moduleState.module)
 
-        controller.updateModule(moduleState, controller.getRegisteredEditors<TestModel>(type)[1])
+        WorkbenchController.updateModule(moduleState, WorkbenchController.informationState.getRegisteredEditors<TestModel>(type)[1])
 
-        assertEquals(1, controller.getModulesFiltered(tabRowKey).size)
-        moduleState = controller.getSelectedModule(tabRowKey) as WorkbenchModuleState<TestModel>
+        assertEquals(1, WorkbenchController.informationState.getModulesFiltered(tabRowKey).size)
+        moduleState = WorkbenchController.informationState.getSelectedModule(tabRowKey) as WorkbenchModuleState<TestModel>
         assertEquals(id, moduleState.controller.id)
-        assertEquals(controller.getRegisteredEditors<TestModel>(type)[1], moduleState.module)
+        assertEquals(WorkbenchController.informationState.getRegisteredEditors<TestModel>(type)[1], moduleState.module)
     }
 
     @Test
     fun twoEditorsForSameKey_DifferentModel() {
         //editor
-        val controller = sut.getWorkbenchController()
         val type = "editorType"
         val id = 456
-        sut.registerEditor(type = type, title = {it.title}, initController = { id, mqtt ->  TestModel(id) }){ }
-        sut.registerEditor(type = type, title = {it.title}, initController = { id, mqtt ->  TestModel2(id) }){ }
-        assertEquals(2, controller.getRegisteredEditors<TestModel>(type).size)
+        sut.registerEditor(type = type, title = {it.title}, initController = { i, _ ->  TestModel(i) }){ }
+        sut.registerEditor(type = type, title = {it.title}, initController = { i, _ ->  TestModel2(i) }){ }
+        assertEquals(2, WorkbenchController.informationState.getRegisteredEditors<TestModel>(type).size)
 
         sut.requestEditor<TestModel>(type = type, id = id)
-        val tabRowKey = TabRowKey(displayType = DisplayType.TAB1, moduleType = ModuleType.EDITOR, windowState = sut.getWorkbenchController().getMainWindow())
+        val tabRowKey = TabRowKey(displayType = DisplayType.TAB1, moduleType = ModuleType.EDITOR, windowState = WorkbenchController.informationState.mainWindow)
 
-        assertEquals(1, controller.getModulesFiltered(tabRowKey).size)
-        val moduleState1: WorkbenchModuleState<TestModel> = controller.getSelectedModule(tabRowKey) as WorkbenchModuleState<TestModel>
+        assertEquals(1, WorkbenchController.informationState.getModulesFiltered(tabRowKey).size)
+        val moduleState1: WorkbenchModuleState<TestModel> = WorkbenchController.informationState.getSelectedModule(tabRowKey) as WorkbenchModuleState<TestModel>
         assertEquals(id, moduleState1.controller.id)
-        assertEquals(controller.getRegisteredEditors<TestModel>(type)[0], moduleState1.module)
+        assertEquals(WorkbenchController.informationState.getRegisteredEditors<TestModel>(type)[0], moduleState1.module)
 
-        controller.updateModule(moduleState1, controller.getRegisteredEditors<TestModel2>(type)[1])
+        WorkbenchController.updateModule(moduleState1, WorkbenchController.informationState.getRegisteredEditors<TestModel2>(type)[1])
 
-        assertEquals(1, controller.getModulesFiltered(tabRowKey).size)
-        val module2: WorkbenchModuleState<TestModel2> = controller.getSelectedModule(tabRowKey) as WorkbenchModuleState<TestModel2>
+        assertEquals(1, WorkbenchController.informationState.getModulesFiltered(tabRowKey).size)
+        val module2: WorkbenchModuleState<TestModel2> = WorkbenchController.informationState.getSelectedModule(tabRowKey) as WorkbenchModuleState<TestModel2>
         assertEquals(id, module2.controller.id)
-        assertEquals(controller.getRegisteredEditors<TestModel2>(type)[1], module2.module)
+        assertEquals(WorkbenchController.informationState.getRegisteredEditors<TestModel2>(type)[1], module2.module)
     }
 }

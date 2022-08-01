@@ -24,12 +24,9 @@ import view.component.WorkbenchWindow
 import java.util.concurrent.Executors
 
 
-class Workbench(appTitle: String = "", private val enableMQ: Boolean = false) {
-
-    private val controller = WorkbenchController(appTitle)
+class Workbench(val appTitle: String = "", private val enableMQ: Boolean = false) {
 
     private var workbenchState by mutableStateOf(WorkbenchState.STARTING)
-
 
     // HiveMQ infrastructure
     // IMPORTANT!!! has to be first instance to initiate, otherwise early clients won't connect to broker
@@ -53,17 +50,15 @@ class Workbench(appTitle: String = "", private val enableMQ: Boolean = false) {
                 logMQClient.subscribe("$MQ_INTERNAL_TOPIC_PATH_EDITOR/#", ::logMQ, Executors.newSingleThreadExecutor())
 
                 // init internal MQDispatcher after broker is
-                mqController = WorkbenchMQDispatcher(controller)
+                mqController = WorkbenchMQDispatcher()
             } catch (ex: Exception) {
                 ex.printStackTrace()
             }
         }
-        controller.initExplorers()
+        WorkbenchController.initExplorers()
         workbenchState = WorkbenchState.RUNNING
-        controller.commandController.dispatchCommands()
+        WorkbenchController.dispatchCommands()
     }
-
-
 
     /**
      * Add an explorer for a given Type to the Workbench
@@ -87,7 +82,7 @@ class Workbench(appTitle: String = "", private val enableMQ: Boolean = false) {
             init = init,
             title = title,
         )
-        controller.registerExplorer(type, explorer)
+        WorkbenchController.registerExplorer(type, explorer)
     }
 
     /**
@@ -123,7 +118,7 @@ class Workbench(appTitle: String = "", private val enableMQ: Boolean = false) {
             onClose = onClose,
             onSave =  onSave
         )
-        this.controller.registerEditor(type, editor)
+        WorkbenchController.registerEditor(type, editor)
     }
 
     /**
@@ -142,16 +137,16 @@ class Workbench(appTitle: String = "", private val enableMQ: Boolean = false) {
         location: ExplorerLocation = ExplorerLocation.LEFT,
         shown: Boolean = true
     ) {
-        val id = controller.getNextKey()
-        controller.addDefaultExplorer(id = id, key = type, explorerModel = c, location = location, shown = shown, listed = listed)
+        val id = WorkbenchController.getNextKey()
+        WorkbenchController.addDefaultExplorer(id = id, key = type, explorerModel = c, location = location, shown = shown, listed = listed)
         if (listed) {
-            controller.commandController.addCommand(Command(
-                text = controller.getRegisteredExplorer<C>(type).title(c),
+            WorkbenchController.addCommand(Command(
+                text = WorkbenchController.informationState.getRegisteredExplorer<C>(type).title(c),
                 paths = mutableListOf(
                     "${MenuType.MenuBar.name}.View.Default Explorers",
                     "${MenuType.MenuAppBar.name}.Default Explorers"
                 ),
-                action = { controller.createExplorerFromDefault(id) }
+                action = { WorkbenchController.createExplorerFromDefault(id) }
             ))
         }
     }
@@ -168,7 +163,7 @@ class Workbench(appTitle: String = "", private val enableMQ: Boolean = false) {
         type: String,
         id: Int
     ) {
-        controller.requestEditorState<C>(modelType = type, dataId = id)
+        WorkbenchController.requestEditorState<C>(modelType = type, dataId = id)
     }
 
     /**
@@ -176,8 +171,11 @@ class Workbench(appTitle: String = "", private val enableMQ: Boolean = false) {
      */
     fun run(onExit: () -> ActionResult) = application {
         // init main window
+        println("recompose app")
+        val informationState = WorkbenchController.informationState
+        WorkbenchController.setAppTitle(appTitle = appTitle)
         WorkbenchUI(
-            controller = controller,
+            informationState = informationState,
             workbenchState = workbenchState,
         ) {
             if (onExit.invoke().successful) {
@@ -186,7 +184,7 @@ class Workbench(appTitle: String = "", private val enableMQ: Boolean = false) {
         }
 
         // init separated windows
-        WorkbenchWindow(controller = controller, workbenchState = workbenchState)
+        WorkbenchWindow(informationState = informationState, workbenchState = workbenchState)
     }
 
     private fun terminatingWorkbenchAsync(applicationScope: ApplicationScope) = GlobalScope.async {
@@ -202,10 +200,5 @@ class Workbench(appTitle: String = "", private val enableMQ: Boolean = false) {
 
     private fun logMQ(topic: String, msg: String) {
         println("Log-MQ:$topic: $msg")
-    }
-
-    //used for testing
-    internal fun getWorkbenchController(): WorkbenchController {
-        return controller
     }
 }

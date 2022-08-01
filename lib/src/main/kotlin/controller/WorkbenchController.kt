@@ -8,69 +8,22 @@ import androidx.compose.runtime.neverEqualPolicy
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.WindowState
-import model.data.MQClientImpl
-import model.data.TabRowKey
-import model.data.WorkbenchModule
+import model.data.*
 import model.data.enums.*
 import model.state.*
 import org.jetbrains.compose.splitpane.ExperimentalSplitPaneApi
 import org.jetbrains.compose.splitpane.SplitPaneState
+import java.util.concurrent.atomic.AtomicInteger
 
 @OptIn(ExperimentalSplitPaneApi::class)
 @Suppress("UNCHECKED_CAST")
-internal class WorkbenchController(appTitle: String) {
+internal object WorkbenchController {
 
-    private val model: WorkbenchStaticState = WorkbenchStaticState(appTitle)
-    val commandController = WorkbenchCommandController(model, this)
-    val dragController = WorkbenchDragController(this)
-
+    var uniqueKey: AtomicInteger = AtomicInteger(0)
     var informationState by mutableStateOf(getDefaultWorkbenchDisplayInformation(), policy = neverEqualPolicy())
         private set
 
-    //Information and model accessor functions
-    fun getAppTitle(): String {
-        return model.appTitle
-    }
-
-    fun getMainWindow(): WorkbenchWindowState {
-        return model.mainWindow
-    }
-
-    fun getScrollToIndex(tabRowKey: TabRowKey) = getIndex(informationState.tabRowState[tabRowKey]?.selected, tabRowKey)
-
-    fun getSelectedModule(tabRowKey: TabRowKey) = informationState.tabRowState[tabRowKey]?.selected
-
-    fun isShowPopUp(tabRowKey: TabRowKey) = informationState.tabRowState[tabRowKey]?.popUpState != null
-
-    fun getPreviewTitle(tabRowKey: TabRowKey) = informationState.tabRowState[tabRowKey]?.preview
-
-    fun getIndex(module: WorkbenchModuleState<*>?, tabRowKey: TabRowKey): Int {
-        val index = getModulesFiltered(tabRowKey).indexOfFirst { it.id == module?.id }
-        return index.coerceAtLeast(0)
-    }
-
-    fun isUnsaved(state: WorkbenchModuleState<*>): Boolean {
-        informationState.unsavedEditors.forEach { entry ->
-            if (state.module.modelType == entry.key) {
-                if (entry.value.contains(state.dataId ?: state.id)) {
-                    return true
-                }
-            }
-        }
-        return false
-    }
-
-    fun getModulesFiltered(key: TabRowKey): List<WorkbenchModuleState<*>> {
-        return informationState.modules.filter {
-                    key.displayType == it.displayType
-                    && (ModuleType.BOTH == key.moduleType || key.moduleType == it.module.moduleType)
-                    && it.window == key.windowState
-        }.reversed()
-    }
-
-    fun hasModules(tabRowKey: TabRowKey): Boolean{
-        return informationState.tabRowState[tabRowKey]?.preview != null || getModulesFiltered(tabRowKey).isNotEmpty()
-    }
+    fun getNextKey():Int = uniqueKey.getAndIncrement()
 
     //Information state update
     fun setPopUp( tabRowKey: TabRowKey, type: PopUpType, message: String = "", action: () -> Unit){
@@ -158,8 +111,8 @@ internal class WorkbenchController(appTitle: String) {
     }
 
     fun verifySplitViewMde(tab1: TabRowKey, tab2: TabRowKey) {
-        val modulesTab1 = getModulesFiltered(tab1)
-        val modulesTab2 = getModulesFiltered(tab2)
+        val modulesTab1 = informationState.getModulesFiltered(tab1)
+        val modulesTab2 = informationState.getModulesFiltered(tab2)
         if(modulesTab1.isNotEmpty() && modulesTab2.isNotEmpty()) return
         else changeSplitViewMode(SplitViewMode.UNSPLIT)
     }
@@ -173,7 +126,7 @@ internal class WorkbenchController(appTitle: String) {
             return
         }
         if(informationState.splitViewMode.isUnsplit()) {
-            val selected = informationState.tabRowState[TabRowKey(DisplayType.TAB1, ModuleType.EDITOR, model.mainWindow)]?.selected
+            val selected = informationState.tabRowState[TabRowKey(DisplayType.TAB1, ModuleType.EDITOR, informationState.mainWindow)]?.selected
             if(selected != null) {
                 reselect(selected)
                 selected.displayType = DisplayType.TAB2
@@ -182,10 +135,10 @@ internal class WorkbenchController(appTitle: String) {
             }
         } else {
             var newInformationState = informationState
-            val selectedTab1 = informationState.tabRowState[TabRowKey(DisplayType.TAB1, ModuleType.EDITOR, model.mainWindow)]?.selected
+            val selectedTab1 = informationState.tabRowState[TabRowKey(DisplayType.TAB1, ModuleType.EDITOR, informationState.mainWindow)]?.selected
             if(selectedTab1 == null) {
-                val selectedTab2 = informationState.tabRowState[TabRowKey(DisplayType.TAB2, ModuleType.EDITOR, model.mainWindow)]?.selected
-                newInformationState = updateSelection(newInformationState, TabRowKey(DisplayType.TAB1, ModuleType.EDITOR, model.mainWindow), selectedTab2)
+                val selectedTab2 = informationState.tabRowState[TabRowKey(DisplayType.TAB2, ModuleType.EDITOR, informationState.mainWindow)]?.selected
+                newInformationState = updateSelection(newInformationState, TabRowKey(DisplayType.TAB1, ModuleType.EDITOR, informationState.mainWindow), selectedTab2)
             }
             val modules = newInformationState.modules.toMutableList()
             modules.forEach { if (DisplayType.TAB2 == it.displayType) it.displayType = DisplayType.TAB1}
@@ -198,19 +151,19 @@ internal class WorkbenchController(appTitle: String) {
         val windows = informationState.windows.toMutableList()
         windows -= tabRowKey.windowState
         informationState = informationState.copy(windows = windows)
-        dragController.removeReverseDropTarget(tabRowKey)
+        WorkbenchDragController.removeReverseDropTarget(tabRowKey)
     }
 
     fun reselect(moduleState: WorkbenchModuleState<*>){
         val tabRowKey = TabRowKey(moduleState)
-        val modules = getModulesFiltered(tabRowKey)
+        val modules = informationState.getModulesFiltered(tabRowKey)
         if(modules.size <= 1 && modules.contains(moduleState)) {
             val newInformationState = hideDrawer(informationState,tabRowKey.displayType)
             informationState = updateSelection(newInformationState, tabRowKey, null)
         } else {
             val selected = informationState.tabRowState[tabRowKey]?.selected
             if(selected != null && selected == moduleState){
-                val index = getIndex(moduleState, tabRowKey)
+                val index = informationState.getIndex(moduleState.id, tabRowKey)
                 informationState = when(index) {
                     0 -> updateSelection(informationState, tabRowKey, modules[1])
                     else -> updateSelection(informationState, tabRowKey, modules[index - 1])
@@ -221,7 +174,7 @@ internal class WorkbenchController(appTitle: String) {
 
     fun moduleToWindow(moduleState: WorkbenchModuleState<*>): WorkbenchWindowState {
         val window = WorkbenchWindowState(
-            windowState = WindowState(position = dragController.getWindowPosition()),
+            windowState = WindowState(position = WorkbenchDragController.dragState.getWindowPosition()),
             hasFocus = true,
             windowHeaderOffset = 0.dp)
 
@@ -301,9 +254,8 @@ internal class WorkbenchController(appTitle: String) {
 
     fun updateModule(moduleState: WorkbenchModuleState<*>, module: WorkbenchModule<*>){
         val modules = informationState.modules.toMutableList()
-        val windows = informationState.windows.toMutableList()
         moduleState.updateModule(module)
-        informationState = informationState.copy(modules = modules, windows = windows)
+        informationState = informationState.copy(modules = modules)
     }
 
     fun moduleStateSelectorPressed(tabRowKey: TabRowKey, moduleState: WorkbenchModuleState<*>?) {
@@ -322,12 +274,12 @@ internal class WorkbenchController(appTitle: String) {
             moduleStateSelectorPressed(TabRowKey(existingModule), existingModule)
             return existingModule
         }
-        val editors = getRegisteredEditors<C>(modelType)
+        val editors = informationState.getRegisteredEditors<C>(modelType)
         val editor = editors[0]
         val mqtt =  MQClientImpl
         val moduleState = WorkbenchModuleState(
             id = getNextKey(),
-            window = model.mainWindow,
+            window = informationState.mainWindow,
             dataId = dataId,
             controller = editor.loader!!.invoke(dataId, mqtt),
             module = editor,
@@ -344,11 +296,11 @@ internal class WorkbenchController(appTitle: String) {
             moduleStateSelectorPressed(TabRowKey(existingModule), existingModule)
             return existingModule
         }
-        val explorer = getRegisteredExplorer<C>(modelType)
+        val explorer = informationState.getRegisteredExplorer<C>(modelType)
         val moduleState = WorkbenchModuleState(
             id = id,
             controller = explorerController,
-            window = model.mainWindow,
+            window = informationState.mainWindow,
             module = explorer,
             close = { removeModuleState(it) },
             displayType = displayType
@@ -360,18 +312,20 @@ internal class WorkbenchController(appTitle: String) {
     }
 
     fun initExplorers() {
-        model.registeredDefaultExplorers.forEach { (t, u) ->
+        informationState.registeredDefaultExplorers.forEach { (t, u) ->
             if (u.shown) {
                 createExplorerFromDefault (t)
             }
         }
-        val toRemove = model.registeredDefaultExplorers.filter { !it.value.listed }.keys
-        toRemove.map { model.registeredDefaultExplorers.remove(it) }
+        val registeredDefaultExplorers = informationState.registeredDefaultExplorers.toMutableMap()
+        val toRemove = registeredDefaultExplorers.filter { !it.value.listed }.keys
+        toRemove.map { registeredDefaultExplorers.remove(it) }
+        informationState = informationState.copy(registeredDefaultExplorers =  registeredDefaultExplorers)
     }
 
     fun createExplorerFromDefault (id: Int) {
-        val defaultState = if(model.registeredDefaultExplorers[id] != null) model.registeredDefaultExplorers[id]!!as WorkbenchDefaultState<Any> else return
-        val explorer = model.registeredExplorers[defaultState.type] as WorkbenchModule<Any>
+        val defaultState = if(informationState.registeredDefaultExplorers[id] != null) informationState.registeredDefaultExplorers[id]!!as WorkbenchDefaultState<Any> else return
+        val explorer = informationState.registeredExplorers[defaultState.type] as WorkbenchModule<Any>
         val existingModule = informationState.modules.find {it.controller == defaultState.controller}
         if (existingModule != null) {
             moduleStateSelectorPressed(TabRowKey(existingModule), existingModule)
@@ -381,51 +335,72 @@ internal class WorkbenchController(appTitle: String) {
             id = id,
             controller = defaultState.controller,
             module = explorer,
-            window = model.mainWindow,
+            window = informationState.mainWindow,
             close = { removeModuleState(it) },
             displayType = if (defaultState.location == ExplorerLocation.LEFT) DisplayType.LEFT else DisplayType.BOTTOM,
         )
         addModuleState(moduleState)
     }
 
-    //Registry specific stuff
-    fun getNextKey():Int = model.uniqueKey.getAndIncrement()
-
+    //Registry specific
     fun registerEditor(moduleType: String, editor: WorkbenchModule<*>){
-        when (val editors = model.registeredEditors[moduleType]) {
-            null -> model.registeredEditors[moduleType] = mutableListOf(editor)
+        val registeredEditors = informationState.registeredEditors.toMutableMap()
+        when (val editors = registeredEditors[moduleType]) {
+            null -> registeredEditors[moduleType] = mutableListOf(editor)
             else -> {
                 editors += editor
-                model.registeredEditors[moduleType] = editors
+                registeredEditors[moduleType] = editors
+            }
+        }
+        informationState = informationState.copy(registeredEditors = registeredEditors)
+    }
+
+    fun registerExplorer(moduleType: String, explorer: WorkbenchModule<*>){
+        val registeredExplorers = informationState.registeredExplorers.toMutableMap()
+        registeredExplorers[moduleType] = explorer
+        informationState = informationState.copy(registeredExplorers = registeredExplorers)
+    }
+
+    fun <C>addDefaultExplorer(key: String, id: Int, explorerModel: C, location: ExplorerLocation, shown: Boolean, listed: Boolean){
+        val registeredDefaultExplorers = informationState.registeredDefaultExplorers.toMutableMap()
+        val explorer = informationState.getRegisteredExplorer<C>(key)
+        registeredDefaultExplorers[id] = WorkbenchDefaultState(explorer.modelType, explorerModel, explorer.title, location, shown, listed)
+        informationState = informationState.copy(registeredDefaultExplorers = registeredDefaultExplorers)
+    }
+
+    fun addCommand(command: Command) {
+        val commands = informationState.commands.toMutableList()
+        commands.add(command)
+        informationState = informationState.copy(commands = commands)
+    }
+
+    fun setAppTitle(appTitle: String){
+        informationState = informationState.copy(appTitle = appTitle)
+    }
+
+    //TODO: is this the right place for this?
+    fun dispatchCommands() {
+        var m: MenuEntry = informationState.commandsMenus[MenuType.MenuBar]!!
+        for (c in informationState.commands) {
+            for (path in c.paths) {
+                val pathSplit = path.split(".")
+                if (pathSplit.size > 4 || pathSplit.isEmpty()) return
+                for (i in pathSplit.indices) {
+                    if (i == 0 && informationState.commandsMenus[MenuType.valueOf(pathSplit[0])] == null) break
+                    m = if (i == 0) {
+                        informationState.commandsMenus[MenuType.valueOf(pathSplit[0])]!!
+                    } else {
+                        m.getMenu(pathSplit[i])
+                    }
+                }
+                m.children.add(c)
+                m.children.sortBy { it.index }
             }
         }
     }
 
-    fun registerExplorer(moduleType: String, explorer: WorkbenchModule<*>){
-        model.registeredExplorers[moduleType] = explorer
-    }
-
-    fun <C>addDefaultExplorer(key: String, id: Int, explorerModel: C, location: ExplorerLocation, shown: Boolean, listed: Boolean){
-        val explorer = getRegisteredExplorer<C>(key)
-        model.registeredDefaultExplorers[id] = WorkbenchDefaultState(explorer.modelType, explorerModel, explorer.title, location, shown, listed)
-    }
-
-    fun <C>getRegisteredExplorer(key: String): WorkbenchModule<C> {
-        val explorer = model.registeredExplorers[key]
-            ?: throw IllegalStateException("Could not find registered Explorer of type $key")
-        return explorer as WorkbenchModule<C>
-    }
-
-    fun <C>getRegisteredEditors(key: String): List<WorkbenchModule<C>> {
-        val editors = model.registeredEditors[key]
-        if (editors == null || editors.isEmpty()) {
-            throw IllegalStateException("Could not find registered Editor of type $key")
-        }
-        return editors as MutableList<WorkbenchModule<C>>
-    }
-
-    fun getRegisteredEditors(moduleState: WorkbenchModuleState<*>?): List<WorkbenchModule<*>> {
-        if (moduleState == null || moduleState.module.moduleType != ModuleType.EDITOR) return emptyList()
-        return getRegisteredEditors<Any>(moduleState.module.modelType)
+    // used for testing
+    internal fun resetInformationState(){
+        informationState = getDefaultWorkbenchDisplayInformation()
     }
 }

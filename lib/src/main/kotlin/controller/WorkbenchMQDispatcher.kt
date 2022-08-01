@@ -4,11 +4,12 @@ import MQ_INTERNAL_EDITOR_STATE_CLOSED
 import MQ_INTERNAL_EDITOR_STATE_SAVED
 import MQ_INTERNAL_EDITOR_STATE_UNSAVED
 import MQ_INTERNAL_TOPIC_PATH_EDITOR
-import model.state.WorkbenchStaticState
+import controller.WorkbenchController.addUnsavedModule
+import controller.WorkbenchController.removeSavedModule
 import model.data.MQClientImpl
 import java.util.concurrent.Executors
 
-internal class WorkbenchMQDispatcher (private val controller: WorkbenchController)
+internal class WorkbenchMQDispatcher
 {
     private var mqClient: MQClientImpl = MQClientImpl
 
@@ -23,9 +24,9 @@ internal class WorkbenchMQDispatcher (private val controller: WorkbenchControlle
             try {
                 val dataId = splitTopic[splitTopic.size-1].toInt()
                 if (msg == MQ_INTERNAL_EDITOR_STATE_UNSAVED) {
-                    controller.addUnsavedModule(type, dataId)
+                    addUnsavedModule(type, dataId)
                 } else if (msg == MQ_INTERNAL_EDITOR_STATE_SAVED || msg == MQ_INTERNAL_EDITOR_STATE_CLOSED) {
-                    controller.removeSavedModule(type, dataId)
+                    removeSavedModule(type, dataId)
                 }
             } catch (exception: NumberFormatException) {
                 return

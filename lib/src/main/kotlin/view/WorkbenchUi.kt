@@ -12,34 +12,40 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.ui.theme.NotoSansTypography
-import controller.WorkbenchController
+import controller.WorkbenchDragController
 import model.data.TabRowKey
 import model.data.enums.DisplayType
 import model.data.enums.ModuleType
 import model.data.enums.WorkbenchState
+import model.state.WorkbenchInformationState
 import org.jetbrains.compose.splitpane.ExperimentalSplitPaneApi
 import view.component.*
 import view.themes.LightColors
 
 @Composable
-internal fun WorkbenchUI(controller: WorkbenchController, workbenchState: WorkbenchState, closeRequest: ()->Unit) {
+internal fun WorkbenchUI(
+    informationState: WorkbenchInformationState,
+    workbenchState: WorkbenchState,
+    closeRequest: ()->Unit
+) {
     MaterialTheme(
         colors = LightColors,
         typography = NotoSansTypography,
     ) {
         DragAndDropWindow(
-            controller = controller,
+            informationState = informationState,
+            dragState = WorkbenchDragController.dragState,
             onCloseRequest = closeRequest,
             tabRowKey = TabRowKey(
                 displayType = DisplayType.WINDOW,
                 ModuleType.BOTH,
-                controller.getMainWindow()
+                informationState.mainWindow
             ),
-            windowScope = { workbenchMenuBar(controller.commandController) }
+            windowScope = { workbenchMenuBar(informationState) }
         ) {
             when (workbenchState) {
                 WorkbenchState.RUNNING -> {
-                    WorkbenchBody(controller)
+                    WorkbenchBody(informationState)
                 }
                 WorkbenchState.STARTING -> {
                     WorkbenchStateInfo("Application is starting.")
@@ -54,41 +60,42 @@ internal fun WorkbenchUI(controller: WorkbenchController, workbenchState: Workbe
 
 @Composable
 @OptIn(ExperimentalSplitPaneApi::class)
-private fun WorkbenchBody(controller: WorkbenchController) {
+private fun WorkbenchBody(informationState: WorkbenchInformationState) {
     Scaffold(
-        topBar = { WorkbenchAppBar(controller) },
+        topBar = { WorkbenchAppBar(informationState) },
     ) {
         val leftExplorerTabRowKey = TabRowKey(
             displayType = DisplayType.LEFT,
             moduleType = ModuleType.EXPLORER,
-            windowState = controller.getMainWindow()
+            windowState = informationState.mainWindow
         )
         val bottomExplorerTabRowKey = TabRowKey(
             displayType = DisplayType.BOTTOM,
             moduleType = ModuleType.EXPLORER,
-            windowState = controller.getMainWindow()
+            windowState = informationState.mainWindow
         )
-        val hasBottomTabs = controller.hasModules(bottomExplorerTabRowKey)
+        val hasBottomTabs = informationState.hasModules(bottomExplorerTabRowKey)
+        println("main Ui")
         Column {
             Row(
                 modifier = Modifier.weight(if (hasBottomTabs) 0.9f else 1f)
             ) {
-                DropTarget(tabRowKey = leftExplorerTabRowKey, controller = controller) {
-                    WorkbenchTabRow(leftExplorerTabRowKey, controller)
+                DropTarget(tabRowKey = leftExplorerTabRowKey, dragState = WorkbenchDragController.dragState) {
+                    WorkbenchTabRow(informationState, leftExplorerTabRowKey)
                 }
-                WorkbenchVerticalSplitPane(splitPaneState = controller.informationState.bottomSplitState) {
+                WorkbenchVerticalSplitPane(splitPaneState = informationState.bottomSplitState) {
                     first {
-                        WorkbenchHorizontalSplitPane(splitPaneState = controller.informationState.leftSplitState) {
+                        WorkbenchHorizontalSplitPane(splitPaneState = informationState.leftSplitState) {
                             first {
-                                WorkbenchTabBody(leftExplorerTabRowKey, controller)
+                                WorkbenchTabBody(informationState, leftExplorerTabRowKey)
                             }
                             second {
-                                WorkbenchEditorSpace(controller)
+                                WorkbenchEditorSpace(informationState)
                             }
                         }
                     }
                     second {
-                        WorkbenchTabBody(bottomExplorerTabRowKey, controller)
+                        WorkbenchTabBody(informationState, bottomExplorerTabRowKey)
                     }
                 }
             }
@@ -98,8 +105,8 @@ private fun WorkbenchBody(controller: WorkbenchController) {
                 verticalAlignment = Alignment.Bottom,
                 horizontalArrangement = Arrangement.Start
             ) {
-                DropTarget(tabRowKey = bottomExplorerTabRowKey, controller = controller) {
-                    WorkbenchTabRow(bottomExplorerTabRowKey, controller)
+                DropTarget(tabRowKey = bottomExplorerTabRowKey, dragState = WorkbenchDragController.dragState) {
+                    WorkbenchTabRow(informationState, bottomExplorerTabRowKey)
                 }
             }
         }

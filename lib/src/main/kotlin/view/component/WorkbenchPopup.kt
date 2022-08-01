@@ -15,7 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.focus.focusTarget
 import androidx.compose.ui.unit.dp
-import controller.WorkbenchController
+import controller.WorkbenchController.removePopUp
 import model.data.TabRowKey
 import model.data.enums.OnCloseResponse
 import model.state.PopUpState
@@ -67,13 +67,13 @@ internal fun WorkbenchPopupSave (onAction: (OnCloseResponse) -> Unit, dismissibl
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-internal fun WorkbenchPopupActionFailed ( controller: WorkbenchController, action: String, popUpState: PopUpState, tabRowKey: TabRowKey) {
+internal fun WorkbenchPopupActionFailed (action: String, popUpState: PopUpState, tabRowKey: TabRowKey) {
     val openDialog = remember { mutableStateOf(true) }
     if (openDialog.value) {
         AlertDialog(
             onDismissRequest = {
                 openDialog.value = false
-                controller.removePopUp(tabRowKey)
+                removePopUp(tabRowKey)
             },
             title = {
                 Text(text = "Can not $action")
@@ -86,7 +86,7 @@ internal fun WorkbenchPopupActionFailed ( controller: WorkbenchController, actio
                     Button(
                         onClick = {
                             openDialog.value = false
-                            controller.removePopUp(tabRowKey)
+                            removePopUp(tabRowKey)
                         }
                     ) {
                         Text("Ok")

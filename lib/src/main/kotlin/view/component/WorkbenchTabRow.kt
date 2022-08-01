@@ -18,10 +18,19 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import controller.WorkbenchController
+import controller.WorkbenchController.moduleStateSelectorPressed
+import controller.WorkbenchController.moduleToWindow
+import controller.WorkbenchController.removePopUp
+import controller.WorkbenchController.reselect
+import controller.WorkbenchController.save
+import controller.WorkbenchController.setPopUp
+import controller.WorkbenchController.updateModule
+import controller.WorkbenchDragController
 import model.data.TabRowKey
 import model.data.WorkbenchModule
 import model.data.enums.OnCloseResponse
 import model.data.enums.PopUpType
+import model.state.WorkbenchInformationState
 import model.state.WorkbenchModuleState
 import util.vertical
 
@@ -29,10 +38,10 @@ import util.vertical
  * Component combining tab headers and currently selected Module of the given controller
  */
 @Composable
-internal fun TabSpace(tabRowKey: TabRowKey, controller: WorkbenchController, onSelect: (WorkbenchModuleState<*>) -> Unit){
+internal fun TabSpace(informationState: WorkbenchInformationState, tabRowKey: TabRowKey, onSelect: (WorkbenchModuleState<*>) -> Unit){
     Column {
-        WorkbenchTabRow(tabRowKey, controller, onSelect)
-        WorkbenchTabBody(tabRowKey, controller)
+        WorkbenchTabRow(informationState, tabRowKey, onSelect)
+        WorkbenchTabBody(informationState, tabRowKey)
     }
 }
 
@@ -40,41 +49,41 @@ internal fun TabSpace(tabRowKey: TabRowKey, controller: WorkbenchController, onS
  * Component which shows Tab headers for all modules in the given controller
  */
 @Composable
-internal fun WorkbenchTabRow(tabRowKey: TabRowKey, controller: WorkbenchController, onSelect: (WorkbenchModuleState<*>) -> Unit = {}) {
+internal fun WorkbenchTabRow(informationState: WorkbenchInformationState, tabRowKey: TabRowKey, onSelect: (WorkbenchModuleState<*>) -> Unit = {}) {
     if (tabRowKey.displayType.orientation.toInt() != 0) {
         Box {
-            VerticalWorkbenchTabRow(tabRowKey, controller, onSelect)
+            VerticalWorkbenchTabRow(informationState, tabRowKey, onSelect)
         }
     } else {
         Box {
-           HorizontalWorkbenchTabRow(tabRowKey, controller, onSelect)
+           HorizontalWorkbenchTabRow(informationState, tabRowKey, onSelect)
         }
     }
-    handlePopUps(controller, tabRowKey)
+    handlePopUps(informationState, tabRowKey)
 }
 
 /**
  * Component which shows the currently selected Module of the given controller
  */
 @Composable
-internal fun WorkbenchTabBody(tabRowKey: TabRowKey, controller: WorkbenchController) {
-    val hasMultipleEditors = controller.getRegisteredEditors(controller.getSelectedModule(tabRowKey)).size > 1
-    val selected = controller.informationState.tabRowState[tabRowKey]?.selected
+internal fun WorkbenchTabBody(informationState: WorkbenchInformationState, tabRowKey: TabRowKey) {
+    val hasMultipleEditors = informationState.getRegisteredEditors<Any>(informationState.getSelectedModule(tabRowKey)).size > 1
+    val selected = informationState.tabRowState[tabRowKey]?.selected
     Column {
         Box(modifier = Modifier.weight(if (hasMultipleEditors) 0.85f else 1f).fillMaxSize()) {
             selected?.content()
         }
         if(hasMultipleEditors && selected != null){
             Box(modifier = Modifier.weight(0.15f).fillMaxSize()) {
-                WorkbenchEditorSelector(controller = controller, tabRowKey = tabRowKey, moduleState = selected)
+                WorkbenchEditorSelector(informationState = informationState, tabRowKey = tabRowKey, moduleState = selected)
             }
         }
     }
 }
 
 @Composable
-internal fun WorkbenchEditorSelector(tabRowKey: TabRowKey, controller: WorkbenchController, moduleState: WorkbenchModuleState<*>) {
-    val editors = controller.getRegisteredEditors(controller.getSelectedModule(tabRowKey))
+internal fun WorkbenchEditorSelector(informationState: WorkbenchInformationState, tabRowKey: TabRowKey, moduleState: WorkbenchModuleState<*>) {
+    val editors = informationState.getRegisteredEditors<Any>(informationState.getSelectedModule(tabRowKey))
     Row(modifier = Modifier.fillMaxSize(),
         horizontalArrangement = Arrangement.Start,
         verticalAlignment = Alignment.Bottom
@@ -82,12 +91,12 @@ internal fun WorkbenchEditorSelector(tabRowKey: TabRowKey, controller: Workbench
         for (editor: WorkbenchModule<*> in editors){
             IconButton(
                 onClick = {
-                    if (controller.isUnsaved(moduleState)) {
-                        controller.setPopUp(tabRowKey, PopUpType.SAVE){
-                            controller.updateModule(controller.getSelectedModule(tabRowKey)!!, editor)
+                    if (informationState.isUnsaved(moduleState)) {
+                        setPopUp(tabRowKey, PopUpType.SAVE){
+                            updateModule(informationState.getSelectedModule(tabRowKey)!!, editor)
                         }
                     } else {
-                        controller.updateModule(controller.getSelectedModule(tabRowKey)!!, editor)
+                        updateModule(informationState.getSelectedModule(tabRowKey)!!, editor)
                     }
                 }
             ){
@@ -98,15 +107,15 @@ internal fun WorkbenchEditorSelector(tabRowKey: TabRowKey, controller: Workbench
 }
 
 @Composable
-private fun HorizontalWorkbenchTabRow(tabRowKey: TabRowKey, controller: WorkbenchController, onSelect: (WorkbenchModuleState<*>) -> Unit) {
+private fun HorizontalWorkbenchTabRow(informationState: WorkbenchInformationState, tabRowKey: TabRowKey, onSelect: (WorkbenchModuleState<*>) -> Unit) {
     val scrollState = rememberLazyListState()
-    val moduleStates = controller.getModulesFiltered(tabRowKey)
-    val preview = controller.getPreviewTitle(tabRowKey)
-    val selected = controller.getSelectedModule(tabRowKey)
-    ScrollToSelected(tabRowKey, controller, scrollState)
+    val moduleStates = informationState.getModulesFiltered(tabRowKey)
+    val preview = informationState.getPreviewTitle(tabRowKey)
+    val selected = informationState.getSelectedModule(tabRowKey)
+    ScrollToSelected(informationState, tabRowKey, scrollState)
     Column {
         LazyRow(state = scrollState) {
-            WorkbenchTabs(selected, preview, moduleStates, tabRowKey, controller, onSelect)
+            WorkbenchTabs(informationState, selected, preview, moduleStates, tabRowKey, onSelect)
         }
         HorizontalScrollbar(
             modifier = Modifier.align(Alignment.CenterHorizontally),
@@ -116,15 +125,15 @@ private fun HorizontalWorkbenchTabRow(tabRowKey: TabRowKey, controller: Workbenc
 }
 
 @Composable
-private fun VerticalWorkbenchTabRow(tabRowKey: TabRowKey, controller: WorkbenchController, onSelect: (WorkbenchModuleState<*>) -> Unit) {
+private fun VerticalWorkbenchTabRow(informationState: WorkbenchInformationState, tabRowKey: TabRowKey, onSelect: (WorkbenchModuleState<*>) -> Unit) {
     val scrollState = rememberLazyListState()
-    val moduleStates = controller.getModulesFiltered(tabRowKey)
-    val preview = controller.getPreviewTitle(tabRowKey)
-    val selected = controller.getSelectedModule(tabRowKey)
-    ScrollToSelected(tabRowKey, controller, scrollState)
+    val moduleStates = informationState.getModulesFiltered(tabRowKey)
+    val preview = informationState.getPreviewTitle(tabRowKey)
+    val selected = informationState.getSelectedModule(tabRowKey)
+    ScrollToSelected(informationState, tabRowKey, scrollState)
     Row {
         LazyColumn(state = scrollState) {
-            WorkbenchTabs(selected, preview, moduleStates, tabRowKey, controller, onSelect)
+            WorkbenchTabs(informationState, selected, preview, moduleStates, tabRowKey, onSelect)
         }
         VerticalScrollbar(
             modifier = Modifier.align(Alignment.CenterVertically),
@@ -134,43 +143,43 @@ private fun VerticalWorkbenchTabRow(tabRowKey: TabRowKey, controller: WorkbenchC
 }
 
 @Composable
-private fun handlePopUps(controller: WorkbenchController, tabRowKey: TabRowKey){
-    if (controller.isShowPopUp(tabRowKey)) {
-        val selected = controller.getSelectedModule(tabRowKey)!!
-        val popUpState = controller.informationState.tabRowState[tabRowKey]!!.popUpState!!
+private fun handlePopUps(informationState: WorkbenchInformationState, tabRowKey: TabRowKey){
+    if (informationState.isShowPopUp(tabRowKey)) {
+        val selected = informationState.getSelectedModule(tabRowKey)!!
+        val popUpState = informationState.tabRowState[tabRowKey]!!.popUpState!!
         when (popUpState.type) {
             PopUpType.SAVE ->  WorkbenchPopupSave({resp ->
                 when (resp) {
                     OnCloseResponse.DISCARD -> popUpState.action.invoke()
-                    OnCloseResponse.SAVE -> controller.save(selected, popUpState.action)
-                    OnCloseResponse.CANCEL -> controller.removePopUp(tabRowKey)
+                    OnCloseResponse.SAVE -> save(selected, popUpState.action)
+                    OnCloseResponse.CANCEL -> removePopUp(tabRowKey)
                 }
             }, false)
-            PopUpType.SAVE_FAILED -> WorkbenchPopupActionFailed(controller,"save", popUpState, tabRowKey)
-            PopUpType.CLOSE_FAILED -> WorkbenchPopupActionFailed(controller,"close", popUpState, tabRowKey)
+            PopUpType.SAVE_FAILED -> WorkbenchPopupActionFailed("save", popUpState, tabRowKey)
+            PopUpType.CLOSE_FAILED -> WorkbenchPopupActionFailed("close", popUpState, tabRowKey)
             else -> throw UnsupportedOperationException()
         }
     }
 }
 
 @Composable
-private fun ScrollToSelected(tabRowKey: TabRowKey, controller: WorkbenchController, state: LazyListState){
-    LaunchedEffect(controller.getModulesFiltered(tabRowKey).size) {
-        state.scrollToItem(controller.getScrollToIndex(tabRowKey))
+private fun ScrollToSelected(informationState: WorkbenchInformationState, tabRowKey: TabRowKey, state: LazyListState){
+    LaunchedEffect(informationState.getModulesFiltered(tabRowKey).size) {
+        state.scrollToItem(informationState.getScrollToIndex(tabRowKey))
     }
 }
 
-private fun LazyListScope.WorkbenchTabs(selected: WorkbenchModuleState<*>?,preview: String?, moduleStates: List<WorkbenchModuleState<*>> ,tabRowKey: TabRowKey, controller: WorkbenchController, onSelect: (WorkbenchModuleState<*>) -> Unit) {
+private fun LazyListScope.WorkbenchTabs(informationState: WorkbenchInformationState, selected: WorkbenchModuleState<*>?,preview: String?, moduleStates: List<WorkbenchModuleState<*>> ,tabRowKey: TabRowKey, onSelect: (WorkbenchModuleState<*>) -> Unit) {
     preview(preview, tabRowKey)
     items(moduleStates){ item ->
         WorkbenchTab(
+            informationState = informationState,
             moduleState = item,
-            controller = controller,
             tabRowKey = tabRowKey,
             selected = selected == item,
             onClick = {
                         onSelect.invoke(item)
-                        controller.moduleStateSelectorPressed(tabRowKey, item)
+                        moduleStateSelectorPressed(tabRowKey, item)
                       },
         )
     }
@@ -188,24 +197,24 @@ private fun LazyListScope.preview(preview: String?, tabRowKey: TabRowKey) {
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun WorkbenchTab(moduleState: WorkbenchModuleState<*>, controller: WorkbenchController, tabRowKey: TabRowKey, selected: Boolean, onClick: ()->Unit) {
+private fun WorkbenchTab(informationState: WorkbenchInformationState, moduleState: WorkbenchModuleState<*>, tabRowKey: TabRowKey, selected: Boolean, onClick: ()->Unit) {
     val writerModifier = getTabModifier(tabRowKey, selected, onClick)
 
-    DragTarget(module = moduleState, controller = controller) {
+    DragTarget(module = moduleState, informationState = informationState, dragState = WorkbenchDragController.dragState) {
         ContextMenuArea(items = {
             listOf(
                 ContextMenuItem("Open in Window") {
-                    controller.reselect(moduleState)
-                    controller.moduleToWindow(moduleState) },
+                    reselect(moduleState)
+                    moduleToWindow(moduleState) },
             )
         }) {
             WorkbenchTab(writerModifier, moduleState.getTitle()) {
-                if (controller.isUnsaved(moduleState)) {
-                    controller.setPopUp(type = PopUpType.SAVE, tabRowKey = tabRowKey) {
-                        controller.close(moduleState)
+                if (informationState.isUnsaved(moduleState)) {
+                    setPopUp(type = PopUpType.SAVE, tabRowKey = tabRowKey) {
+                        WorkbenchController.close(moduleState)
                     }
                 } else {
-                    controller.close(moduleState)
+                    WorkbenchController.close(moduleState)
                 }
             }
         }

@@ -1,13 +1,13 @@
 package model
 
-import model.state.WorkbenchStaticState
+import model.state.getDefaultWorkbenchDisplayInformation
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-internal class WorkbenchModelTest {
+internal class WorkbenchInformationStateTest {
 
-    private val sut = WorkbenchStaticState()
+    private val sut = getDefaultWorkbenchDisplayInformation()
 
     @Test
     fun initialStates() {

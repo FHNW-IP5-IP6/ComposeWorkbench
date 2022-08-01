@@ -18,13 +18,14 @@ import kotlin.test.assertTrue
 
 class WorkbenchDragControllerTest {
 
-    private var controller = WorkbenchController("appTitle")
-    private var sut = WorkbenchDragController(controller)
+    private var controller = WorkbenchController
+    private var sut = WorkbenchDragController
 
     @BeforeEach
     fun setup() {
-        controller = WorkbenchController("appTitle")
-        sut = WorkbenchDragController(controller)
+        controller.resetInformationState()
+        controller.setAppTitle("appTitle")
+        sut.resetDragState()
     }
 
     @Test
@@ -67,11 +68,11 @@ class WorkbenchDragControllerTest {
         windowState2.hasFocus = false
 
         sut.setPosition(DpOffset(60.dp, 60.dp))
-        assertEquals(windowState1, sut.getCurrentReverseDopTarget()?.tabRowKey?.windowState)
+        assertEquals(windowState1, sut.dragState.getCurrentReverseDopTarget()?.tabRowKey?.windowState)
 
         windowState2.hasFocus = true
         windowState1.hasFocus = false
-        assertEquals(windowState2, sut.getCurrentReverseDopTarget()?.tabRowKey?.windowState)
+        assertEquals(windowState2, sut.dragState.getCurrentReverseDopTarget()?.tabRowKey?.windowState)
     }
 
     @Test
@@ -81,7 +82,7 @@ class WorkbenchDragControllerTest {
         val explorerLeft = controller.requestExplorerState(id = 1, modelType = "type", explorerController = "model1", displayType = DisplayType.LEFT)
         val explorerBottom = controller.requestExplorerState(id = 2, modelType = "type", explorerController = "model2", displayType = DisplayType.BOTTOM)
 
-        val tabRowKeyBottom = TabRowKey(DisplayType.BOTTOM, ModuleType.EXPLORER, controller.getMainWindow())
+        val tabRowKeyBottom = TabRowKey(DisplayType.BOTTOM, ModuleType.EXPLORER, controller.informationState.mainWindow)
         val target = DropTarget(false, tabRowKeyBottom, Rect(0f, 50f, 100f, 100f))
 
         sut.setModuleState(explorerLeft)
@@ -105,16 +106,16 @@ class WorkbenchDragControllerTest {
         val editor2 = controller.requestEditorState<String>("type", 2)
         editor2.displayType = DisplayType.TAB2
         val explorer = controller.requestExplorerState(id = 1, modelType = "type", explorerController = "model", displayType = DisplayType.LEFT)
-        val editorTabRowKey1 = TabRowKey(DisplayType.TAB1, ModuleType.EDITOR, controller.getMainWindow())
-        val editorTabRowKey2 = TabRowKey(DisplayType.TAB2, ModuleType.EDITOR, controller.getMainWindow())
-        val explorerTabRowKey = TabRowKey(DisplayType.LEFT, ModuleType.EXPLORER, controller.getMainWindow())
+        val editorTabRowKey1 = TabRowKey(DisplayType.TAB1, ModuleType.EDITOR, controller.informationState.mainWindow)
+        val editorTabRowKey2 = TabRowKey(DisplayType.TAB2, ModuleType.EDITOR, controller.informationState.mainWindow)
+        val explorerTabRowKey = TabRowKey(DisplayType.LEFT, ModuleType.EXPLORER, controller.informationState.mainWindow)
 
         //Only one reverse target (main window)
-        sut.addReverseDropTarget(TabRowKey(DisplayType.WINDOW, ModuleType.BOTH, controller.getMainWindow()), Rect(0f, 0f, 100f, 100f))
-        assertEquals(controller.getMainWindow() ,sut.getCurrentReverseDopTarget()?.tabRowKey?.windowState)
-        assertFalse { sut.isCurrentDropTarget(explorerTabRowKey) }
-        assertFalse { sut.isCurrentDropTarget(editorTabRowKey1) }
-        assertFalse { sut.isCurrentDropTarget(editorTabRowKey2) }
+        sut.addReverseDropTarget(TabRowKey(DisplayType.WINDOW, ModuleType.BOTH, controller.informationState.mainWindow), Rect(0f, 0f, 100f, 100f))
+        assertEquals(controller.informationState.mainWindow ,sut.dragState.getCurrentReverseDopTarget()?.tabRowKey?.windowState)
+        assertFalse { sut.dragState.isCurrentDropTarget(explorerTabRowKey) }
+        assertFalse { sut.dragState.isCurrentDropTarget(editorTabRowKey1) }
+        assertFalse { sut.dragState.isCurrentDropTarget(editorTabRowKey2) }
 
         sut.setModuleState(editor1)
         sut.addDropTarget(editorTabRowKey1, Rect(0f,0f,10f,10f))
@@ -124,18 +125,18 @@ class WorkbenchDragControllerTest {
 
         //one drop target is valid and position matches bounds
         sut.setPosition(DpOffset(25.dp, 25.dp))
-        assertFalse { sut.isCurrentDropTarget(explorerTabRowKey) }
-        assertFalse { sut.isCurrentDropTarget(editorTabRowKey1) }
-        assertTrue { sut.isCurrentDropTarget(editorTabRowKey2) }
+        assertFalse { sut.dragState.isCurrentDropTarget(explorerTabRowKey) }
+        assertFalse { sut.dragState.isCurrentDropTarget(editorTabRowKey1) }
+        assertTrue { sut.dragState.isCurrentDropTarget(editorTabRowKey2) }
         assertTrue { sut.isValidDropTarget(editorTabRowKey2) }
 
         sut.setModuleState(explorer)
 
         //drop target is no longer valid, position matches bounds
         sut.setPosition(DpOffset(25.dp, 25.dp))
-        assertFalse { sut.isCurrentDropTarget(explorerTabRowKey) }
-        assertFalse { sut.isCurrentDropTarget(editorTabRowKey1) }
-        assertTrue { sut.isCurrentDropTarget(editorTabRowKey2) }
+        assertFalse { sut.dragState.isCurrentDropTarget(explorerTabRowKey) }
+        assertFalse { sut.dragState.isCurrentDropTarget(editorTabRowKey1) }
+        assertTrue { sut.dragState.isCurrentDropTarget(editorTabRowKey2) }
         assertFalse { sut.isValidDropTarget(editorTabRowKey2) }
     }
 }

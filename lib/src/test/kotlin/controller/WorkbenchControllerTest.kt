@@ -12,11 +12,12 @@ import kotlin.test.assertNotNull
 
 class WorkbenchControllerTest {
 
-    private var sut = WorkbenchController("appTitle")
+    private var sut = WorkbenchController
 
     @BeforeEach
     fun setup(){
-        sut = WorkbenchController("appTitle")
+        sut.resetInformationState()
+        sut.setAppTitle("appTitle")
     }
 
     @Test
@@ -43,7 +44,7 @@ class WorkbenchControllerTest {
 
     @Test
     fun getAppTitle() {
-        assertEquals("appTitle", sut.getAppTitle())
+        assertEquals("appTitle", sut.informationState.appTitle)
     }
 
     @Test
@@ -52,11 +53,11 @@ class WorkbenchControllerTest {
         sut.registerEditor("type", editorModule)
         val moduleState = sut.requestEditorState<String>("type", 666)
 
-        val tabRowKey = TabRowKey(displayType = moduleState.displayType, moduleType = ModuleType.EDITOR, windowState = sut.getMainWindow())
-        assertEquals(1, sut.getModulesFiltered(tabRowKey).size)
-        assertEquals(moduleState, sut.getSelectedModule(tabRowKey))
-        assertEquals(1, sut.getRegisteredEditors<String>("type").size)
-        assertEquals(editorModule, sut.getRegisteredEditors<String>("type").first())
+        val tabRowKey = TabRowKey(displayType = moduleState.displayType, moduleType = ModuleType.EDITOR, windowState = sut.informationState.mainWindow)
+        assertEquals(1, sut.informationState.getModulesFiltered(tabRowKey).size)
+        assertEquals(moduleState, sut.informationState.getSelectedModule(tabRowKey))
+        assertEquals(1, sut.informationState.getRegisteredEditors<String>("type").size)
+        assertEquals(editorModule, sut.informationState.getRegisteredEditors<String>("type").first())
     }
 
     @Test
@@ -65,10 +66,10 @@ class WorkbenchControllerTest {
         sut.registerExplorer("type", explorerModule)
         val moduleState = sut.requestExplorerState(id = 0, modelType = "type", explorerController = "model1", DisplayType.LEFT)
 
-        val tabRowKey = TabRowKey(displayType = moduleState.displayType, moduleType = ModuleType.EXPLORER, windowState = sut.getMainWindow())
-        assertEquals(1, sut.getModulesFiltered(tabRowKey).size)
-        assertEquals(moduleState, sut.getSelectedModule(tabRowKey))
-        assertEquals(explorerModule, sut.getRegisteredExplorer<String>("type"))
+        val tabRowKey = TabRowKey(displayType = moduleState.displayType, moduleType = ModuleType.EXPLORER, windowState = sut.informationState.mainWindow)
+        assertEquals(1, sut.informationState.getModulesFiltered(tabRowKey).size)
+        assertEquals(moduleState, sut.informationState.getSelectedModule(tabRowKey))
+        assertEquals(explorerModule, sut.informationState.getRegisteredExplorer<String>("type"))
     }
 
     @Test
@@ -77,18 +78,18 @@ class WorkbenchControllerTest {
         sut.registerEditor("type", editorModule)
         sut.requestEditorState<String>("type", 666)
 
-        val tabRowKey = TabRowKey(displayType = DisplayType.TAB1, moduleType = ModuleType.EDITOR, windowState = sut.getMainWindow())
-        assertEquals(1, sut.getModulesFiltered(tabRowKey).size)
-        assertNotNull(sut.getSelectedModule(tabRowKey))
+        val tabRowKey = TabRowKey(displayType = DisplayType.TAB1, moduleType = ModuleType.EDITOR, windowState = sut.informationState.mainWindow)
+        assertEquals(1, sut.informationState.getModulesFiltered(tabRowKey).size)
+        assertNotNull(sut.informationState.getSelectedModule(tabRowKey))
 
-        val moduleState = sut.getSelectedModule(tabRowKey)!!
+        val moduleState = sut.informationState.getSelectedModule(tabRowKey)!!
         val window = sut.moduleToWindow(moduleState)
-        assertFalse { sut.getModulesFiltered(tabRowKey).contains(moduleState) }
+        assertFalse { sut.informationState.getModulesFiltered(tabRowKey).contains(moduleState) }
 
         val tabRowKeyWindow = TabRowKey(displayType = DisplayType.WINDOW, moduleType = ModuleType.BOTH, windowState = window)
         assertEquals(DisplayType.WINDOW, moduleState.displayType)
-        assertEquals(1, sut.getModulesFiltered(tabRowKeyWindow).size)
-        assertEquals(moduleState, sut.getSelectedModule(tabRowKeyWindow))
+        assertEquals(1, sut.informationState.getModulesFiltered(tabRowKeyWindow).size)
+        assertEquals(moduleState, sut.informationState.getSelectedModule(tabRowKeyWindow))
         assertEquals(1, sut.informationState.windows.size)
     }
 
@@ -98,18 +99,18 @@ class WorkbenchControllerTest {
         sut.registerExplorer("type", explorerModule)
         sut.requestExplorerState<String>( 0,"type", "model", DisplayType.LEFT)
 
-        val tabRowKey = TabRowKey(displayType = DisplayType.LEFT, moduleType = ModuleType.EXPLORER, windowState = sut.getMainWindow())
-        assertEquals(1, sut.getModulesFiltered(tabRowKey).size)
-        assertNotNull(sut.getSelectedModule(tabRowKey))
+        val tabRowKey = TabRowKey(displayType = DisplayType.LEFT, moduleType = ModuleType.EXPLORER, windowState = sut.informationState.mainWindow)
+        assertEquals(1, sut.informationState.getModulesFiltered(tabRowKey).size)
+        assertNotNull(sut.informationState.getSelectedModule(tabRowKey))
 
-        val moduleState = sut.getSelectedModule(tabRowKey)!!
+        val moduleState = sut.informationState.getSelectedModule(tabRowKey)!!
         val window = sut.moduleToWindow(moduleState)
-        assertFalse { sut.getModulesFiltered(tabRowKey).contains(moduleState) }
+        assertFalse { sut.informationState.getModulesFiltered(tabRowKey).contains(moduleState) }
 
         val tabRowKeyWindow = TabRowKey(displayType = DisplayType.WINDOW, moduleType = ModuleType.BOTH, windowState = window)
         assertEquals(DisplayType.WINDOW, moduleState.displayType)
-        assertEquals(1, sut.getModulesFiltered(tabRowKeyWindow).size)
-        assertEquals(moduleState, sut.getSelectedModule(tabRowKeyWindow))
+        assertEquals(1, sut.informationState.getModulesFiltered(tabRowKeyWindow).size)
+        assertEquals(moduleState, sut.informationState.getSelectedModule(tabRowKeyWindow))
         assertEquals(1, sut.informationState.windows.size)
     }
 }

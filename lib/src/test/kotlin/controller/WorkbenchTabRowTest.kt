@@ -15,40 +15,41 @@ import kotlin.test.assertTrue
 
 class WorkbenchTabRowTest {
 
-    private var sut = WorkbenchController("appTitle")
+    private var sut = WorkbenchController
     private val displayType = DisplayType.LEFT
     private val moduleType = ModuleType.EXPLORER
 
-    private var tabRowKey = TabRowKey(displayType, moduleType, sut.getMainWindow())
+    private var tabRowKey = TabRowKey(displayType, moduleType, sut.informationState.mainWindow)
 
     @BeforeEach
     fun setup(){
-        sut = WorkbenchController("appTitle")
-        tabRowKey = TabRowKey(displayType, moduleType, sut.getMainWindow())
+        sut.resetInformationState()
+        sut.setAppTitle("appTitle")
+        tabRowKey = TabRowKey(displayType, moduleType, sut.informationState.mainWindow)
     }
 
     @Test
     fun removeModule_NoModules() {
-        assertEquals(0, sut.getModulesFiltered(tabRowKey).size)
+        assertEquals(0, sut.informationState.getModulesFiltered(tabRowKey).size)
         sut.removeModuleState(getNewModuleState())
 
-        assertEquals(0, sut.getModulesFiltered(tabRowKey).size)
+        assertEquals(0, sut.informationState.getModulesFiltered(tabRowKey).size)
     }
 
     @Test
     fun removeModule_RemoveModule() {
         val moduleState = getNewModuleState()
         sut.addModuleState(moduleState)
-        assertTrue { sut.getModulesFiltered(tabRowKey).contains(moduleState) }
-        assertEquals(moduleState, sut.getSelectedModule(tabRowKey))
+        assertTrue { sut.informationState.getModulesFiltered(tabRowKey).contains(moduleState) }
+        assertEquals(moduleState, sut.informationState.getSelectedModule(tabRowKey))
 
         sut.removeModuleState(moduleState)
-        assertEquals(0, sut.getModulesFiltered(tabRowKey).size)
+        assertEquals(0, sut.informationState.getModulesFiltered(tabRowKey).size)
     }
 
     @Test
     fun getIndex_NoExplorersNoExplorer() {
-        assertEquals(0, sut.getIndex(null, tabRowKey))
+        assertEquals(0, sut.informationState.getIndex(null, tabRowKey))
     }
 
     @Test
@@ -56,7 +57,7 @@ class WorkbenchTabRowTest {
         sut.registerExplorer(moduleType = "String", explorer = getModule())
         val explorer = sut.requestExplorerState(id = 1, modelType = "String", explorerController = "model", displayType = displayType)
 
-        assertEquals(0, sut.getIndex(explorer, TabRowKey(explorer)))
+        assertEquals(0, sut.informationState.getIndex(explorer.id, TabRowKey(explorer)))
     }
 
     @Test
@@ -65,8 +66,8 @@ class WorkbenchTabRowTest {
         val explorer1 = sut.requestExplorerState(id = 1, modelType = "String", explorerController = "model", displayType = displayType)
         val explorer2 = sut.requestExplorerState(id = 1, modelType = "String", explorerController = "model", displayType = DisplayType.BOTTOM)
 
-        assertEquals(0, sut.getIndex(explorer1, TabRowKey(explorer1)))
-        assertEquals(0, sut.getIndex(explorer2, TabRowKey(explorer2)))
+        assertEquals(0, sut.informationState.getIndex(explorer1.id, TabRowKey(explorer1)))
+        assertEquals(0, sut.informationState.getIndex(explorer2.id, TabRowKey(explorer2)))
     }
 
     @Test
@@ -75,8 +76,8 @@ class WorkbenchTabRowTest {
         val explorer1 = sut.requestExplorerState(id = 1, modelType = "String", explorerController = "model1", displayType = displayType)
         val explorer2 = sut.requestExplorerState(id = 2, modelType = "String", explorerController = "model2", displayType = displayType)
 
-        assertEquals(0, sut.getIndex(explorer2, TabRowKey(explorer2)))
-        assertEquals(1, sut.getIndex(explorer1, TabRowKey(explorer1)))
+        assertEquals(0, sut.informationState.getIndex(explorer2.id, TabRowKey(explorer2)))
+        assertEquals(1, sut.informationState.getIndex(explorer1.id, TabRowKey(explorer1)))
     }
 
     @Test
@@ -85,9 +86,9 @@ class WorkbenchTabRowTest {
         val explorer1 = sut.requestExplorerState(id = 1, modelType = "String", explorerController = "model1", displayType = displayType)
         sut.requestExplorerState(id = 2, modelType = "String", explorerController = "model2", displayType = displayType)
 
-        assertFalse { sut.getSelectedModule(TabRowKey(explorer1)) == explorer1 }
+        assertFalse { sut.informationState.getSelectedModule(TabRowKey(explorer1)) == explorer1 }
         sut.moduleStateSelectorPressed(TabRowKey(explorer1), explorer1)
-        assertEquals(explorer1, sut.getSelectedModule(TabRowKey(explorer1)))
+        assertEquals(explorer1, sut.informationState.getSelectedModule(TabRowKey(explorer1)))
     }
 
     @Test
@@ -96,9 +97,9 @@ class WorkbenchTabRowTest {
         val explorer1 = sut.requestExplorerState(id = 1, modelType = "String", explorerController = "model1", displayType = displayType)
         val explorer2 = sut.requestExplorerState(id = 2, modelType = "String", explorerController = "model2", displayType = displayType)
 
-        assertEquals(explorer2, sut.getSelectedModule(tabRowKey))
+        assertEquals(explorer2, sut.informationState.getSelectedModule(tabRowKey))
         sut.moduleStateSelectorPressed(tabRowKey, explorer1)
-        assertEquals(explorer1, sut.getSelectedModule(tabRowKey))
+        assertEquals(explorer1, sut.informationState.getSelectedModule(tabRowKey))
     }
 
     @Test
@@ -107,7 +108,7 @@ class WorkbenchTabRowTest {
         val explorer1 = sut.requestExplorerState(id = 1, modelType = "String", explorerController = "model", displayType = displayType)
 
         sut.moduleStateSelectorPressed(tabRowKey, explorer1)
-        assertNull(sut.getSelectedModule(tabRowKey))
+        assertNull(sut.informationState.getSelectedModule(tabRowKey))
     }
 
     @OptIn(ExperimentalSplitPaneApi::class)
@@ -120,7 +121,7 @@ class WorkbenchTabRowTest {
         assertEquals( 0.25f, sut.informationState.leftSplitState.positionPercentage )
 
         sut.moduleStateSelectorPressed(tabRowKey, explorer)
-        assertNull(sut.getSelectedModule(tabRowKey))
+        assertNull(sut.informationState.getSelectedModule(tabRowKey))
         assertFalse { sut.informationState.leftSplitState.moveEnabled }
         assertEquals( 0f, sut.informationState.leftSplitState.positionPercentage )
     }
@@ -131,12 +132,12 @@ class WorkbenchTabRowTest {
         sut.requestExplorerState(id = 1, modelType = "String", explorerController = "model1", displayType = displayType)
         val moduleState2 = sut.requestExplorerState(id = 2, modelType = "String", explorerController = "model2", displayType = displayType)
         val moduleState3 = sut.requestExplorerState(id = 3, modelType = "String", explorerController = "model3", displayType = displayType)
-        assertEquals(moduleState3, sut.getSelectedModule(tabRowKey))
+        assertEquals(moduleState3, sut.informationState.getSelectedModule(tabRowKey))
 
         sut.moduleStateSelectorPressed(tabRowKey,moduleState2)
-        assertEquals(moduleState2, sut.getSelectedModule(tabRowKey))
+        assertEquals(moduleState2, sut.informationState.getSelectedModule(tabRowKey))
         sut.reselect(moduleState2)
-        assertEquals(moduleState3, sut.getSelectedModule(tabRowKey))
+        assertEquals(moduleState3, sut.informationState.getSelectedModule(tabRowKey))
     }
 
     @Test
@@ -145,15 +146,15 @@ class WorkbenchTabRowTest {
         sut.requestExplorerState(id = 1, modelType = "String", explorerController = "model1", displayType = displayType)
         val moduleState2 = sut.requestExplorerState(id = 2, modelType = "String", explorerController = "model2", displayType = displayType)
         val moduleState3 = sut.requestExplorerState(id = 3, modelType = "String", explorerController = "model3", displayType = displayType)
-        assertEquals(moduleState3, sut.getSelectedModule(tabRowKey))
+        assertEquals(moduleState3, sut.informationState.getSelectedModule(tabRowKey))
 
         sut.reselect(moduleState2)
-        assertEquals(moduleState3, sut.getSelectedModule(tabRowKey))
+        assertEquals(moduleState3, sut.informationState.getSelectedModule(tabRowKey))
     }
 
     private fun getNewModuleState(): WorkbenchModuleState<*> {
         val module = getModule()
-        return WorkbenchModuleState(id = 1, controller = "model", module = module, displayType = displayType, window = sut.getMainWindow())
+        return WorkbenchModuleState(id = 1, controller = "model", module = module, displayType = displayType, window = sut.informationState.mainWindow)
     }
 
     private fun getModule() :WorkbenchModule<String> {
