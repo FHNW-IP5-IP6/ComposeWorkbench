@@ -3,7 +3,7 @@ package model.state
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyShortcut
-import controller.WorkbenchController
+import controller.WorkbenchAction
 import model.data.*
 import model.data.enums.DisplayType
 import model.data.enums.MenuType
@@ -153,22 +153,22 @@ internal fun getWorkbenchCommands(): List<Command> {
         listOf(
             Command(text = "Save All",
                 paths = mutableListOf("${MenuType.MenuBar.name}.File"),
-                action = { WorkbenchController.saveAll() },
+                action =  WorkbenchAction.SaveAll(),
                 shortcut = KeyShortcut(Key.S, ctrl = true, alt = true),
             ),
             Command(text = "Horizontal",
                 paths = mutableListOf("${MenuType.MenuBar.name}.View.Split TabSpace"),
-                action = { WorkbenchController.changeSplitViewMode(SplitViewMode.HORIZONTAL) },
+                action = WorkbenchAction.ChangeSplitViewMode(SplitViewMode.HORIZONTAL),
                 shortcut = KeyShortcut(Key.H , ctrl = true, shift = true)
             ),
             Command(text = "Vertical",
                 paths = mutableListOf("${MenuType.MenuBar.name}.View.Split TabSpace"),
-                action = { WorkbenchController.changeSplitViewMode(SplitViewMode.VERTICAL) },
+                action = WorkbenchAction.ChangeSplitViewMode(SplitViewMode.VERTICAL),
                 shortcut = KeyShortcut(Key.V , ctrl = true, shift = true)
             ),
             Command(text = "Unsplit",
                 paths = mutableListOf("${MenuType.MenuBar.name}.View.Split TabSpace"),
-                action = { WorkbenchController.changeSplitViewMode(SplitViewMode.UNSPLIT) },
+                action = WorkbenchAction.ChangeSplitViewMode(SplitViewMode.UNSPLIT),
                 shortcut = KeyShortcut(Key.U , ctrl = true, shift = true)
             ),
         )

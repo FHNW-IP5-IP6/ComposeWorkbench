@@ -15,6 +15,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerMoveFilter
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
+import controller.Action
 import model.data.Command
 import model.data.MenuEntry
 
@@ -23,7 +24,11 @@ private val contentPadding = PaddingValues(8.dp, 2.dp, 10.dp, 2.dp)
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
-internal fun WorkbenchMenu(menuEntry: MenuEntry, imageVector: ImageVector) {
+internal fun WorkbenchMenu(
+    menuEntry: MenuEntry,
+    imageVector: ImageVector,
+    onActionRequired: (Action) -> Unit,
+) {
     val onMenu = remember { mutableStateOf(false) }
     val preventReopen = remember { mutableStateOf(false) }
 
@@ -55,10 +60,10 @@ internal fun WorkbenchMenu(menuEntry: MenuEntry, imageVector: ImageVector) {
         ) {
             menuEntry.children.forEach {
                 if(it is MenuEntry) {
-                    WBSubMenu(it)
+                    WBSubMenu(it, onActionRequired)
                     menuEntry.expanded.value = menuEntry.expanded.value || it.expanded.value
                 }
-                else if (it is Command) WBMenuItem(it)
+                else if (it is Command) WBMenuItem(it, onActionRequired)
             }
         }
     }
@@ -66,7 +71,10 @@ internal fun WorkbenchMenu(menuEntry: MenuEntry, imageVector: ImageVector) {
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
-private fun ColumnScope.WBSubMenu(menuEntry: MenuEntry) {
+private fun ColumnScope.WBSubMenu(
+    menuEntry: MenuEntry,
+    onActionRequired: (Action) -> Unit,
+) {
     DropdownMenuItem(
         onClick = {},
         contentPadding = contentPadding,
@@ -109,10 +117,10 @@ private fun ColumnScope.WBSubMenu(menuEntry: MenuEntry) {
                 ) {
                     menuEntry.children.forEach {
                         if(it is MenuEntry) {
-                            WBSubMenu(it)
+                            WBSubMenu(it, onActionRequired)
                             menuEntry.expanded.value = menuEntry.expanded.value || it.expanded.value
                         }
-                        else if (it is Command) WBMenuItem(it)
+                        else if (it is Command) WBMenuItem(it, onActionRequired)
                     }
                 }
             }
@@ -121,9 +129,12 @@ private fun ColumnScope.WBSubMenu(menuEntry: MenuEntry) {
 }
 
 @Composable
-private fun ColumnScope.WBMenuItem(command: Command) {
+private fun ColumnScope.WBMenuItem(
+    command: Command,
+    onActionRequired: (Action) -> Unit,
+) {
     DropdownMenuItem(
-        onClick = command.action,
+        onClick = {onActionRequired.invoke(command.action) },
         contentPadding = contentPadding,
         modifier = Modifier.setMaxHeightByFontSize()
     ) {

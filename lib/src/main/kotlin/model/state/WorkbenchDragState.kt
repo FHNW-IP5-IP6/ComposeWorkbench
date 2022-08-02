@@ -5,6 +5,7 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.window.WindowPosition
 import model.data.TabRowKey
+import model.data.enums.ModuleType
 import util.toOffset
 
 /**
@@ -49,6 +50,11 @@ internal data class WorkbenchDragState(
         return dropTargets.find { !it.isReverse && it.bounds.contains(
             positionOnScreen.toOffset()) && it.tabRowKey.windowState == windowState }
     }
+
+    internal fun isValidDropTarget(tabRowKey: TabRowKey, informationState: WorkbenchInformationState): Boolean {
+        val moduleType = module?.module?.moduleType ?: return false
+        return (ModuleType.BOTH == moduleType || ModuleType.BOTH == tabRowKey.moduleType || moduleType == tabRowKey.moduleType) && !informationState.getModulesFiltered(tabRowKey).contains(module)
+    }
 }
 
 internal data class DropTarget(
@@ -57,4 +63,13 @@ internal data class DropTarget(
     val bounds: Rect
 ) {
     override fun toString() = "$tabRowKey, isRevers $isReverse, bounds $bounds"
+}
+
+internal fun getDefaultWorkbenchDragState(): WorkbenchDragState {
+    return WorkbenchDragState(
+        isDragging = false,
+        positionOnScreen = DpOffset.Zero,
+        module = null,
+        dropTargets = listOf()
+    )
 }

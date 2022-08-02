@@ -4,7 +4,7 @@ import model.data.enums.PopUpType
 
 internal data class PopUpState(
     val type: PopUpType,
-    val action: () -> Unit,
-    val message: String
+    val message: String,
+    val action: () -> Unit
 ) {
 }

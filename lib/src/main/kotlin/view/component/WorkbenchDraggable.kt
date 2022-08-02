@@ -7,7 +7,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.*
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.awt.awtEvent
+import androidx.compose.ui.awt.awtEventOrNull
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.PointerEventType
@@ -22,15 +22,7 @@ import androidx.compose.ui.window.FrameWindowScope
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowPosition
 import androidx.compose.ui.window.WindowState
-import controller.WorkbenchController.updatePreviewTitle
-import controller.WorkbenchDragController
-import controller.WorkbenchDragController.addDropTarget
-import controller.WorkbenchDragController.addReverseDropTarget
-import controller.WorkbenchDragController.dropDraggedModule
-import controller.WorkbenchDragController.isValidDropTarget
-import controller.WorkbenchDragController.setDragging
-import controller.WorkbenchDragController.setModuleState
-import controller.WorkbenchDragController.setPosition
+import controller.*
 import model.data.TabRowKey
 import model.state.*
 import java.awt.event.WindowEvent
@@ -45,6 +37,7 @@ import java.awt.event.WindowFocusListener
 internal fun DragAndDropWindow(
     informationState: WorkbenchInformationState,
     dragState: WorkbenchDragState,
+    onActionRequired: (Action) -> Unit,
     tabRowKey: TabRowKey,
     onCloseRequest: () -> Unit,
     windowScope: @Composable FrameWindowScope.() -> Unit = {},
@@ -66,13 +59,16 @@ internal fun DragAndDropWindow(
 
         val density = LocalDensity.current
         Box(modifier = Modifier.fillMaxSize().onGloballyPositioned {
-            addReverseDropTarget(tabRowKey, getBounds(true, tabRowKey.windowState, it.boundsInWindow(), density))
+            onActionRequired.invoke(
+                DragAndDropAction.AddReverseDropTarget(
+                    tabRowKey,
+                    getBounds(true, tabRowKey.windowState, it.boundsInWindow(), density)
+                ))
         }) {
             windowScope()
             content()
             DragAnimation(dragState, tabRowKey.windowState)
         }
-
     }
 }
 
@@ -81,7 +77,9 @@ internal fun DragAndDropWindow(
  */
 @Composable
 internal fun DropTarget(
+    informationState: WorkbenchInformationState,
     dragState: WorkbenchDragState,
+    onActionRequired: (Action) -> Unit,
     tabRowKey: TabRowKey,
     modifier: Modifier = Modifier,
     content: @Composable (BoxScope.() -> Unit)
@@ -89,12 +87,16 @@ internal fun DropTarget(
     val density = LocalDensity.current
 
     Box(modifier = modifier.onGloballyPositioned {
-        addDropTarget(tabRowKey, getBounds(false, tabRowKey.windowState,  it.boundsInWindow(), density))
+        onActionRequired.invoke(
+            DragAndDropAction.AddDropTarget(
+                tabRowKey,
+                getBounds(false, tabRowKey.windowState, it.boundsInWindow(), density)
+            ))
     }) {
-        if (dragState.isCurrentDropTarget(tabRowKey) && isValidDropTarget(tabRowKey)){
-            updatePreviewTitle(tabRowKey, dragState.module!!.getTitle())
+        if (dragState.isCurrentDropTarget(tabRowKey) && dragState.isValidDropTarget(tabRowKey, informationState)){
+            onActionRequired.invoke(WorkbenchAction.UpdatePreviewTitle(tabRowKey, dragState.module!!.getTitle()))
         } else {
-            updatePreviewTitle(tabRowKey, null)
+            onActionRequired.invoke(WorkbenchAction.UpdatePreviewTitle(tabRowKey, null))
         }
         content()
     }
@@ -111,30 +113,38 @@ internal fun DropTarget(
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 internal fun DragTarget(
-    modifier: Modifier = Modifier,
-    module: WorkbenchModuleState<*>,
     informationState: WorkbenchInformationState,
     dragState: WorkbenchDragState,
+    onActionRequired: (Action) -> Unit,
+    modifier: Modifier = Modifier,
+    module: WorkbenchModuleState<*>,
     content: @Composable BoxScope.() -> Unit
 ){
     Box(modifier = modifier
         .onPointerEvent(PointerEventType.Move) {
             if (dragState.isDragging) {
-                setPosition(DpOffset(it.awtEvent.xOnScreen.dp, it.awtEvent.yOnScreen.dp))
+                onActionRequired.invoke(
+                    DragAndDropAction.SetPosition(
+                        DpOffset(
+                            it.awtEventOrNull?.xOnScreen?.dp ?: 0.dp,
+                            it.awtEventOrNull?.yOnScreen?.dp ?: 0.dp
+                        )
+                    )
+                )
             }
         }
         .pointerInput(key1 = module.id) {
             detectDragGestures(onDragStart = {
-                WorkbenchDragController.reset()
-                setDragging(true)
-                setModuleState(module)
+                onActionRequired.invoke(DragAndDropAction.Reset())
+                onActionRequired.invoke(DragAndDropAction.SetDragging(true))
+                onActionRequired.invoke(DragAndDropAction.SetModuleState(module))
             }, onDrag = { change, _ ->
                 change.consumeAllChanges()
             }, onDragEnd = {
-                setDragging(false)
-                dropDraggedModule(informationState)
+                onActionRequired.invoke(DragAndDropAction.SetDragging(false))
+                onActionRequired.invoke(WorkbenchAction.DropDraggedModule())
             }, onDragCancel = {
-                WorkbenchDragController.reset()
+                onActionRequired.invoke(DragAndDropAction.Reset())
             })
         }) {
         content()
@@ -142,7 +152,10 @@ internal fun DragTarget(
 }
 
 @Composable
-private fun DragAnimation(dragState: WorkbenchDragState, currentWindow: WorkbenchWindowState){
+private fun DragAnimation(
+    dragState: WorkbenchDragState,
+    currentWindow: WorkbenchWindowState
+){
     val dropTarget = dragState.getCurrentReverseDopTarget()
     var dragAnimationSize by remember { mutableStateOf(IntSize.Zero) }
 

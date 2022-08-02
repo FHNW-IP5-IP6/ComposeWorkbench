@@ -12,13 +12,17 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import controller.WorkbenchController.saveAll
+import controller.Action
+import controller.WorkbenchAction
 import model.data.enums.MenuType
 import model.state.WorkbenchInformationState
 import util.selectedButtonColors
 
 @Composable
-internal fun WorkbenchAppBar(informationState: WorkbenchInformationState) {
+internal fun WorkbenchAppBar(
+    informationState: WorkbenchInformationState,
+    onActionRequired: (Action) -> Unit
+) {
 
     TopAppBar(content = {
         Row(
@@ -26,14 +30,14 @@ internal fun WorkbenchAppBar(informationState: WorkbenchInformationState) {
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            WorkbenchMenu(informationState.getMenuEntry(MenuType.MenuAppBar), Icons.Default.Menu)
+            WorkbenchMenu(informationState.getMenuEntry(MenuType.MenuAppBar), Icons.Default.Menu, onActionRequired)
             Text(
                 informationState.appTitle,
                 fontSize = MaterialTheme.typography.h4.fontSize,
                 modifier = Modifier.align(alignment = Alignment.CenterVertically),
             )
             Button(
-                onClick = { saveAll() },
+                onClick = { onActionRequired.invoke(WorkbenchAction.SaveAll()) },
                 modifier = Modifier.align(alignment = Alignment.CenterVertically),
                 colors = ButtonDefaults.selectedButtonColors(true),
                 enabled = informationState.unsavedEditors.isNotEmpty()

@@ -2,6 +2,7 @@ package model.data
 
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.input.key.KeyShortcut
+import controller.Action
 
 interface MenuItem {
     val text: String
@@ -14,7 +15,7 @@ interface MenuItem {
 class Command (
     override val text: String,
     override var index: Int = 0,
-    val action: () -> Unit,
+    val action: Action,
     val paths: MutableList<String>,
     val shortcut: KeyShortcut? = null,
 ) : MenuItem {}
