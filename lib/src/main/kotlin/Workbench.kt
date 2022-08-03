@@ -145,7 +145,7 @@ class Workbench(private val appTitle: String = "", private val enableMQ: Boolean
         val id = controller.getNextKey()
         val explorer = controller.informationState.getRegisteredExplorer<Any>(type)
         val defaultExplorer = WorkbenchDefaultState(explorer.modelType, c, explorer.title, location, shown, listed)
-        controller.triggerAction(WorkbenchAction.AddDefaultExplorer(type, id, defaultExplorer))
+        controller.triggerAction(WorkbenchAction.AddDefaultExplorer(id, defaultExplorer))
         if (listed) {
             controller.triggerAction(WorkbenchAction.AddCommand(Command(
                 text = controller.informationState.getRegisteredExplorer<C>(type).title(c),

@@ -24,7 +24,6 @@ internal fun WorkbenchWindow(
 ){
     if (workbenchState == WorkbenchState.RUNNING) {
         key(informationState.windows) {
-            println("recompose window")
             for (state in informationState.windows) {
                 val tabRowKey =
                     TabRowKey(displayType = DisplayType.WINDOW, moduleType = ModuleType.BOTH, windowState = state)

@@ -14,6 +14,7 @@ pluginManagement {
 }
 
 include(":lib")
+include(":examples:hello-workbench:workbench")
 include(":examples:cities:explorer")
 include(":examples:cities:editor")
 include(":examples:cities:workbench")

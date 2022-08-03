@@ -20,5 +20,6 @@ internal const val MQ_INTERNAL_EDITOR_STATE_CREATED = "created"
 internal const val MQ_INTERNAL_EDITOR_STATE_SAVED = "saved"
 internal const val MQ_INTERNAL_EDITOR_STATE_UNSAVED = "unsaved"
 internal const val MQ_INTERNAL_EDITOR_STATE_CLOSED = "closed"
+internal const val MQ_INTERNAL_EDITOR_STATE_DELETED = "deleted"
 internal const val MQ_INTERNAL_EDITOR_STATE_SELECTED = "selected"
 

@@ -12,8 +12,6 @@ version = "1.0.0"
 
 dependencies {
     implementation(compose.desktop.currentOs)
-    implementation(project(":examples:cities:editor"))
-    implementation(project(":examples:cities:explorer"))
     implementation(project(":lib"))
 }
 
@@ -23,10 +21,10 @@ tasks.withType<KotlinCompile> {
 
 compose.desktop {
     application {
-        mainClass = "ch.fhnw.composeWorkbench.examples.cities.MainKt"
+        mainClass = "ch.fhnw.composeWorkbench.examples.hello-workbench.MainKt"
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
-            packageName = "ch.fhnw.composeWorkbench.examples.cities"
+            packageName = "ch.fhnw.composeWorkbench.examples.hello-workbench"
             packageVersion = "1.0.0"
         }
     }

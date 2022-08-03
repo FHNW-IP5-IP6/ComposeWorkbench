@@ -22,9 +22,14 @@ import androidx.compose.ui.window.FrameWindowScope
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowPosition
 import androidx.compose.ui.window.WindowState
-import controller.*
+import controller.Action
+import controller.DragAndDropAction
+import controller.WorkbenchAction
 import model.data.TabRowKey
-import model.state.*
+import model.state.WorkbenchDragState
+import model.state.WorkbenchInformationState
+import model.state.WorkbenchModuleState
+import model.state.WorkbenchWindowState
 import java.awt.event.WindowEvent
 import java.awt.event.WindowFocusListener
 
@@ -42,7 +47,7 @@ internal fun DragAndDropWindow(
     onCloseRequest: () -> Unit,
     windowScope: @Composable FrameWindowScope.() -> Unit = {},
     content: @Composable () -> Unit
-){
+) {
     Window(
         onCloseRequest = onCloseRequest,
         title = informationState.appTitle,
@@ -52,6 +57,7 @@ internal fun DragAndDropWindow(
             override fun windowGainedFocus(e: WindowEvent) {
                 tabRowKey.windowState.hasFocus = true
             }
+
             override fun windowLostFocus(e: WindowEvent) {
                 tabRowKey.windowState.hasFocus = false
             }
@@ -59,11 +65,11 @@ internal fun DragAndDropWindow(
 
         val density = LocalDensity.current
         Box(modifier = Modifier.fillMaxSize().onGloballyPositioned {
-            onActionRequired.invoke(
-                DragAndDropAction.AddReverseDropTarget(
-                    tabRowKey,
-                    getBounds(true, tabRowKey.windowState, it.boundsInWindow(), density)
-                ))
+            updateTarget(
+                onActionRequired, dragState, tabRowKey,
+                getBounds(true, tabRowKey.windowState, it.boundsInWindow(), density),
+                true
+            )
         }) {
             windowScope()
             content()
@@ -83,19 +89,20 @@ internal fun DropTarget(
     tabRowKey: TabRowKey,
     modifier: Modifier = Modifier,
     content: @Composable (BoxScope.() -> Unit)
-){
+) {
     val density = LocalDensity.current
-
-    Box(modifier = modifier.onGloballyPositioned {
-        onActionRequired.invoke(
-            DragAndDropAction.AddDropTarget(
-                tabRowKey,
-                getBounds(false, tabRowKey.windowState, it.boundsInWindow(), density)
-            ))
-    }) {
-        if (dragState.isCurrentDropTarget(tabRowKey) && dragState.isValidDropTarget(tabRowKey, informationState)){
+    Box(
+        modifier = modifier.onGloballyPositioned {
+            updateTarget(
+                onActionRequired, dragState, tabRowKey,
+                getBounds(false, tabRowKey.windowState, it.boundsInWindow(), density),
+                false
+            )
+        }
+    ) {
+        if (dragState.isCurrentDropTarget(tabRowKey) && dragState.isValidDropTarget(tabRowKey, informationState)) {
             onActionRequired.invoke(WorkbenchAction.UpdatePreviewTitle(tabRowKey, dragState.module!!.getTitle()))
-        } else {
+        } else if (informationState.tabRowState[tabRowKey]?.preview != null){
             onActionRequired.invoke(WorkbenchAction.UpdatePreviewTitle(tabRowKey, null))
         }
         content()
@@ -104,44 +111,38 @@ internal fun DropTarget(
 
 /**
  * Module that can be dragged. Must be inside a DragAndDropContainer!
- *
- * @param content: content of the drag target
- * @param modifier: Modifier to for the Box surrounding the content
- * @param module: ModuleType which can be dragged
- * @param controller: Workbench Controller
  */
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 internal fun DragTarget(
-    informationState: WorkbenchInformationState,
     dragState: WorkbenchDragState,
     onActionRequired: (Action) -> Unit,
     modifier: Modifier = Modifier,
     module: WorkbenchModuleState<*>,
     content: @Composable BoxScope.() -> Unit
-){
+) {
     Box(modifier = modifier
         .onPointerEvent(PointerEventType.Move) {
             if (dragState.isDragging) {
-                onActionRequired.invoke(
-                    DragAndDropAction.SetPosition(
-                        DpOffset(
-                            it.awtEventOrNull?.xOnScreen?.dp ?: 0.dp,
-                            it.awtEventOrNull?.yOnScreen?.dp ?: 0.dp
+                val awtEvent = it.awtEventOrNull
+                if(awtEvent!= null) {
+                    onActionRequired.invoke(
+                        DragAndDropAction.SetPosition(
+                            DpOffset(
+                                awtEvent.xOnScreen.dp,
+                                awtEvent.yOnScreen.dp
+                            )
                         )
                     )
-                )
+                }
             }
         }
         .pointerInput(key1 = module.id) {
             detectDragGestures(onDragStart = {
-                onActionRequired.invoke(DragAndDropAction.Reset())
-                onActionRequired.invoke(DragAndDropAction.SetDragging(true))
-                onActionRequired.invoke(DragAndDropAction.SetModuleState(module))
+                onActionRequired.invoke(DragAndDropAction.StartDragging(module))
             }, onDrag = { change, _ ->
                 change.consumeAllChanges()
             }, onDragEnd = {
-                onActionRequired.invoke(DragAndDropAction.SetDragging(false))
                 onActionRequired.invoke(WorkbenchAction.DropDraggedModule())
             }, onDragCancel = {
                 onActionRequired.invoke(DragAndDropAction.Reset())
@@ -155,61 +156,91 @@ internal fun DragTarget(
 private fun DragAnimation(
     dragState: WorkbenchDragState,
     currentWindow: WorkbenchWindowState
-){
-    val dropTarget = dragState.getCurrentReverseDopTarget()
-    var dragAnimationSize by remember { mutableStateOf(IntSize.Zero) }
+) {
+    if(dragState.positionOnScreen.isSpecified) {
+        val dropTarget = dragState.getCurrentReverseDopTarget()
+        var dragAnimationSize by remember { mutableStateOf(IntSize.Zero) }
 
-    if (dragState.isDragging) {
-        if (dropTarget == null){
-            Window(
-                onCloseRequest = {},
-                transparent = false,
-                resizable = false,
-                undecorated = true,
-                state = WindowState(
-                    size =  DpSize(dragAnimationSize.width.dp / 2, dragAnimationSize.height.dp / 2),
-                    position = WindowPosition(dragState.positionOnScreen.x, dragState.positionOnScreen.y)
-                )
-            ) {
-                Box {
+        if (dragState.isDragging) {
+            if (dropTarget == null) {
+                Window(
+                    onCloseRequest = {},
+                    transparent = false,
+                    resizable = false,
+                    undecorated = true,
+                    state = WindowState(
+                        size = DpSize(dragAnimationSize.width.dp / 2, dragAnimationSize.height.dp / 2),
+                        position = WindowPosition(dragState.positionOnScreen.x, dragState.positionOnScreen.y)
+                    )
+                ) {
+                    Box {
+                        dragState.module?.content()
+                    }
+                }
+            } else if (currentWindow == dropTarget.tabRowKey.windowState) {
+                val offset = dragState.toOffset(dropTarget.tabRowKey.windowState)
+                Box(modifier = Modifier
+                    .graphicsLayer {
+                        scaleX = 0.5f
+                        scaleY = 0.5f
+                        alpha = if (dragAnimationSize == IntSize.Zero) 0f else .9f
+                        translationX = offset.x.minus(dragAnimationSize.width * 0.25f)
+                        translationY = offset.y.minus(dragAnimationSize.height * 0.25f)
+                    }
+                    .onGloballyPositioned {
+                        dragAnimationSize = it.size
+                    }
+                ) {
                     dragState.module?.content()
                 }
-            }
-        } else if (currentWindow == dropTarget.tabRowKey.windowState) {
-            val offset = dragState.toOffset(dropTarget.tabRowKey.windowState)
-            Box(modifier = Modifier
-                .graphicsLayer {
-                    scaleX = 0.5f
-                    scaleY = 0.5f
-                    alpha = if (dragAnimationSize == IntSize.Zero) 0f else .9f
-                    translationX = offset.x.minus(dragAnimationSize.width * 0.25f)
-                    translationY = offset.y.minus(dragAnimationSize.height * 0.25f)
-                }
-                .onGloballyPositioned {
-                    dragAnimationSize = it.size
-                }
-            ) {
-                dragState.module?.content()
             }
         }
     }
 }
 
-private fun getBounds(isWindow: Boolean = false, windowState: WorkbenchWindowState, relativeToWindow: Rect, density: Density): Rect{
+private fun getBounds(
+    isWindow: Boolean = false,
+    windowState: WorkbenchWindowState,
+    relativeToWindow: Rect,
+    density: Density
+): Rect {
     with(density) {
-        if(isWindow) {
+        if (isWindow) {
             windowState.windowHeaderOffset = windowState.windowState.size.height - relativeToWindow.height.toDp()
         }
         var top = windowState.windowState.position.y + relativeToWindow.top.toDp()
-        if (!isWindow){
+        if (!isWindow) {
             top += windowState.windowHeaderOffset
         }
         val left = windowState.windowState.position.x + relativeToWindow.left.toDp()
         val right = left + relativeToWindow.width.toDp()
         var bottom = top + relativeToWindow.height.toDp()
-        if (isWindow){
+        if (isWindow) {
             bottom += windowState.windowHeaderOffset
         }
-        return Rect(left = left.value - 10, right = right.value + 10, top = top.value - 10, bottom = bottom.value + 10)
+        return if(!isWindow){
+            Rect(left = left.value - 10, top = top.value - 10, right = right.value + 10, bottom = bottom.value + 10)
+        }else {
+            Rect(left = left.value, top = top.value, right = right.value, bottom = bottom.value)
+        }
+    }
+}
+
+private fun updateTarget(
+    onActionRequired: (Action) -> Unit,
+    dragState: WorkbenchDragState,
+    tabRowKey: TabRowKey,
+    bounds: Rect,
+    isReverse: Boolean
+) {
+    val same = dragState.dropTargets.filter { it.tabRowKey == tabRowKey && it.isReverse == isReverse }.find { it.bounds == bounds }
+    if (same == null) {
+        onActionRequired.invoke(
+            DragAndDropAction.AddDropTarget(
+                tabRowKey,
+                bounds,
+                isReverse
+            )
+        )
     }
 }

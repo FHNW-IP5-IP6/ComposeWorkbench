@@ -40,7 +40,7 @@ internal sealed class WorkbenchAction(
 
 
     class VerifySplitViewMode(val tabRowKey1: TabRowKey, val tabRowKey2: TabRowKey)                     : WorkbenchAction("Verify split view mode")
-    class UpdatePreviewTitle(val tabRowKey: TabRowKey, val title: String?)                               : WorkbenchAction("Update preview title")
+    class UpdatePreviewTitle(val tabRowKey: TabRowKey, val title: String?)                              : WorkbenchAction("Update preview title")
     class UpdateSelection(val tabRowKey: TabRowKey, val moduleState: WorkbenchModuleState<*>?)          : WorkbenchAction("Update selection")
     class TabSelectorPressed(val tabRowKey: TabRowKey,val moduleState: WorkbenchModuleState<*>)         : WorkbenchAction("Tab selector pressed")
 
@@ -48,7 +48,7 @@ internal sealed class WorkbenchAction(
     class RegisterExplorer(val moduleType: String, val explorer: WorkbenchModule<*>)                    : WorkbenchAction("Register explorer")
 
     class ChangeSplitViewMode(val splitViewMode: SplitViewMode)                                         : WorkbenchAction("Change split view mode")
-    class AddDefaultExplorer(val key: String, val id: Int, val state: WorkbenchDefaultState<*>)         : WorkbenchAction("Add default explorer")
+    class AddDefaultExplorer(val id: Int, val state: WorkbenchDefaultState<*>)         : WorkbenchAction("Add default explorer")
     class AddCommand(val command: Command)                                                              : WorkbenchAction("Add command")
 
     class CreateExplorerFromDefault(val id: Int)                                                        : WorkbenchAction("Create explorer from default")

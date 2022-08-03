@@ -3,6 +3,7 @@ package model.state
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.unit.DpOffset
+import androidx.compose.ui.unit.isUnspecified
 import androidx.compose.ui.window.WindowPosition
 import model.data.TabRowKey
 import model.data.enums.ModuleType
@@ -24,9 +25,9 @@ internal data class WorkbenchDragState(
     }
 
     internal fun getCurrentReverseDopTarget(): DropTarget? {
+        if(positionOnScreen.isUnspecified) return null
         val targets = dropTargets.filter { it.isReverse && it.bounds.contains(
             positionOnScreen.toOffset()) }
-        targets.forEach { println(it.tabRowKey) }
         return when (targets.isEmpty()){
             true -> null
             false -> {
@@ -47,6 +48,7 @@ internal data class WorkbenchDragState(
     }
 
     internal fun getCurrentDopTarget(windowState: WorkbenchWindowState): DropTarget? {
+        if(positionOnScreen.isUnspecified) return null
         return dropTargets.find { !it.isReverse && it.bounds.contains(
             positionOnScreen.toOffset()) && it.tabRowKey.windowState == windowState }
     }

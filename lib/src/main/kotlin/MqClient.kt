@@ -9,9 +9,23 @@ interface MqClient {
     fun subscribe(topic: String, callBack: (String, String)->Unit)
     fun subscribe(topic: String, callBack: (String, String)->Unit, executor: Executor)
 
+    /**
+     * Let the workbench know that the entity with the given type and id has changed
+     */
     fun publishUnsaved(type: String, id: Int)
-    fun publishSaved(type: String, id: Int)
-    fun subscribeForSelectedEditor(editorType: String, callBack: (Int)->Unit)
-    fun subscribeForUpdates(editorType: String, callBack: (id: Int, msg: String)->Unit)
 
+    /**
+     * Let the workbench know that the entity with the given type and id was saved
+     */
+    fun publishSaved(type: String, id: Int)
+
+    /**
+     * Get notified when an editor of the given type is selected
+     */
+    fun subscribeForSelectedEditor(editorType: String, callBack: (Int)->Unit)
+
+    /**
+     * Get notified when an editor of the given type is updated
+     */
+    fun subscribeForUpdates(editorType: String, callBack: (id: Int, msg: String)->Unit)
 }

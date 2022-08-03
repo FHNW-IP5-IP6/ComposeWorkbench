@@ -4,7 +4,7 @@ import ActionResult
 import ExplorerLocation
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.neverEqualPolicy
+import androidx.compose.runtime.referentialEqualityPolicy
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.unit.DpOffset
@@ -21,11 +21,12 @@ import java.util.concurrent.atomic.AtomicInteger
 @Suppress("UNCHECKED_CAST")
 internal class WorkbenchController {
 
+    private val stateUpdateLock = Any()
     var uniqueKey: AtomicInteger = AtomicInteger(0)
-    var informationState by mutableStateOf(getDefaultWorkbenchDisplayInformation(), policy = neverEqualPolicy())
+    var informationState by mutableStateOf(getDefaultWorkbenchDisplayInformation(), policy = referentialEqualityPolicy())
         private set
 
-    var dragState by mutableStateOf(getDefaultWorkbenchDragState(), policy = neverEqualPolicy())
+    var dragState by mutableStateOf(getDefaultWorkbenchDragState())
         private set
 
     //TODO: is this the right place for this?
@@ -59,16 +60,18 @@ internal class WorkbenchController {
     }
 
     private fun triggerAction(workbenchAction: WorkbenchAction) {
-        synchronized(informationState) {
+        synchronized(stateUpdateLock) {
             val newState = when (workbenchAction) {
                 is WorkbenchAction.AddCommand -> addCommand(workbenchAction.command)
                 is WorkbenchAction.AddDefaultExplorer -> addDefaultExplorer(
-                    workbenchAction.key,
                     workbenchAction.id,
                     workbenchAction.state
                 )
                 is WorkbenchAction.AddModuleState -> addModuleState(informationState, workbenchAction.moduleState)
-                is WorkbenchAction.AddUnsavedModule -> addUnsavedModule(workbenchAction.type, workbenchAction.dataId)
+                is WorkbenchAction.AddUnsavedModule -> addUnsavedModule(
+                    workbenchAction.type,
+                    workbenchAction.dataId
+                )
                 is WorkbenchAction.ChangeSplitViewMode -> changeSplitViewMode(workbenchAction.splitViewMode)
                 is WorkbenchAction.CloseModuleState -> close(workbenchAction.moduleState)
                 is WorkbenchAction.CreateExplorerFromDefault -> createExplorerFromDefault(
@@ -83,20 +86,29 @@ internal class WorkbenchController {
                 is WorkbenchAction.HideDrawer -> hideDrawer(informationState, workbenchAction.displayType)
                 is WorkbenchAction.InitExplorers -> initExplorers()
                 is WorkbenchAction.ModuleToWindow -> moduleToWindow(informationState, workbenchAction.moduleState)
-                is WorkbenchAction.RegisterEditor -> registerEditor(workbenchAction.moduleType, workbenchAction.editor)
+                is WorkbenchAction.RegisterEditor -> registerEditor(
+                    workbenchAction.moduleType,
+                    workbenchAction.editor
+                )
                 is WorkbenchAction.RegisterExplorer -> registerExplorer(
                     workbenchAction.moduleType,
                     workbenchAction.explorer
                 )
-                is WorkbenchAction.RemoveModuleState -> removeModuleState(workbenchAction.moduleState)
+                is WorkbenchAction.RemoveModuleState -> removeModuleState(
+                    informationState,
+                    workbenchAction.moduleState
+                )
                 is WorkbenchAction.RemovePopUp -> removePopUp(workbenchAction.tabRowKey)
-                is WorkbenchAction.RemoveSavedModule -> removeSavedModule(workbenchAction.type, workbenchAction.dataId)
+                is WorkbenchAction.RemoveSavedModule -> removeSavedModule(
+                    workbenchAction.type,
+                    workbenchAction.dataId
+                )
                 is WorkbenchAction.RemoveWindow -> removeWindow(workbenchAction.tabRowKey)
                 is WorkbenchAction.RequestEditorState -> requestEditorState(
                     workbenchAction.type,
                     workbenchAction.dataId
                 )
-                is WorkbenchAction.ReselectModuleState -> reselect(workbenchAction.moduleState)
+                is WorkbenchAction.ReselectModuleState -> reselect(informationState, workbenchAction.moduleState)
                 is WorkbenchAction.SaveAll -> saveAll()
                 is WorkbenchAction.SaveModuleState -> save(workbenchAction.moduleState, workbenchAction.action)
                 is WorkbenchAction.SetAppTitle -> setAppTitle(workbenchAction.appTitle)
@@ -136,70 +148,51 @@ internal class WorkbenchController {
      * - To prevent deadlocks Drag and Drop Actions MUST NEVER trigger any information state actions
      */
     private fun triggerAction(action: DragAndDropAction) {
-        synchronized(informationState) {
+        synchronized(stateUpdateLock) {
             val newState = when (action) {
-                is DragAndDropAction.SetModuleState -> setModuleState(action.moduleState)
-                is DragAndDropAction.AddDropTarget -> addDropTarget(action.tabRowKey, action.bounds)
-                is DragAndDropAction.AddReverseDropTarget -> addReverseDropTarget(action.tabRowKey, action.bounds)
-                is DragAndDropAction.RemoveReverseDropTarget -> removeReverseDropTarget(action.tabRowKey)
+                is DragAndDropAction.AddDropTarget -> addDropTarget(action.tabRowKey, action.bounds, action.isReverse)
                 is DragAndDropAction.Reset -> reset()
-                is DragAndDropAction.SetDragging -> setDragging(action.isDragging)
+                is DragAndDropAction.StartDragging -> startDragging(action.moduleState)
                 is DragAndDropAction.SetPosition -> setPosition(action.positionOnScreen)
             }
             dragState = newState
         }
     }
 
+    //Drop target cleanup not working!!
     private fun dropDraggedModule(): WorkbenchInformationState {
-        var newInformationState = informationState
+        var result = informationState
         if (dragState.module != null) {
             val module = dragState.module as WorkbenchModuleState<*>
             val reverseDropTarget = dragState.getCurrentReverseDopTarget()
             if (reverseDropTarget == null) {
-                newInformationState = reselect(module)
-                newInformationState = moduleToWindow(newInformationState, module)
+                result = reselect(result, module)
+                result = moduleToWindow(result, module)
             } else {
                 val dropTarget = dragState.getCurrentDopTarget(reverseDropTarget.tabRowKey.windowState)
                 if (dropTarget != null && dragState.isValidDropTarget(dropTarget.tabRowKey, informationState)) {
-                    newInformationState = reselect(module)
-                    newInformationState = dropModule(newInformationState, dropTarget, module)
+                    result = reselect(result, module)
+                    result = dropModule(result, dropTarget, module)
                 }
             }
         }
         triggerAction(DragAndDropAction.Reset())
-        return newInformationState
+        return result
     }
 
-    private fun addReverseDropTarget(tabRowKey: TabRowKey, bounds: Rect): WorkbenchDragState {
+    private fun addDropTarget(tabRowKey: TabRowKey, bounds: Rect, isReverse: Boolean): WorkbenchDragState {
         val dropTargets = dragState.dropTargets.toMutableList()
-        dropTargets.removeIf { it.isReverse && it.tabRowKey == tabRowKey }
-        dropTargets += DropTarget(isReverse = true, bounds = bounds, tabRowKey = tabRowKey)
-        return dragState.copy(dropTargets = dropTargets)
-    }
-
-    private fun addDropTarget(tabRowKey: TabRowKey, bounds: Rect): WorkbenchDragState {
-        val dropTargets = dragState.dropTargets.toMutableList()
-        dropTargets.removeIf { !it.isReverse && it.tabRowKey == tabRowKey }
-        dropTargets += DropTarget(isReverse = false, bounds = bounds, tabRowKey = tabRowKey)
-        return dragState.copy(dropTargets = dropTargets)
-    }
-
-    private fun removeReverseDropTarget(tabRowKey: TabRowKey): WorkbenchDragState {
-        val dropTargets = dragState.dropTargets.toMutableList()
-        dropTargets.removeIf { it.tabRowKey.windowState == tabRowKey.windowState }
+        dropTargets.removeIf { it.isReverse == isReverse && it.tabRowKey == tabRowKey }
+        dropTargets += DropTarget(isReverse = isReverse, bounds = bounds, tabRowKey = tabRowKey)
         return dragState.copy(dropTargets = dropTargets)
     }
 
     private fun reset(): WorkbenchDragState {
-        return dragState.copy(isDragging = false, module = null, positionOnScreen = DpOffset.Zero)
+        return dragState.copy(isDragging = false, module = null, positionOnScreen = DpOffset.Unspecified)
     }
 
-    private fun setDragging(isDragging: Boolean): WorkbenchDragState {
-        return dragState.copy(isDragging = isDragging)
-    }
-
-    private fun setModuleState(moduleState: WorkbenchModuleState<*>?): WorkbenchDragState {
-        return dragState.copy(module = moduleState)
+    private fun startDragging(moduleState: WorkbenchModuleState<*>): WorkbenchDragState {
+        return dragState.copy(isDragging = true, module = moduleState, positionOnScreen = DpOffset.Unspecified)
     }
 
     private fun setPosition(positionOnScreen: DpOffset): WorkbenchDragState {
@@ -276,7 +269,8 @@ internal class WorkbenchController {
     private fun close(moduleState: WorkbenchModuleState<*>): WorkbenchInformationState {
         val onSuccess = {
             MQClientImpl.publishClosed(moduleState.module.modelType, moduleState.dataId ?: moduleState.id)
-            removePopUp(TabRowKey(moduleState))
+            val newInformationState = removePopUp(TabRowKey(moduleState))
+            removeModuleState(newInformationState, moduleState)
         }
         return executeAction({ moduleState.onClose() }, onSuccess) {
             setPopUp(TabRowKey(moduleState), PopUpState(PopUpType.CLOSE_FAILED, it.message) {})
@@ -331,10 +325,10 @@ internal class WorkbenchController {
                 informationState.mainWindow
             )]?.selected
             if (selected != null) {
-                reselect(selected)
+                var result = reselect(informationState, selected)
                 selected.displayType = DisplayType.TAB2
-                val newInformationState = updateSelection(informationState, TabRowKey(selected), selected)
-                return newInformationState.copy(splitViewMode = splitViewMode, currentTabSpace = DisplayType.TAB2)
+                result = updateSelection(result, TabRowKey(selected), selected)
+                return result.copy(splitViewMode = splitViewMode, currentTabSpace = DisplayType.TAB2)
             }
         } else {
             var newInformationState = informationState
@@ -370,30 +364,40 @@ internal class WorkbenchController {
     private fun removeWindow(tabRowKey: TabRowKey): WorkbenchInformationState {
         val windows = informationState.windows.toMutableList()
         windows -= tabRowKey.windowState
-        triggerAction(DragAndDropAction.RemoveReverseDropTarget(tabRowKey))
+        //cleanup drop targets
+        val dropTargets = dragState.dropTargets.toMutableList()
+        dropTargets.removeIf { it.tabRowKey.windowState == tabRowKey.windowState }
+        dragState = dragState.copy(dropTargets = dropTargets)
+
         return informationState.copy(windows = windows)
     }
 
-    private fun reselect(moduleState: WorkbenchModuleState<*>): WorkbenchInformationState {
+    private fun reselect(
+        newInformationState: WorkbenchInformationState,
+        moduleState: WorkbenchModuleState<*>
+    ): WorkbenchInformationState {
         val tabRowKey = TabRowKey(moduleState)
-        val modules = informationState.getModulesFiltered(tabRowKey)
+        val modules = newInformationState.getModulesFiltered(tabRowKey)
         return if (modules.size <= 1 && modules.contains(moduleState)) {
-            val newInformationState = hideDrawer(informationState, tabRowKey.displayType)
-            updateSelection(newInformationState, tabRowKey, null)
+            val result = hideDrawer(newInformationState, tabRowKey.displayType)
+            updateSelection(result, tabRowKey, null)
         } else {
-            val selected = informationState.tabRowState[tabRowKey]?.selected
+            val selected = newInformationState.tabRowState[tabRowKey]?.selected
             if (selected != null && selected == moduleState) {
-                when (val index = informationState.getIndex(moduleState.id, tabRowKey)) {
-                    0 -> updateSelection(informationState, tabRowKey, modules[1])
-                    else -> updateSelection(informationState, tabRowKey, modules[index - 1])
+                when (val index = newInformationState.getIndex(moduleState.id, tabRowKey)) {
+                    0 -> updateSelection(newInformationState, tabRowKey, modules[1])
+                    else -> updateSelection(newInformationState, tabRowKey, modules[index - 1])
                 }
             } else {
-                informationState
+                newInformationState
             }
         }
     }
 
-    private fun moduleToWindow(newInformationState: WorkbenchInformationState ,moduleState: WorkbenchModuleState<*>): WorkbenchInformationState {
+    private fun moduleToWindow(
+        newInformationState: WorkbenchInformationState,
+        moduleState: WorkbenchModuleState<*>
+    ): WorkbenchInformationState {
         val window = WorkbenchWindowState(
             windowState = WindowState(position = dragState.getWindowPosition()),
             hasFocus = true,
@@ -489,14 +493,21 @@ internal class WorkbenchController {
         return result.copy(modules = modules)
     }
 
-    private fun removeModuleState(moduleState: WorkbenchModuleState<*>): WorkbenchInformationState {
-        reselect(moduleState)
-        val modules = informationState.modules.toMutableList()
+    private fun removeModuleState(
+        newInformationState: WorkbenchInformationState,
+        moduleState: WorkbenchModuleState<*>
+    ): WorkbenchInformationState {
+        val modules = newInformationState.modules.toMutableList()
         modules -= moduleState
-        return informationState.copy(modules = modules)
+        val result = reselect(newInformationState, moduleState)
+        return result.copy(modules = modules)
     }
 
-    private fun dropModule(newInformationState: WorkbenchInformationState, dropTarget: DropTarget, moduleState: WorkbenchModuleState<*>): WorkbenchInformationState {
+    private fun dropModule(
+        newInformationState: WorkbenchInformationState,
+        dropTarget: DropTarget,
+        moduleState: WorkbenchModuleState<*>
+    ): WorkbenchInformationState {
         val moduleStates = newInformationState.modules.toMutableList()
         //remove and add module state to ensure it's at the beginning of the tab row
         moduleStates -= moduleState
@@ -544,7 +555,6 @@ internal class WorkbenchController {
             dataId = dataId,
             controller = editor.loader!!.invoke(dataId, mqtt),
             module = editor,
-            close = { removeModuleState(it) },
             displayType = informationState.currentTabSpace,
         )
         return addModuleState(informationState, moduleState)
@@ -595,7 +605,6 @@ internal class WorkbenchController {
             controller = defaultState.controller,
             module = explorer,
             window = newInformationState.mainWindow,
-            close = { removeModuleState(it) },
             displayType = if (defaultState.location == ExplorerLocation.LEFT) DisplayType.LEFT else DisplayType.BOTTOM,
         )
         return addModuleState(newInformationState, moduleState)
@@ -620,7 +629,7 @@ internal class WorkbenchController {
         return informationState.copy(registeredExplorers = registeredExplorers)
     }
 
-    private fun addDefaultExplorer(key: String, id: Int, state: WorkbenchDefaultState<*>): WorkbenchInformationState {
+    private fun addDefaultExplorer(id: Int, state: WorkbenchDefaultState<*>): WorkbenchInformationState {
         val registeredDefaultExplorers = informationState.registeredDefaultExplorers.toMutableMap()
         registeredDefaultExplorers[id] = state
         return informationState.copy(registeredDefaultExplorers = registeredDefaultExplorers)

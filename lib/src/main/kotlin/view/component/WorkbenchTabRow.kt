@@ -255,7 +255,7 @@ private fun WorkbenchTab(
 ) {
     val writerModifier = getTabModifier(tabRowKey, selected, onClick)
 
-    DragTarget(module = moduleState, informationState = informationState, dragState = dragState, onActionRequired = onActionRequired) {
+    DragTarget(module = moduleState, dragState = dragState, onActionRequired = onActionRequired) {
         ContextMenuArea(items = {
             listOf(
                 ContextMenuItem("Open in Window") {

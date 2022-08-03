@@ -13,7 +13,6 @@ internal class WorkbenchModuleState <C> (
     var controller: C,
     var module: WorkbenchModule<C>,
     var window: WorkbenchWindowState,
-    var close: (WorkbenchModuleState<*>) -> Unit = {},
     var displayType: DisplayType,
     var isPreview: Boolean = false
 ){
@@ -40,11 +39,7 @@ internal class WorkbenchModuleState <C> (
     fun onSave(): ActionResult = module.onSave(controller, MQClientImpl)
 
     fun onClose(): ActionResult {
-        val result =  module.onClose(controller, MQClientImpl)
-        if(result.successful) {
-            close(this)
-        }
-        return result
+        return  module.onClose(controller, MQClientImpl)
     }
 
     @Composable
