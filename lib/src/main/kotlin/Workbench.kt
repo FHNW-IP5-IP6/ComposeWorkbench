@@ -1,4 +1,5 @@
 
+import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -6,6 +7,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.window.ApplicationScope
 import androidx.compose.ui.window.application
+import com.example.ui.theme.NotoSansTypography
 import com.hivemq.embedded.EmbeddedHiveMQ
 import com.hivemq.embedded.EmbeddedHiveMQBuilder
 import controller.WorkbenchAction
@@ -23,6 +25,7 @@ import model.state.WorkbenchDefaultState
 import util.WorkbenchDefaultIcon
 import view.WorkbenchUI
 import view.component.WorkbenchWindow
+import view.themes.LightColors
 import java.util.concurrent.Executors
 
 
@@ -180,21 +183,30 @@ class Workbench(private val appTitle: String = "", private val enableMQ: Boolean
         // init main window
         val informationState = controller.informationState
         val dragState = controller.dragState
-
-        WorkbenchUI(
-            informationState = informationState,
-            dragState = dragState,
-            onActionRequired = {controller.triggerAction(it)},
-
-            workbenchState = workbenchState,
+        MaterialTheme(
+            colors = LightColors,
+            typography = NotoSansTypography,
         ) {
-            if (onExit.invoke().successful) {
-                terminatingWorkbenchAsync(this)
-            }
-        }
+            WorkbenchUI(
+                informationState = informationState,
+                dragState = dragState,
+                onActionRequired = { controller.triggerAction(it) },
 
-        // init separated windows
-        WorkbenchWindow(informationState = informationState, dragState = dragState, onActionRequired = {controller.triggerAction(it)}, workbenchState = workbenchState)
+                workbenchState = workbenchState,
+            ) {
+                if (onExit.invoke().successful) {
+                    terminatingWorkbenchAsync(this)
+                }
+            }
+
+            // init separated windows
+            WorkbenchWindow(
+                informationState = informationState,
+                dragState = dragState,
+                onActionRequired = { controller.triggerAction(it) },
+                workbenchState = workbenchState
+            )
+        }
     }
 
     private fun terminatingWorkbenchAsync(applicationScope: ApplicationScope) = GlobalScope.async {

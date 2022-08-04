@@ -31,32 +31,27 @@ internal fun WorkbenchUI(
     workbenchState: WorkbenchState,
     closeRequest: ()->Unit
 ) {
-    MaterialTheme(
-        colors = LightColors,
-        typography = NotoSansTypography,
+    DragAndDropWindow(
+        informationState = informationState,
+        dragState = dragState,
+        onActionRequired = onActionRequired,
+        onCloseRequest = closeRequest,
+        tabRowKey = TabRowKey(
+            displayType = DisplayType.WINDOW,
+            ModuleType.BOTH,
+            informationState.mainWindow
+        ),
+        windowScope = { workbenchMenuBar(informationState, onActionRequired) }
     ) {
-        DragAndDropWindow(
-            informationState = informationState,
-            dragState = dragState,
-            onActionRequired = onActionRequired,
-            onCloseRequest = closeRequest,
-            tabRowKey = TabRowKey(
-                displayType = DisplayType.WINDOW,
-                ModuleType.BOTH,
-                informationState.mainWindow
-            ),
-            windowScope = { workbenchMenuBar(informationState, onActionRequired) }
-        ) {
-            when (workbenchState) {
-                WorkbenchState.RUNNING -> {
-                    WorkbenchBody(informationState, dragState, onActionRequired)
-                }
-                WorkbenchState.STARTING -> {
-                    WorkbenchStateInfo("Application is starting.")
-                }
-                WorkbenchState.TERMINATING -> {
-                    WorkbenchStateInfo("Application is terminating.")
-                }
+        when (workbenchState) {
+            WorkbenchState.RUNNING -> {
+                WorkbenchBody(informationState, dragState, onActionRequired)
+            }
+            WorkbenchState.STARTING -> {
+                WorkbenchStateInfo("Application is starting.")
+            }
+            WorkbenchState.TERMINATING -> {
+                WorkbenchStateInfo("Application is terminating.")
             }
         }
     }

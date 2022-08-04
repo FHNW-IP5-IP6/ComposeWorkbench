@@ -41,16 +41,11 @@ internal fun WorkbenchWindow(
                     tabRowKey = tabRowKey,
                     dragState = dragState
                 ) {
-                    MaterialTheme(
-                        colors = LightColors,
-                        typography = NotoSansTypography,
-                    ) {
-                        Column {
-                            DropTarget(informationState = informationState, tabRowKey = tabRowKey, dragState = dragState, onActionRequired =  onActionRequired) {
-                                WorkbenchTabRow(informationState, dragState, onActionRequired, tabRowKey)
-                            }
-                            WorkbenchTabBody(informationState, onActionRequired, tabRowKey)
+                    Column {
+                        DropTarget(informationState = informationState, tabRowKey = tabRowKey, dragState = dragState, onActionRequired =  onActionRequired) {
+                            WorkbenchTabRow(informationState, dragState, onActionRequired, tabRowKey)
                         }
+                        WorkbenchTabBody(informationState, onActionRequired, tabRowKey)
                     }
                 }
             }
