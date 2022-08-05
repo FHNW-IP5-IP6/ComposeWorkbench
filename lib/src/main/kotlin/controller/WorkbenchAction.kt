@@ -5,7 +5,6 @@ import model.data.TabRowKey
 import model.data.WorkbenchModule
 import model.data.enums.DisplayType
 import model.data.enums.SplitViewMode
-import model.state.DropTarget
 import model.state.PopUpState
 import model.state.WorkbenchDefaultState
 import model.state.WorkbenchModuleState
@@ -35,8 +34,7 @@ internal sealed class WorkbenchAction(
     class AddModuleState(val moduleState: WorkbenchModuleState<*>)                                      : WorkbenchAction("Add module state")
     class RemoveModuleState(val moduleState: WorkbenchModuleState<*>)                                   : WorkbenchAction("Remove module state")
     class SaveModuleState(val moduleState: WorkbenchModuleState<*>, val action: () -> Unit)             : WorkbenchAction("Save module state")
-    class DropModuleState(val dropTarget: DropTarget, val moduleState: WorkbenchModuleState<*>)         : WorkbenchAction("Drop module state")
-    class UpdateModuleState(val moduleState: WorkbenchModuleState<*>,val module: WorkbenchModule<*>)    : WorkbenchAction("Update module state module")
+    class UpdateEditor(val moduleState: WorkbenchModuleState<*>, val module: WorkbenchModule<*>)    : WorkbenchAction("Update module state module")
 
 
     class VerifySplitViewMode(val tabRowKey1: TabRowKey, val tabRowKey2: TabRowKey)                     : WorkbenchAction("Verify split view mode")

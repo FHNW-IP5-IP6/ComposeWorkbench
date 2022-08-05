@@ -22,10 +22,30 @@ internal class WorkbenchModuleState <C> (
         module.init?.invoke(controller, MQClientImpl)
     }
 
-    fun updateModule(module: WorkbenchModule<*>){
+    fun updateModule(module: WorkbenchModule<*>): WorkbenchModuleState<*>{
         module as WorkbenchModule<C>
-        this.module = module
         controller = module.loader!!.invoke(dataId!!, MQClientImpl)
+        return WorkbenchModuleState(
+            id = this.id,
+            dataId = this.dataId,
+            controller = controller,
+            module = module,
+            window = this.window,
+            displayType = this.displayType,
+            isPreview = this.isPreview
+        )
+    }
+
+    fun updateLocation(window: WorkbenchWindowState, displayType: DisplayType): WorkbenchModuleState<*>{
+        return WorkbenchModuleState(
+            id = this.id,
+            dataId = this.dataId,
+            controller = this.controller,
+            module = this.module,
+            window = window,
+            displayType = displayType,
+            isPreview = this.isPreview
+        )
     }
 
     fun selected() {

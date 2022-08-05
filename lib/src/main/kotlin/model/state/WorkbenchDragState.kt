@@ -44,6 +44,7 @@ internal data class WorkbenchDragState(
     }
 
     internal fun getWindowPosition(): WindowPosition {
+        if(positionOnScreen.isUnspecified) return WindowPosition.PlatformDefault
         return WindowPosition(x = positionOnScreen.x, y = positionOnScreen.y)
     }
 
@@ -55,7 +56,10 @@ internal data class WorkbenchDragState(
 
     internal fun isValidDropTarget(tabRowKey: TabRowKey, informationState: WorkbenchInformationState): Boolean {
         val moduleType = module?.module?.moduleType ?: return false
-        return (ModuleType.BOTH == moduleType || ModuleType.BOTH == tabRowKey.moduleType || moduleType == tabRowKey.moduleType) && !informationState.getModulesFiltered(tabRowKey).contains(module)
+        return (ModuleType.BOTH == moduleType
+                || ModuleType.BOTH == tabRowKey.moduleType
+                || moduleType == tabRowKey.moduleType)
+                && !informationState.getModulesFiltered(tabRowKey).contains(module)
     }
 }
 

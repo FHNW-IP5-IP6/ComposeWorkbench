@@ -95,9 +95,9 @@ class WorkbenchControllerTest {
         assertFalse { sut.informationState.getModulesFiltered(tabRowKey).contains(moduleState) }
 
         val tabRowKeyWindow = TabRowKey(displayType = DisplayType.WINDOW, moduleType = ModuleType.BOTH, windowState = sut.informationState.windows[0])
-        assertEquals(DisplayType.WINDOW, moduleState.displayType)
         assertEquals(1, sut.informationState.getModulesFiltered(tabRowKeyWindow).size)
-        assertEquals(moduleState, sut.informationState.getSelectedModule(tabRowKeyWindow))
+        val newModule = sut.informationState.getModulesFiltered(tabRowKeyWindow).first()
+        assertEquals(DisplayType.WINDOW, newModule.displayType)
         assertEquals(1, sut.informationState.windows.size)
     }
 
@@ -118,9 +118,10 @@ class WorkbenchControllerTest {
         assertFalse { sut.informationState.getModulesFiltered(tabRowKey).contains(selected) }
 
         val tabRowKeyWindow = TabRowKey(displayType = DisplayType.WINDOW, moduleType = ModuleType.BOTH, windowState = sut.informationState.windows[0])
-        assertEquals(DisplayType.WINDOW, selected.displayType)
+
         assertEquals(1, sut.informationState.getModulesFiltered(tabRowKeyWindow).size)
-        assertEquals(selected, sut.informationState.getSelectedModule(tabRowKeyWindow))
+        val newModule = sut.informationState.getModulesFiltered(tabRowKeyWindow).first()
+        assertEquals(DisplayType.WINDOW, newModule.displayType)
         assertEquals(1, sut.informationState.windows.size)
     }
 }

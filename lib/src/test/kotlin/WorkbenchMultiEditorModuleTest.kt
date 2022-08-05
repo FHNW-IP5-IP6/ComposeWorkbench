@@ -45,7 +45,7 @@ class WorkbenchMultiEditorModuleTest {
         assertEquals(id, moduleState.controller.id)
         assertEquals(controller.informationState.getRegisteredEditors<TestModel>(type)[0], moduleState.module)
 
-        controller.triggerAction(WorkbenchAction.UpdateModuleState(moduleState, controller.informationState.getRegisteredEditors<TestModel>(type)[1]))
+        controller.triggerAction(WorkbenchAction.UpdateEditor(moduleState, controller.informationState.getRegisteredEditors<TestModel>(type)[1]))
 
         assertEquals(1, controller.informationState.getModulesFiltered(tabRowKey).size)
         moduleState = controller.informationState.getSelectedModule(tabRowKey) as WorkbenchModuleState<TestModel>
@@ -70,7 +70,7 @@ class WorkbenchMultiEditorModuleTest {
         assertEquals(id, moduleState1.controller.id)
         assertEquals(controller.informationState.getRegisteredEditors<TestModel>(type)[0], moduleState1.module)
 
-        controller.triggerAction(WorkbenchAction.UpdateModuleState(moduleState1, controller.informationState.getRegisteredEditors<TestModel2>(type)[1]))
+        controller.triggerAction(WorkbenchAction.UpdateEditor(moduleState1, controller.informationState.getRegisteredEditors<TestModel2>(type)[1]))
 
         assertEquals(1, controller.informationState.getModulesFiltered(tabRowKey).size)
         val module2: WorkbenchModuleState<TestModel2> = controller.informationState.getSelectedModule(tabRowKey) as WorkbenchModuleState<TestModel2>

@@ -81,6 +81,7 @@ internal fun DragAndDropWindow(
 /**
  * Target to drop a dragged module
  */
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 internal fun DropTarget(
     informationState: WorkbenchInformationState,
@@ -100,6 +101,7 @@ internal fun DropTarget(
             )
         }
     ) {
+        //TODO: Can this be handled when changing the drag position??
         if (dragState.isCurrentDropTarget(tabRowKey) && dragState.isValidDropTarget(tabRowKey, informationState)) {
             onActionRequired.invoke(WorkbenchAction.UpdatePreviewTitle(tabRowKey, dragState.module!!.getTitle()))
         } else if (informationState.tabRowState[tabRowKey]?.preview != null){
@@ -137,7 +139,7 @@ internal fun DragTarget(
                 }
             }
         }
-        .pointerInput(key1 = module.id) {
+        .pointerInput(key1 = module) {
             detectDragGestures(onDragStart = {
                 onActionRequired.invoke(DragAndDropAction.StartDragging(module))
             }, onDrag = { change, _ ->

@@ -4,7 +4,6 @@ import ActionResult
 import ExplorerLocation
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.referentialEqualityPolicy
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.unit.DpOffset
@@ -23,7 +22,7 @@ internal class WorkbenchController {
 
     private val stateUpdateLock = Any()
     var uniqueKey: AtomicInteger = AtomicInteger(0)
-    var informationState by mutableStateOf(getDefaultWorkbenchDisplayInformation(), policy = referentialEqualityPolicy())
+    var informationState by mutableStateOf(getDefaultWorkbenchDisplayInformation())
         private set
 
     var dragState by mutableStateOf(getDefaultWorkbenchDragState())
@@ -78,11 +77,6 @@ internal class WorkbenchController {
                     informationState,
                     workbenchAction.id
                 )
-                is WorkbenchAction.DropModuleState -> dropModule(
-                    informationState,
-                    workbenchAction.dropTarget,
-                    workbenchAction.moduleState
-                )
                 is WorkbenchAction.HideDrawer -> hideDrawer(informationState, workbenchAction.displayType)
                 is WorkbenchAction.InitExplorers -> initExplorers()
                 is WorkbenchAction.ModuleToWindow -> moduleToWindow(informationState, workbenchAction.moduleState)
@@ -103,7 +97,7 @@ internal class WorkbenchController {
                     workbenchAction.type,
                     workbenchAction.dataId
                 )
-                is WorkbenchAction.RemoveWindow -> removeWindow(workbenchAction.tabRowKey)
+                is WorkbenchAction.RemoveWindow -> removeWindow(informationState, workbenchAction.tabRowKey)
                 is WorkbenchAction.RequestEditorState -> requestEditorState(
                     workbenchAction.type,
                     workbenchAction.dataId
@@ -119,7 +113,7 @@ internal class WorkbenchController {
                     workbenchAction.moduleState
                 )
                 is WorkbenchAction.UpdateCurrentTabSpace -> updateCurrentTabSpace(workbenchAction.displayType)
-                is WorkbenchAction.UpdateModuleState -> updateModule(
+                is WorkbenchAction.UpdateEditor -> updateEditor(
                     workbenchAction.moduleState,
                     workbenchAction.module
                 )
@@ -171,13 +165,22 @@ internal class WorkbenchController {
             } else {
                 val dropTarget = dragState.getCurrentDopTarget(reverseDropTarget.tabRowKey.windowState)
                 if (dropTarget != null && dragState.isValidDropTarget(dropTarget.tabRowKey, informationState)) {
-                    result = reselect(result, module)
                     result = dropModule(result, dropTarget, module)
                 }
             }
         }
         triggerAction(DragAndDropAction.Reset())
         return result
+    }
+
+    private fun dropModule(
+        newInformationState: WorkbenchInformationState,
+        dropTarget: DropTarget,
+        moduleState: WorkbenchModuleState<*>
+    ): WorkbenchInformationState {
+        val result = removeModuleState(newInformationState, moduleState)
+        val newState = moduleState.updateLocation(dropTarget.tabRowKey.windowState, dropTarget.tabRowKey.displayType)
+        return addModuleState(result,  newState)
     }
 
     private fun addDropTarget(tabRowKey: TabRowKey, bounds: Rect, isReverse: Boolean): WorkbenchDragState {
@@ -361,15 +364,15 @@ internal class WorkbenchController {
         return informationState
     }
 
-    private fun removeWindow(tabRowKey: TabRowKey): WorkbenchInformationState {
-        val windows = informationState.windows.toMutableList()
+    private fun removeWindow(newInformationState: WorkbenchInformationState, tabRowKey: TabRowKey): WorkbenchInformationState {
+        val windows = newInformationState.windows.toMutableList()
         windows -= tabRowKey.windowState
         //cleanup drop targets
         val dropTargets = dragState.dropTargets.toMutableList()
         dropTargets.removeIf { it.tabRowKey.windowState == tabRowKey.windowState }
         dragState = dragState.copy(dropTargets = dropTargets)
 
-        return informationState.copy(windows = windows)
+        return newInformationState.copy(windows = windows)
     }
 
     private fun reselect(
@@ -378,7 +381,7 @@ internal class WorkbenchController {
     ): WorkbenchInformationState {
         val tabRowKey = TabRowKey(moduleState)
         val modules = newInformationState.getModulesFiltered(tabRowKey)
-        return if (modules.size <= 1 && modules.contains(moduleState)) {
+        return if (modules.isEmpty() || modules.size <= 1 && modules.contains(moduleState)) {
             val result = hideDrawer(newInformationState, tabRowKey.displayType)
             updateSelection(result, tabRowKey, null)
         } else {
@@ -403,13 +406,11 @@ internal class WorkbenchController {
             hasFocus = true,
             windowHeaderOffset = 0.dp
         )
-
-        moduleState.displayType = DisplayType.WINDOW
-        moduleState.window = window
-
-        val windows = newInformationState.windows.toMutableList()
+        var result = removeModuleState(newInformationState, moduleState)
+        val newState = moduleState.updateLocation(window, DisplayType.WINDOW)
+        result = addModuleState(result,  newState)
+        val windows = result.windows.toMutableList()
         windows += window
-        val result = updateSelection(newInformationState, TabRowKey(moduleState), moduleState)
         return result.copy(windows = windows)
     }
 
@@ -436,7 +437,6 @@ internal class WorkbenchController {
         } else {
             tabRowStates[tabRowKey] = informationState.tabRowState[tabRowKey]!!.copy(selected = moduleState)
         }
-        moduleState?.selected()
         return newInformationState.copy(tabRowState = tabRowStates)
     }
 
@@ -499,33 +499,26 @@ internal class WorkbenchController {
     ): WorkbenchInformationState {
         val modules = newInformationState.modules.toMutableList()
         modules -= moduleState
-        val result = reselect(newInformationState, moduleState)
-        return result.copy(modules = modules)
+        var result = reselect(newInformationState, moduleState)
+        result = result.copy(modules = modules)
+        //remove window if empty
+        if (moduleState.window != result.mainWindow && result.getModulesFiltered(TabRowKey(moduleState)).isEmpty()) {
+            result = removeWindow(newInformationState, TabRowKey(moduleState))
+        }
+        return result
     }
 
-    private fun dropModule(
-        newInformationState: WorkbenchInformationState,
-        dropTarget: DropTarget,
-        moduleState: WorkbenchModuleState<*>
-    ): WorkbenchInformationState {
-        val moduleStates = newInformationState.modules.toMutableList()
-        //remove and add module state to ensure it's at the beginning of the tab row
-        moduleStates -= moduleState
-        moduleState.window = dropTarget.tabRowKey.windowState
-        moduleState.displayType = dropTarget.tabRowKey.displayType
-        moduleStates += moduleState
-        var result = newInformationState.copy(modules = moduleStates)
-        result = showDrawer(result, moduleState.displayType)
-        return updateSelection(result, TabRowKey(moduleState), moduleState)
-    }
-
-    private fun updateModule(
+    private fun updateEditor(
         moduleState: WorkbenchModuleState<*>,
         module: WorkbenchModule<*>
     ): WorkbenchInformationState {
         val modules = informationState.modules.toMutableList()
-        moduleState.updateModule(module)
-        return informationState.copy(modules = modules)
+        val index = modules.indexOf(moduleState).coerceAtLeast(0)
+        modules.remove(moduleState)
+        val newModule = moduleState.updateModule(module)
+        modules.add(index, newModule)
+        val result = updateSelection(informationState, TabRowKey(newModule),newModule)
+        return result.copy(modules = modules)
     }
 
     private fun moduleStateSelectorPressed(

@@ -112,11 +112,11 @@ internal fun WorkbenchEditorSelector(
                             popUpState = PopUpState(
                                 type = PopUpType.SAVE,
                                 message = "") {
-                                    onActionRequired.invoke(WorkbenchAction.UpdateModuleState(informationState.getSelectedModule(tabRowKey)!!, editor))
+                                    onActionRequired.invoke(WorkbenchAction.UpdateEditor(informationState.getSelectedModule(tabRowKey)!!, editor))
                                 }
                         ))
                     } else {
-                        onActionRequired.invoke(WorkbenchAction.UpdateModuleState(informationState.getSelectedModule(tabRowKey)!!, editor))
+                        onActionRequired.invoke(WorkbenchAction.UpdateEditor(informationState.getSelectedModule(tabRowKey)!!, editor))
                     }
                 }
             ){
