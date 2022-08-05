@@ -1,4 +1,4 @@
-
+package model.data
 import java.util.concurrent.Executor
 
 sealed interface MqClient {

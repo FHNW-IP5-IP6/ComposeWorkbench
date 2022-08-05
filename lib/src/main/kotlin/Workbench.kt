@@ -17,6 +17,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import model.data.Command
 import model.data.MQClientImpl
+import model.data.MqClient
 import model.data.WorkbenchModule
 import model.data.enums.MenuType
 import model.data.enums.ModuleType
@@ -29,7 +30,7 @@ import view.themes.LightColors
 import java.util.concurrent.Executors
 
 
-sealed class Workbench(private val appTitle: String = "", private val enableMQ: Boolean = false) {
+class Workbench(private val appTitle: String = "", private val enableMQ: Boolean = false) {
 
     private var workbenchState by mutableStateOf(WorkbenchState.STARTING)
     private val controller = WorkbenchController()

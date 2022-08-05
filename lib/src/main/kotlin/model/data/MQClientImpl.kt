@@ -8,7 +8,6 @@ import MQ_INTERNAL_EDITOR_STATE_SAVED
 import MQ_INTERNAL_EDITOR_STATE_SELECTED
 import MQ_INTERNAL_EDITOR_STATE_UNSAVED
 import MQ_INTERNAL_TOPIC_PATH_EDITOR
-import MqClient
 import com.hivemq.client.mqtt.MqttClient
 import com.hivemq.client.mqtt.datatypes.MqttQos
 import com.hivemq.client.mqtt.mqtt5.Mqtt5BlockingClient
