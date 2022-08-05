@@ -1,7 +1,7 @@
 
 import java.util.concurrent.Executor
 
-interface MqClient {
+sealed interface MqClient {
 
     fun publish(topic: String, msg: String)
     fun publish(type: String, id: Int, msg: String)

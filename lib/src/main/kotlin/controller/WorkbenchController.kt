@@ -497,13 +497,13 @@ internal class WorkbenchController {
         newInformationState: WorkbenchInformationState,
         moduleState: WorkbenchModuleState<*>
     ): WorkbenchInformationState {
-        val modules = newInformationState.modules.toMutableList()
-        modules -= moduleState
         var result = reselect(newInformationState, moduleState)
+        val modules = result.modules.toMutableList()
+        modules -= moduleState
         result = result.copy(modules = modules)
         //remove window if empty
         if (moduleState.window != result.mainWindow && result.getModulesFiltered(TabRowKey(moduleState)).isEmpty()) {
-            result = removeWindow(newInformationState, TabRowKey(moduleState))
+            result = removeWindow(result, TabRowKey(moduleState))
         }
         return result
     }

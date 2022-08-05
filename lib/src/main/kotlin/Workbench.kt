@@ -29,7 +29,7 @@ import view.themes.LightColors
 import java.util.concurrent.Executors
 
 
-class Workbench(private val appTitle: String = "", private val enableMQ: Boolean = false) {
+sealed class Workbench(private val appTitle: String = "", private val enableMQ: Boolean = false) {
 
     private var workbenchState by mutableStateOf(WorkbenchState.STARTING)
     private val controller = WorkbenchController()
