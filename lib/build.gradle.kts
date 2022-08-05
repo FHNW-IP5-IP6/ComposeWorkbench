@@ -15,6 +15,8 @@ dependencies {
     testImplementation(kotlin("test"))
     implementation(compose.desktop.currentOs)
 
+    runtimeOnly("org.jetbrains.kotlinx:kotlinx-coroutines-swing:1.6.0")
+
     @OptIn(org.jetbrains.compose.ExperimentalComposeLibrary::class)
     implementation (org.jetbrains.compose.ComposePlugin.DesktopDependencies.components.splitPane)
     implementation("com.hivemq:hivemq-community-edition-embedded:2021.3")
