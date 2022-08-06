@@ -11,11 +11,11 @@ Editor: An Editor is a module who's main purpose is to edit a given data record.
 ## Gradle
 ## Maven
 # Usage
-Check the \demo directory for examples on how to use ComposeWorkbench
+Check the \examples directory for examples on how to use ComposeWorkbench
 
 To create a ComposeWorkbench app start wit an instance of a Workbench
 ``
-val workbench: Workbench = Workbench("Sample App")
+val workbench: Workbench = Workbench("Hello Workbench")
 ``
 
 ### Register Modules
@@ -23,22 +23,21 @@ Editors and Explorers must be registered before they can be used (requested). Th
 
 Use the workbench to register editors and explorers by calling the exposed functions.
 
-//TODO: Make this look better
-<table>
-<tr>
-<th> 
+<table style="border: none">
+<tr style="border: none">
+<th style="border: none; border-bottom: thin solid;"> 
 
 ``Workbench.registerExplorer<C>``
 
 </th>
-<th> 
+<th style="border: none; border-bottom: thin solid;"> 
 
 ``Workbench.registerEditor<C>``
 
 </th>
 </tr>
-<tr>
-<td>
+<tr style="border: none">
+<td style="border: none">
 
 Register an Explorer with the following arguments:
 - C: Any - controller used in view to manage and display data
@@ -47,18 +46,27 @@ Register an Explorer with the following arguments:
 - init: (C, MQClient) -> Unit - initialize messaging
 - explorerView: @Composable(C) -> Unit - displayable content
 ```
-    workbench.registerExplorer<EmployeeController>(
-        type =  "Employees",
-        title = { it.title() },
-        init =  {c, m -> },
-    ) { c ->
-        //The @Composable explorer view goes here
-        Text(text = "This is an Explorer")
+     workbench.registerExplorer<List<Color>>(
+        type = COLORS,
+        title = { colors -> "Colors: ${colors.size}" },
+    ) { colors ->
+        Column {
+            colors.forEachIndexed { i, c ->
+                Card (
+                    modifier = Modifier.padding(5.dp).height(25.dp).fillMaxWidth(),
+                    backgroundColor = c,
+                    onClick = { workbench.requestEditor(
+                        type = COLOR,
+                        id = i
+                    ) }
+                ) { }
+            }
+        }
     }
 ```
 
 </td>
-<td>
+<td style="border: none">
 
 Register and Editor with the following arguments:
 - C: Any - controller used in view to manage and display data
@@ -66,18 +74,20 @@ Register and Editor with the following arguments:
 - title: (C) -> String - the display title of the editor
 - initController: (Int, MQClient) -> C - initialize a controller for the given data id and setup messaging
 - icon: ImageVector - icon used for the editor (Optional)
-- onClose: (C, MQClient) -> ActionResult - callback when closing the editor (Optional)
 - onSave: (C, MQClient) -> ActionResult - callback when saving the editor (Optional)
 - editorView: @Composable(C) -> Unit - displayable content
 ```
-    workbench.registerEditor<EmployeeController>(
-                type =              "Employee",
-                title =             { it.name },
-                initController =    { employeeController },
-        ){ c ->
-            //The @Composable editor view goes here
-            Text(text = "This is an Editor")
+    workbench.registerEditor<RgbController>(
+        type = COLOR,
+        title = { it.rgbState.title() },
+        initController =  {i, mqtt -> RgbController(i, repository[i]){mqtt.publishUnsaved(COLOR, i)} },
+        icon = Icons.Filled.Edit,
+        onSave = { c, _ ->
+            repository[c.rgbState.index] = Color(c.rgbState.r, c.rgbState.g, c.rgbState.b, 1f)
+            success()
         }
+    ){
+        RgbEditorUi(it)
     }
 ```
 
@@ -85,31 +95,28 @@ Register and Editor with the following arguments:
 </tr>
 </table>
 
-#### OnClose OnSave
-Closing and Saving an Editor will publish a message even if the callback is not specified. Both callbacks require an ActionResult as return value. This ActionResult has a success flag which is a Boolean and a message. Use the predefined functions success() and failure(msg: String). The current action will be aborted should the returned ActionResults success flag be false.
-
-- OnClose is called whenever an Editor is closed: Use this to execute additional actions or custom messages
-- OnSave is called whenever Save All is executed or the Editor has unsaved state and is closed: Use this for validation or to execute additional actions or custom messages
+#### OnSave
+Saving an Editor will publish a message even if the callback is not specified. The onSave callback requires an ActionResult as return value. This ActionResult has a success flag which is a Boolean and a message. Use the predefined functions success() and failure(msg: String). The current action will be aborted should the returned ActionResults success flag be false. OnSave is called whenever Save All is executed or the Editor has unsaved state and is closed: Use this for validation or to execute additional actions or custom messages
 
 ### Request Modules
 Once a Module is registered it can be requested. Explorers and Editors can be requested multiple times. An Explorer for example can be requested with different data subsets, like one explorer for employees grouped by country. It is also possible to have one Explorer for Lists which can handle all needed Data. Editors are requested whenever a data record needs editing.
 Use the workbench to request editors and explorers by calling the exposed functions.
 
-<table>
-<tr>
-<th> 
+<table style="border: none">
+<tr style="border: none">
+<th style="border: none; border-bottom: thin solid;"> 
 
 ``Workbench.requestExplorer<C>``
 
 </th>
-<th> 
+<th style="border: none; border-bottom: thin solid;"> 
 
 ``Workbench.requestEditor<C>``
 
 </th>
 </tr>
-<tr>
-<td>
+<tr style="border: none">
+<td style="border: none">
 
 Request an Explorer with the following arguments:
 - type: String - the type of Data for which an Explorer is requested
@@ -118,22 +125,23 @@ Request an Explorer with the following arguments:
 - location: ExplorerLocation - the location for this Explorer (Optional)
 - shown: boolean - defines if the explorer is shown when starting the Workbench (Optional)
 ```
-    workbench.requestExplorer<EmployeeController>(
-        type =      "Employees",
-        c =         EmployeeController(), 
+    workbench.requestExplorer<List<Color>>(
+        type = COLORS,
+        c = colors, 
+        listed = true
     )
 ``` 
 
 </td>
-<td>
+<td style="border: none">
 
 Request an Editor with the following arguments:
 - type: String -
 - id: Int -
 ```
-    workbench.requestEditor<EmployeeController>(
-        type = "Employee", 
-        id =    1234
+    workbench.requestEditor(
+        type = COLOR,
+        id = i
     )
 ```
 
@@ -141,8 +149,11 @@ Request an Editor with the following arguments:
 </tr>
 </table>
 
-TODO: make example for this and add screenshots?
+The most common use case to request Editors is when clicking on and item in the Explorer. An Editor for a given id and type can only be requested once. Should the Editor be requested again the workbench is simply selecting the already displayed Editor.
+There can be multiple Editors for the same Type. The location of a city for example can be edited by providing a set of coordinates but also by selecting a location on a Map.
+If there are multiple editors for the Same Type the Workbench is defaulting to the Editor which was registered first, and the User can then switch between the available Editors.
 
+![screen-gif](./doku/readme/EditorSelect.gif)
 
 ### Commands
 //TODO: is this a thing?

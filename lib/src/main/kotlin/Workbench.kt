@@ -204,12 +204,11 @@ class Workbench(private val appTitle: String = "", private val enableMQ: Boolean
     /**
      * Edit given Controller with editor of given type
      *
-     * @param C: Controller which the editor uses to manage and display data
      * @param id: id of the specific data which is to be edited
      * @param type: The type of data which the Editor is used for
      */
     @Suppress("UNCHECKED_CAST")
-    fun <C> requestEditor(
+    fun requestEditor(
         type: String,
         id: Int
     ) {

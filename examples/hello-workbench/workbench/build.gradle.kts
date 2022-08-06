@@ -13,6 +13,7 @@ version = "1.0.0"
 dependencies {
     implementation(compose.desktop.currentOs)
     implementation(project(":lib"))
+    implementation("org.jetbrains.compose.material:material-icons-extended:1.1.1")
 }
 
 tasks.withType<KotlinCompile> {
