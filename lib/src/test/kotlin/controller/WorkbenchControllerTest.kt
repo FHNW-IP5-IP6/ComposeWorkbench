@@ -56,8 +56,8 @@ class WorkbenchControllerTest {
     @Test
     fun registerAndRequestEditor(){
         val editorModule = WorkbenchModule(ModuleType.EDITOR,"type", title ={"title"}, loader = {id, mqtt -> "model"} ) {}
-        sut.triggerAction(WorkbenchAction.RegisterEditor("type", editorModule))
-        sut.triggerAction(WorkbenchAction.RequestEditorState("type", 666))
+        sut.triggerAction(WorkbenchActionSync.RegisterEditor("type", editorModule))
+        sut.triggerAction(WorkbenchActionSync.RequestEditorState("type", 666))
         val moduleState = sut.informationState.modules.find { it.module.modelType == "type" && it.dataId == 666 }!!
 
         val tabRowKey = TabRowKey(displayType = moduleState.displayType, moduleType = ModuleType.EDITOR, windowState = sut.informationState.mainWindow)
@@ -70,9 +70,9 @@ class WorkbenchControllerTest {
     @Test
     fun registerAndRequestExplorer(){
         val explorerModule = WorkbenchModule<String>(ModuleType.EXPLORER,"type", title ={"title"}) {}
-        sut.triggerAction(WorkbenchAction.RegisterExplorer("type", explorerModule))
+        sut.triggerAction(WorkbenchActionSync.RegisterExplorer("type", explorerModule))
         val moduleState = WorkbenchModuleState<String>(module =  explorerModule, controller = "bla", displayType = DisplayType.LEFT, id = 456, window = sut.informationState.mainWindow)
-        sut.triggerAction(WorkbenchAction.RequestExplorerState(moduleState))
+        sut.triggerAction(WorkbenchActionSync.RequestExplorerState(moduleState))
 
         val tabRowKey = TabRowKey(displayType = moduleState.displayType, moduleType = ModuleType.EXPLORER, windowState = sut.informationState.mainWindow)
         assertEquals(1, sut.informationState.getModulesFiltered(tabRowKey).size)
@@ -83,8 +83,8 @@ class WorkbenchControllerTest {
     @Test
     fun convertEditorToWindow() {
         val editorModule = WorkbenchModule(ModuleType.EDITOR,"type", title ={"title"}, loader = {id, mqtt -> "model"} ) {}
-        sut.triggerAction(WorkbenchAction.RegisterEditor("type", editorModule))
-        sut.triggerAction(WorkbenchAction.RequestEditorState("type", 666))
+        sut.triggerAction(WorkbenchActionSync.RegisterEditor("type", editorModule))
+        sut.triggerAction(WorkbenchActionSync.RequestEditorState("type", 666))
 
         val tabRowKey = TabRowKey(displayType = DisplayType.TAB1, moduleType = ModuleType.EDITOR, windowState = sut.informationState.mainWindow)
         assertEquals(1, sut.informationState.getModulesFiltered(tabRowKey).size)
@@ -105,8 +105,8 @@ class WorkbenchControllerTest {
     fun convertExplorerToWindow() {
         val explorerModule = WorkbenchModule<String>(ModuleType.EXPLORER,"type", title ={"title"}) { }
         val moduleState = WorkbenchModuleState(module =  explorerModule, controller = "bla", displayType = DisplayType.LEFT, id = 456, window = sut.informationState.mainWindow)
-        sut.triggerAction(WorkbenchAction.RegisterExplorer("type", explorerModule))
-        sut.triggerAction(WorkbenchAction.RequestExplorerState(moduleState))
+        sut.triggerAction(WorkbenchActionSync.RegisterExplorer("type", explorerModule))
+        sut.triggerAction(WorkbenchActionSync.RequestExplorerState(moduleState))
 
         val tabRowKey = TabRowKey(displayType = DisplayType.LEFT, moduleType = ModuleType.EXPLORER, windowState = sut.informationState.mainWindow)
         assertEquals(1, sut.informationState.getModulesFiltered(tabRowKey).size)

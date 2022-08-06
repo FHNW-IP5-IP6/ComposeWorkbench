@@ -39,8 +39,8 @@ class WorkbenchDragTest {
     fun reset() {
         val editorModule =
             WorkbenchModule(ModuleType.EDITOR, "type", title = { "title" }, loader = { _, _ -> "model" }) { }
-        sut.triggerAction(WorkbenchAction.RegisterEditor("type", editorModule))
-        sut.triggerAction(WorkbenchAction.RequestEditorState("type", 1))
+        sut.triggerAction(WorkbenchActionSync.RegisterEditor("type", editorModule))
+        sut.triggerAction(WorkbenchActionSync.RequestEditorState("type", 1))
         val moduleState = sut.informationState.modules.find { it.module.modelType == "type" && it.dataId == 1 }!!
 
         sut.triggerAction(DragAndDropAction.StartDragging(moduleState))
@@ -78,7 +78,7 @@ class WorkbenchDragTest {
     @Test
     fun isValidDropTarget() {
         val explorerModule = WorkbenchModule<String>(ModuleType.EXPLORER, "type", title = { "title" }) { }
-        sut.triggerAction(WorkbenchAction.RegisterExplorer("type", explorerModule))
+        sut.triggerAction(WorkbenchActionSync.RegisterExplorer("type", explorerModule))
 
         val explorerLeft = WorkbenchModuleState(
             module = explorerModule,
@@ -94,8 +94,8 @@ class WorkbenchDragTest {
             id = 2,
             window = sut.informationState.mainWindow
         )
-        sut.triggerAction(WorkbenchAction.RequestExplorerState(explorerLeft))
-        sut.triggerAction(WorkbenchAction.RequestExplorerState(explorerBottom))
+        sut.triggerAction(WorkbenchActionSync.RequestExplorerState(explorerLeft))
+        sut.triggerAction(WorkbenchActionSync.RequestExplorerState(explorerBottom))
 
         val tabRowKeyBottom = TabRowKey(DisplayType.BOTTOM, ModuleType.EXPLORER, sut.informationState.mainWindow)
         val target = DropTarget(false, tabRowKeyBottom, Rect(0f, 50f, 100f, 100f))
@@ -115,12 +115,12 @@ class WorkbenchDragTest {
         val editorModule =
             WorkbenchModule(ModuleType.EDITOR, "type", title = { "title" }, loader = { id, _ -> "model $id" }) { }
         val explorerModule = WorkbenchModule<String>(ModuleType.EXPLORER, "type", title = { "title" }) { }
-        sut.triggerAction(WorkbenchAction.RegisterExplorer("type", explorerModule))
-        sut.triggerAction(WorkbenchAction.RegisterEditor("type", editorModule))
-        sut.triggerAction(WorkbenchAction.RegisterEditor("type", editorModule))
-        sut.triggerAction(WorkbenchAction.RequestEditorState("type", 1))
+        sut.triggerAction(WorkbenchActionSync.RegisterExplorer("type", explorerModule))
+        sut.triggerAction(WorkbenchActionSync.RegisterEditor("type", editorModule))
+        sut.triggerAction(WorkbenchActionSync.RegisterEditor("type", editorModule))
+        sut.triggerAction(WorkbenchActionSync.RequestEditorState("type", 1))
         val editor1 = sut.informationState.modules.find { it.module.modelType == "type" && it.dataId == 1 }!!
-        sut.triggerAction(WorkbenchAction.RequestEditorState("type", 2))
+        sut.triggerAction(WorkbenchActionSync.RequestEditorState("type", 2))
         val editor2 = sut.informationState.modules.find { it.module.modelType == "type" && it.dataId == 2 }!!
         editor2.displayType = DisplayType.TAB2
 
@@ -131,7 +131,7 @@ class WorkbenchDragTest {
             id = 1,
             window = sut.informationState.mainWindow
         )
-        sut.triggerAction(WorkbenchAction.RequestExplorerState(explorer))
+        sut.triggerAction(WorkbenchActionSync.RequestExplorerState(explorer))
         val editorTabRowKey1 = TabRowKey(DisplayType.TAB1, ModuleType.EDITOR, sut.informationState.mainWindow)
         val editorTabRowKey2 = TabRowKey(DisplayType.TAB2, ModuleType.EDITOR, sut.informationState.mainWindow)
         val explorerTabRowKey = TabRowKey(DisplayType.LEFT, ModuleType.EXPLORER, sut.informationState.mainWindow)

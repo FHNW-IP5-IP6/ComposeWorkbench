@@ -53,18 +53,16 @@ internal class WorkbenchController {
     fun getNextKey(): Int = uniqueKey.getAndIncrement()
 
     fun triggerAction(action: Action) {
-        synchronized(stateUpdateLock) {
             when (action) {
                 is WorkbenchAction -> triggerAction(action)
                 is DragAndDropAction -> triggerAction(action)
             }
-        }
     }
 
     private fun triggerAction(workbenchAction: WorkbenchAction) {
             val newState = when (workbenchAction) {
-                is WorkbenchAction.AddCommand -> addCommand(workbenchAction.command)
-                is WorkbenchAction.AddDefaultExplorer -> addDefaultExplorer(
+                is WorkbenchActionSync.AddCommand -> addCommand(workbenchAction.command)
+                is WorkbenchActionSync.AddDefaultExplorer -> addDefaultExplorer(
                     workbenchAction.id,
                     workbenchAction.state
                 )
@@ -82,11 +80,11 @@ internal class WorkbenchController {
                 is WorkbenchAction.HideDrawer -> hideDrawer(informationState, workbenchAction.displayType)
                 is WorkbenchAction.InitExplorers -> initExplorers()
                 is WorkbenchAction.ModuleToWindow -> moduleToWindow(informationState, workbenchAction.moduleState)
-                is WorkbenchAction.RegisterEditor -> registerEditor(
+                is WorkbenchActionSync.RegisterEditor -> registerEditor(
                     workbenchAction.moduleType,
                     workbenchAction.editor
                 )
-                is WorkbenchAction.RegisterExplorer -> registerExplorer(
+                is WorkbenchActionSync.RegisterExplorer -> registerExplorer(
                     workbenchAction.moduleType,
                     workbenchAction.explorer
                 )
@@ -100,7 +98,7 @@ internal class WorkbenchController {
                     workbenchAction.dataId
                 )
                 is WorkbenchAction.RemoveWindow -> removeWindow(informationState, workbenchAction.tabRowKey)
-                is WorkbenchAction.RequestEditorState -> requestEditorState(
+                is WorkbenchActionSync.RequestEditorState -> requestEditorState(
                     workbenchAction.type,
                     workbenchAction.dataId
                 )
@@ -128,10 +126,11 @@ internal class WorkbenchController {
                     workbenchAction.tabRowKey1,
                     workbenchAction.tabRowKey2
                 )
-                is WorkbenchAction.RequestExplorerState -> requestExplorerState(workbenchAction.moduleState)
+                is WorkbenchActionSync.RequestExplorerState -> requestExplorerState(workbenchAction.moduleState)
                 is WorkbenchAction.DropDraggedModule -> dropDraggedModule()
             }
             informationState = newState
+
     }
 
     /**

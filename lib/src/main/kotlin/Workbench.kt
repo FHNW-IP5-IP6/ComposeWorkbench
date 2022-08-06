@@ -10,7 +10,7 @@ import androidx.compose.ui.window.application
 import com.example.ui.theme.NotoSansTypography
 import com.hivemq.embedded.EmbeddedHiveMQ
 import com.hivemq.embedded.EmbeddedHiveMQBuilder
-import controller.Action
+import controller.*
 import controller.WorkbenchAction
 import controller.WorkbenchController
 import controller.WorkbenchMQDispatcher
@@ -36,8 +36,7 @@ import java.util.concurrent.Executors
 class Workbench(private val appTitle: String = "", private val enableMQ: Boolean = false) {
 
     private val mainScope = CoroutineScope(Dispatchers.Main.immediate + SupervisorJob())
-
-    private val actionChannel = Channel<Action>(capacity = Channel.UNLIMITED)
+    private val actionChannel = Channel<Action> (capacity = Channel.UNLIMITED)
 
     private var workbenchState by mutableStateOf(WorkbenchState.STARTING)
     private val controller = WorkbenchController()
@@ -49,18 +48,28 @@ class Workbench(private val appTitle: String = "", private val enableMQ: Boolean
 
     private val initJob: Job
 
-    private fun triggerAction(action: Action) = CoroutineScope(Dispatchers.Default).launch {
-        actionChannel.send(action)
+    private fun triggerAction(action: Action) = runBlocking(Dispatchers.Main) {
+        launch {
+            actionChannel.send(action)
+        }
+        if (action is WorkbenchActionSync) {
+            action.response.await()
+        }
     }
 
-    private fun consumingActions() = CoroutineScope(Dispatchers.Default).launch {
-        actionChannel.consumeEach {
-            controller.triggerAction(it)
+    private fun startConsumingActions() {
+        CoroutineScope(Dispatchers.Default).launch {
+            actionChannel.consumeEach { action ->
+                controller.triggerAction(action)
+                if (action is WorkbenchActionSync) {
+                    action.response.complete(0)
+                }
+            }
         }
     }
 
     init {
-        consumingActions()
+        startConsumingActions()
         initJob = initMQInfrastructure()
     }
 
@@ -115,7 +124,7 @@ class Workbench(private val appTitle: String = "", private val enableMQ: Boolean
             init = init,
             title = title,
         )
-        triggerAction(WorkbenchAction.RegisterExplorer(type, explorer))
+        triggerAction(WorkbenchActionSync.RegisterExplorer(type, explorer))
     }
 
     /**
@@ -151,7 +160,7 @@ class Workbench(private val appTitle: String = "", private val enableMQ: Boolean
             onClose = onClose,
             onSave = onSave
         )
-        triggerAction(WorkbenchAction.RegisterEditor(type, editor))
+        triggerAction(WorkbenchActionSync.RegisterEditor(type, editor))
     }
 
     /**
@@ -173,10 +182,10 @@ class Workbench(private val appTitle: String = "", private val enableMQ: Boolean
         val id = controller.getNextKey()
         val explorer = controller.informationState.getRegisteredExplorer<Any>(type)
         val defaultExplorer = WorkbenchDefaultState(explorer.modelType, c, explorer.title, location, shown, listed)
-        triggerAction(WorkbenchAction.AddDefaultExplorer(id, defaultExplorer))
+        triggerAction(WorkbenchActionSync.AddDefaultExplorer(id, defaultExplorer))
         if (listed) {
             controller.triggerAction(
-                WorkbenchAction.AddCommand(
+                WorkbenchActionSync.AddCommand(
                     Command(
                         text = controller.informationState.getRegisteredExplorer<C>(type).title(c),
                         paths = mutableListOf(
@@ -202,7 +211,7 @@ class Workbench(private val appTitle: String = "", private val enableMQ: Boolean
         type: String,
         id: Int
     ) {
-        triggerAction(WorkbenchAction.RequestEditorState(type, id))
+        triggerAction(WorkbenchActionSync.RequestEditorState(type, id))
     }
 
     /**
