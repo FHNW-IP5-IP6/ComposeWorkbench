@@ -40,10 +40,6 @@ fun main() {
                                                          )},
              icon = Icons.Default.Edit,
             title = { "${it.editorState.data.street.value} ${it.editorState.data.streetNumber.value}" },
-          onClose = { controller, mqtt  ->
-                        println("close ${controller.editorState.data.id}")
-                        ActionResult(true, "All good, my friend.")
-                    },
            onSave = { controller, mqtt ->
                         controller.triggerAction(RealEstateAction.Save())
                         success()

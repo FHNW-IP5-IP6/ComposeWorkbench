@@ -15,11 +15,6 @@ sealed interface MqClient {
     fun publishUnsaved(type: String, id: Int)
 
     /**
-     * Let the workbench know that the entity with the given type and id was saved
-     */
-    fun publishSaved(type: String, id: Int)
-
-    /**
      * Get notified when an editor of the given type is selected
      */
     fun subscribeForSelectedEditor(editorType: String, callBack: (Int)->Unit)

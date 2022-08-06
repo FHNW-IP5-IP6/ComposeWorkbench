@@ -8,8 +8,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
@@ -17,91 +15,106 @@ import androidx.compose.ui.focus.focusTarget
 import androidx.compose.ui.unit.dp
 import controller.Action
 import controller.WorkbenchAction
-import model.data.TabRowKey
-import model.data.enums.OnCloseResponse
+import model.data.enums.PopUpType
 import model.state.PopUpState
+import model.state.WorkbenchInformationState
 
-@OptIn(ExperimentalMaterialApi::class)
+
 @Composable
-internal fun WorkbenchPopupSave (onAction: (OnCloseResponse) -> Unit, dismissible: Boolean = true) {
-    val openDialog = remember { mutableStateOf(true) }
-    if (openDialog.value) {
-        AlertDialog(
-            onDismissRequest = {
-                if (dismissible) {
-                    openDialog.value = false
-                    onAction(OnCloseResponse.CANCEL)
-                }
-            },
-            title = {
-                Text(text = "Do you want to save the changes to this Editor?")
-            },
-            text = {
-                Text("If you don't save, your changes will be lost.")
-            },
-            buttons = {
-                Row( modifier = Modifier.padding(start = 8.dp, end = 8.dp) ) {
-                    Button(
-                        onClick = { openDialog.value = false; onAction(OnCloseResponse.DISCARD) }
-                    ) {
-                        Text("Discard")
-                    }
-                    Spacer(Modifier.width(45.dp))
-                    Button(
-                        onClick = { openDialog.value = false; onAction(OnCloseResponse.CANCEL) }
-                    ) {
-                        Text("Cancel")
-                    }
-                    Spacer(Modifier.width(8.dp))
-                    Button(
-                        modifier = Modifier.focusTarget(),
-                        onClick = { openDialog.value = false; onAction(OnCloseResponse.SAVE) }
-                    ) {
-                        Text("Save")
-                    }
-                }
-            },
-            shape = RoundedCornerShape(20.dp),
-        )
+internal fun handlePopUps(
+    informationState: WorkbenchInformationState,
+    onActionRequired: (Action) -> Unit,
+){
+    if (informationState.popUpState != null) {
+        when (informationState.popUpState.type) {
+            PopUpType.ON_CLOSE -> WorkbenchPopupOnClose(informationState.popUpState, onActionRequired)
+            PopUpType.ON_EDITOR_SWITCH -> WorkbenchPopupOnClose(informationState.popUpState, onActionRequired)
+            PopUpType.SAVE_FAILED -> WorkbenchPopupSaveFailed(informationState.popUpState, onActionRequired)
+        }
     }
 }
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-internal fun WorkbenchPopupActionFailed (
-    onActionRequired: (Action) -> Unit,
-    action: String,
+internal fun WorkbenchPopupOnClose (
     popUpState: PopUpState,
-    tabRowKey: TabRowKey
+    onActionRequired: (Action) -> Unit,
+    dismissible: Boolean = false,
 ) {
-    val openDialog = remember { mutableStateOf(true) }
-    if (openDialog.value) {
-        AlertDialog(
-            onDismissRequest = {
-                openDialog.value = false
-                onActionRequired.invoke(WorkbenchAction.RemovePopUp(tabRowKey))
-            },
-            title = {
-                Text(text = "Can not $action")
-            },
-            text = {
-                Text(popUpState.message)
-            },
-            buttons = {
-                Row( modifier = Modifier.padding(start = 40.dp, end = 40.dp) ) {
-                    Button(
-                        onClick = {
-                            openDialog.value = false
-                            onActionRequired.invoke(WorkbenchAction.RemovePopUp(tabRowKey))
-                        }
-                    ) {
-                        Text("Ok")
-                    }
+    AlertDialog(
+        onDismissRequest = {
+            if (dismissible) {
+                onActionRequired(WorkbenchAction.ClosePopUp())
+            }
+        },
+        title = {
+            Text(text = "Do you want to save the changes to this Editor?")
+        },
+        text = {
+            Text("If you don't save, your changes will be lost.")
+        },
+        buttons = {
+            Row( modifier = Modifier.padding(start = 8.dp, end = 8.dp) ) {
+                Button(
+                    onClick = { onActionRequired(WorkbenchAction.DiscardChanges(popUpState.moduleState, popUpState)) }
+                ) {
+                    Text("Discard")
                 }
-            },
-            shape = RoundedCornerShape(20.dp),
-        )
-    }
+                Spacer(Modifier.width(45.dp))
+                Button(
+                    onClick = { onActionRequired(WorkbenchAction.ClosePopUp()) }
+                ) {
+                    Text("Cancel")
+                }
+                Spacer(Modifier.width(8.dp))
+                Button(
+                    modifier = Modifier.focusTarget(),
+                    onClick = { onActionRequired(WorkbenchAction.SaveAndClose(popUpState.moduleState, popUpState)) }
+                ) {
+                    Text("Save")
+                }
+            }
+        },
+        shape = RoundedCornerShape(20.dp),
+    )
+}
+
+@OptIn(ExperimentalMaterialApi::class)
+@Composable
+internal fun WorkbenchPopupSaveFailed (
+    popUpState: PopUpState,
+    onActionRequired: (Action) -> Unit,
+    dismissible: Boolean = false,
+) {
+    AlertDialog(
+        onDismissRequest = {
+            if (dismissible) {
+                WorkbenchAction.ClosePopUp()
+            }
+        },
+        title = {
+            Text(text = "Can not save")
+        },
+        text = {
+            Text(popUpState.message)
+        },
+        buttons = {
+            Row( modifier = Modifier.padding(start = 40.dp, end = 40.dp) ) {
+                Button(
+                    onClick = { onActionRequired(WorkbenchAction.DiscardChanges(popUpState.moduleState, popUpState)) }
+                ) {
+                    Text("Discard")
+                }
+                Spacer(Modifier.width(45.dp))
+                Button(
+                    onClick = { onActionRequired(WorkbenchAction.ClosePopUp()) }
+                ) {
+                    Text("Cancel")
+                }
+            }
+        },
+        shape = RoundedCornerShape(20.dp),
+    )
 }
 
 // source: https://gist.github.com/EugeneTheDev/a27664cb7e7899f964348b05883cbccd

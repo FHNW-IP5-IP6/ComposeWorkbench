@@ -1,5 +1,5 @@
 package model.data.enums
 
 internal enum class PopUpType {
-    SAVE, SAVE_FAILED, CLOSE_FAILED, LOAD
+    ON_CLOSE, SAVE_FAILED, ON_EDITOR_SWITCH
 }

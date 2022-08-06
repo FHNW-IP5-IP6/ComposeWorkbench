@@ -55,10 +55,6 @@ internal class WorkbenchModuleState <C> (
 
     fun onSave(): ActionResult = module.onSave(controller, MQClientImpl)
 
-    fun onClose(): ActionResult {
-        return  module.onClose(controller, MQClientImpl)
-    }
-
     @Composable
     fun content() = module.content(controller)
 

@@ -33,6 +33,7 @@ internal data class WorkbenchInformationState(
     val mainWindow: WorkbenchWindowState,
     val preview: WorkbenchPreviewState,
     val appTitle: String,
+    val popUpState: PopUpState?,
 ) {
 
     fun <C> getRegisteredExplorer(key: String): WorkbenchModule<C> {
@@ -88,8 +89,8 @@ internal data class WorkbenchInformationState(
         return tabRowState[tabRowKey]?.selected
     }
 
-    internal fun isShowPopUp(tabRowKey: TabRowKey): Boolean {
-        return tabRowState[tabRowKey]?.popUpState != null
+    internal fun isShowPopUp(): Boolean {
+        return popUpState != null
     }
 
     internal fun getIndex(moduleId: Int?, tabRowKey: TabRowKey): Int {
@@ -138,7 +139,8 @@ internal fun getDefaultWorkbenchDisplayInformation(): WorkbenchInformationState 
         registeredExplorers = mapOf(),
         mainWindow = getMainWorkbenchWindowState(),
         preview = WorkbenchPreviewState(null, ""),
-        appTitle = ""
+        appTitle = "",
+        popUpState = null
     )
 }
 

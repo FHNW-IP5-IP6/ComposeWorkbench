@@ -63,7 +63,6 @@ internal fun WorkbenchTabRow(
            HorizontalWorkbenchTabRow(informationState, onActionRequired, tabRowKey, onSelect)
         }
     }
-    handlePopUps(informationState, onActionRequired, tabRowKey)
 }
 
 /**
@@ -103,19 +102,7 @@ internal fun WorkbenchEditorSelector(
     ) {
         for (editor: WorkbenchModule<*> in editors){
             IconButton(
-                onClick = {
-                    if (informationState.isUnsaved(moduleState)) {
-                        onActionRequired.invoke(WorkbenchAction.SetPopUp(tabRowKey,
-                            popUpState = PopUpState(
-                                type = PopUpType.SAVE,
-                                message = "") {
-                                    onActionRequired.invoke(WorkbenchAction.UpdateEditor(informationState.getSelectedModule(tabRowKey)!!, editor))
-                                }
-                        ))
-                    } else {
-                        onActionRequired.invoke(WorkbenchAction.UpdateEditor(informationState.getSelectedModule(tabRowKey)!!, editor))
-                    }
-                }
+                onClick = { onActionRequired(WorkbenchAction.UpdateEditor(moduleState, editor)) }
             ){
                 Icon(editor.icon, "")
             }
@@ -166,30 +153,6 @@ private fun VerticalWorkbenchTabRow(
             modifier = Modifier.align(Alignment.CenterVertically),
             adapter = rememberScrollbarAdapter(scrollState)
         )
-    }
-}
-
-@Composable
-private fun handlePopUps(
-    informationState: WorkbenchInformationState,
-    onActionRequired: (Action) -> Unit,
-    tabRowKey: TabRowKey
-){
-    if (informationState.isShowPopUp(tabRowKey)) {
-        val selected = informationState.getSelectedModule(tabRowKey)!!
-        val popUpState = informationState.tabRowState[tabRowKey]!!.popUpState!!
-        when (popUpState.type) {
-            PopUpType.SAVE -> WorkbenchPopupSave({resp ->
-                when (resp) {
-                    OnCloseResponse.DISCARD -> popUpState.action.invoke()
-                    OnCloseResponse.SAVE -> onActionRequired.invoke(WorkbenchAction.SaveModuleState(selected, popUpState.action))
-                    OnCloseResponse.CANCEL -> onActionRequired.invoke(WorkbenchAction.RemovePopUp(tabRowKey))
-                }
-            }, false)
-            PopUpType.SAVE_FAILED -> WorkbenchPopupActionFailed(onActionRequired,"save", popUpState, tabRowKey)
-            PopUpType.CLOSE_FAILED -> WorkbenchPopupActionFailed(onActionRequired,"close", popUpState, tabRowKey)
-            else -> throw UnsupportedOperationException()
-        }
     }
 }
 
@@ -256,19 +219,7 @@ private fun WorkbenchTab(
             )
         }) {
             WorkbenchTab(writerModifier, moduleState.getTitle()) {
-                if (informationState.isUnsaved(moduleState)) {
-                    onActionRequired.invoke(WorkbenchAction.SetPopUp(
-                        tabRowKey = tabRowKey,
-                        popUpState = PopUpState(
-                            type = PopUpType.SAVE,
-                            message = ""
-                        ) {
-                            onActionRequired.invoke(WorkbenchAction.CloseModuleState(moduleState))
-                        }
-                    ))
-                } else {
-                    onActionRequired.invoke(WorkbenchAction.CloseModuleState(moduleState))
-                }
+                onActionRequired(WorkbenchAction.CloseModuleState(moduleState))
             }
         }
     }

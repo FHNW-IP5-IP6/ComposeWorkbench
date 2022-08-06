@@ -25,8 +25,6 @@ internal class WorkbenchMQDispatcher(
                 val dataId = splitTopic[splitTopic.size-1].toInt()
                 if (msg == MQ_INTERNAL_EDITOR_STATE_UNSAVED) {
                     onActionRequired(WorkbenchAction.AddUnsavedModule(type, dataId))
-                } else if (msg == MQ_INTERNAL_EDITOR_STATE_SAVED || msg == MQ_INTERNAL_EDITOR_STATE_CLOSED) {
-                    onActionRequired(WorkbenchAction.RemoveSavedModule(type, dataId))
                 }
             } catch (exception: NumberFormatException) {
                 return

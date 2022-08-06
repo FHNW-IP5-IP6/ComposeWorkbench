@@ -56,7 +56,7 @@ internal object MQClientImpl: MqClient {
         publish(type, id, MQ_INTERNAL_EDITOR_STATE_UNSAVED)
     }
 
-    override fun publishSaved(type: String, id: Int) {
+    internal fun publishSaved(type: String, id: Int) {
         publish(type, id, MQ_INTERNAL_EDITOR_STATE_SAVED)
     }
 

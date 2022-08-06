@@ -14,7 +14,6 @@ internal class WorkbenchModule<C>(
     val icon: ImageVector = WorkbenchDefaultIcon,
     val loader: ((Int, MQClientImpl) -> C)? = null,
     val init: ((C, MQClientImpl) -> Unit)? = null,
-    val onClose: (C, MQClientImpl) -> ActionResult = { _: C, _: MQClientImpl -> success()},
     val onSave: (C, MQClientImpl) -> ActionResult = { _: C, _: MQClientImpl -> success()},
     val content: @Composable (C) -> Unit,
     )

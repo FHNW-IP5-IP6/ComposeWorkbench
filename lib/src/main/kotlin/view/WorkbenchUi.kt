@@ -105,5 +105,6 @@ private fun WorkbenchBody(
                 }
             }
         }
+        handlePopUps(informationState, onActionRequired)
     }
 }

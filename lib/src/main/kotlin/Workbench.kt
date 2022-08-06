@@ -138,7 +138,6 @@ class Workbench(private val appTitle: String = "", private val enableMQ: Boolean
         title: (C) -> String,
         initController: (Int, MqClient) -> C,
         icon: ImageVector = WorkbenchDefaultIcon,
-        onClose: (C, MqClient) -> ActionResult = { _, _ -> success() },
         onSave: (C, MqClient) -> ActionResult = { _, _ -> success() },
         editorView: @Composable (C) -> Unit
     ) {
@@ -149,7 +148,6 @@ class Workbench(private val appTitle: String = "", private val enableMQ: Boolean
             loader = initController,
             content = editorView,
             title = title,
-            onClose = onClose,
             onSave = onSave
         )
         triggerAction(WorkbenchActionSync.RegisterEditor(type, editor))

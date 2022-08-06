@@ -5,6 +5,7 @@ import model.data.Command
 import model.data.TabRowKey
 import model.data.WorkbenchModule
 import model.data.enums.DisplayType
+import model.data.enums.PopUpType
 import model.data.enums.SplitViewMode
 import model.state.PopUpState
 import model.state.WorkbenchDefaultState
@@ -18,8 +19,12 @@ internal sealed class WorkbenchAction(
     class SaveAll                                                                                       : WorkbenchAction("Save all")
     class DropDraggedModule                                                                             : WorkbenchAction("Drop dragged module")
 
-    class RemovePopUp(val tabRowKey: TabRowKey)                                                         : WorkbenchAction("Remove popUp")
-    class SetPopUp(val tabRowKey: TabRowKey, val popUpState: PopUpState)                                : WorkbenchAction("Set popUp")
+    class ClosePopUp()                                                                                  : WorkbenchAction("Close PopUp")
+    class OpenPopUp(
+        val popUpType: PopUpType,
+        val moduleState: WorkbenchModuleState<*>,
+        val module: WorkbenchModule<*>,
+        val message: String)                                                                            : WorkbenchAction("Open PopUp")
 
     class UpdateCurrentTabSpace(val displayType: DisplayType)                                           : WorkbenchAction("Update current tab space")
     class HideDrawer(val displayType: DisplayType)                                                      : WorkbenchAction("Hide drawer")
@@ -34,7 +39,9 @@ internal sealed class WorkbenchAction(
     class ModuleToWindow(val moduleState: WorkbenchModuleState<*>)                                      : WorkbenchAction("Module to window")
     class AddModuleState(val moduleState: WorkbenchModuleState<*>)                                      : WorkbenchAction("Add module state")
     class RemoveModuleState(val moduleState: WorkbenchModuleState<*>)                                   : WorkbenchAction("Remove module state")
-    class SaveModuleState(val moduleState: WorkbenchModuleState<*>, val action: () -> Unit)             : WorkbenchAction("Save module state")
+    class SaveChanges(val moduleState: WorkbenchModuleState<*>)                                         : WorkbenchAction("Save changes of module state")
+    class SaveAndClose(val moduleState: WorkbenchModuleState<*>, val popUpState: PopUpState)            : WorkbenchAction("Save changes and close module")
+    class DiscardChanges(val moduleState: WorkbenchModuleState<*>, val popUpState: PopUpState)          : WorkbenchAction("Discard changes of module state")
     class UpdateEditor(val moduleState: WorkbenchModuleState<*>, val module: WorkbenchModule<*>)        : WorkbenchAction("Update module state module")
 
 
