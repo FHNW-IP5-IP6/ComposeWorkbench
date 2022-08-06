@@ -60,7 +60,7 @@ fun main() {
         },
     ) { controller ->
         CitiesExplorerUi(controller.citiesState) {
-            workbench.requestEditor<CityState>("City", it)
+            workbench.requestEditor("City", it)
         }
     }
 

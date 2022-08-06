@@ -72,7 +72,7 @@ fun main() {
                                 ExplorerUI(selectedId = controller.selectedId,
                                           realEstates = controller.allRealEstates,
                                               trigger = { controller.triggerAction(it) },
-                                              onClick = { requestEditor<RealEstateController>(TYPE_REAL_ESTATE, it)})
+                                              onClick = { requestEditor(TYPE_REAL_ESTATE, it)})
 
                             })
 

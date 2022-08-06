@@ -55,7 +55,7 @@ internal class WorkbenchTest{
     @Test
     fun requestEditor() {
         sut.registerEditor(type = "String", initController = { _, _ -> "test"}, title = { "title" }){}
-        sut.requestEditor<String>("String", 0)
+        sut.requestEditor("String", 0)
         val tabRowKey = TabRowKey(displayType = DisplayType.TAB1, moduleType = ModuleType.EDITOR, windowState = controller.informationState.mainWindow)
         controller.triggerAction(WorkbenchAction.InitExplorers())
 

@@ -37,7 +37,7 @@ class WorkbenchMultiEditorModuleTest {
         sut.registerEditor(type = type, title = {it.title}, initController = { i, _ ->TestModel(i) }){ }
         assertEquals(2, controller.informationState.getRegisteredEditors<TestModel>(type).size)
 
-        sut.requestEditor<TestModel>(type = type, id = id)
+        sut.requestEditor(type = type, id = id)
         val tabRowKey = TabRowKey(displayType = DisplayType.TAB1, moduleType = ModuleType.EDITOR, windowState = controller.informationState.mainWindow)
         assertEquals(1, controller.informationState.getModulesFiltered(tabRowKey).size)
 
@@ -62,7 +62,7 @@ class WorkbenchMultiEditorModuleTest {
         sut.registerEditor(type = type, title = {it.title}, initController = { i, _ ->  TestModel2(i) }){ }
         assertEquals(2, controller.informationState.getRegisteredEditors<TestModel>(type).size)
 
-        sut.requestEditor<TestModel>(type = type, id = id)
+        sut.requestEditor(type = type, id = id)
         val tabRowKey = TabRowKey(displayType = DisplayType.TAB1, moduleType = ModuleType.EDITOR, windowState = controller.informationState.mainWindow)
 
         assertEquals(1, controller.informationState.getModulesFiltered(tabRowKey).size)
