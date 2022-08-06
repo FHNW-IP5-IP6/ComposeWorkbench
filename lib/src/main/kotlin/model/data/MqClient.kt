@@ -1,4 +1,5 @@
 package model.data
+import UpdateType
 import java.util.concurrent.Executor
 
 sealed interface MqClient {
@@ -22,6 +23,5 @@ sealed interface MqClient {
     /**
      * Get notified when an editor of the given type is updated
      */
-    //TODO: message can be Saved, or Closed use enum
-    fun subscribeForUpdates(editorType: String, callBack: (id: Int, msg: String)->Unit)
+    fun subscribeForUpdates(editorType: String, callBack: (id: Int, updateType: UpdateType)->Unit)
 }

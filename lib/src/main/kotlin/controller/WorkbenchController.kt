@@ -98,6 +98,7 @@ internal class WorkbenchController {
             )
             is WorkbenchAction.ReselectModuleState -> informationState.reselect(workbenchAction.moduleState)
             is WorkbenchAction.SaveAll -> informationState.saveAll()
+            is WorkbenchAction.CloseAll -> informationState.closeAll(workbenchAction.windowState)
             is WorkbenchAction.SaveChanges -> informationState.save(workbenchAction.moduleState)
             is WorkbenchAction.SaveAndClose -> informationState.saveAndClose(workbenchAction.moduleState, workbenchAction.popUpState)
             is WorkbenchAction.DiscardChanges -> informationState.discardChanges(workbenchAction.moduleState, workbenchAction.popUpState)
@@ -281,6 +282,20 @@ internal class WorkbenchController {
         return refreshSaveState(unsaved)
     }
 
+    private fun WorkbenchInformationState.closeAll(windowState: WorkbenchWindowState): WorkbenchInformationState {
+        modules.filter { it.window == windowState }
+            .forEach {
+                unsavedEditors.forEach { entry ->
+                    if (it.module.modelType == entry.key) {
+                        if (entry.value.contains(it.dataId ?: it.id)) {
+                            informationState = closeRequest(it)
+                        }
+                    }
+                }
+            }
+        return refreshSaveState(unsavedEditors.toMutableMap())
+    }
+
     private fun WorkbenchInformationState.saveAll(): WorkbenchInformationState {
         modules.forEach {
             unsavedEditors.forEach { entry ->
@@ -377,7 +392,6 @@ internal class WorkbenchController {
     }
 
     private fun WorkbenchInformationState.removeWindow(tabRowKey: TabRowKey): WorkbenchInformationState {
-        //TODO: this should handle the on close and action results of each opened editor in window?
         val windows = windows.toMutableList()
         windows -= tabRowKey.windowState
         cleanupDropTargets(tabRowKey.windowState, tabRowKey.displayType)
@@ -386,7 +400,7 @@ internal class WorkbenchController {
 
     private fun cleanupDropTargets(windowState: WorkbenchWindowState, displayType: DisplayType) {
         val dropTargets = dragState.dropTargets.toMutableList()
-        dropTargets.removeIf { it.tabRowKey.windowState == windowState && displayType == displayType }
+        dropTargets.removeIf { it.tabRowKey.windowState == windowState && it.tabRowKey.displayType == displayType }
         dragState = dragState.copy(dropTargets = dropTargets)
     }
 
@@ -562,12 +576,6 @@ internal class WorkbenchController {
         if (existingModule != null) {
             return moduleStateSelectorPressed(TabRowKey(existingModule), existingModule)
         }
-        fun <C> init() {
-            val state = moduleState as WorkbenchModuleState<C>
-            val module = moduleState.module
-            module.init?.invoke(state.controller, MQClientImpl)
-        }
-        init<Any>()
         return addModuleState(moduleState)
     }
 
@@ -578,7 +586,6 @@ internal class WorkbenchController {
                 newInformationState = newInformationState.createExplorerFromDefault(t)
             }
         }
-        //TODO: invoke module init for all created
         val registeredDefaultExplorers = newInformationState.registeredDefaultExplorers.toMutableMap()
         val toRemove = registeredDefaultExplorers.filter { !it.value.listed }.keys
         toRemove.map { registeredDefaultExplorers.remove(it) }

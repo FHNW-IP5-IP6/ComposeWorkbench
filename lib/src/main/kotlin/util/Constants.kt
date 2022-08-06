@@ -22,3 +22,13 @@ internal const val MQ_INTERNAL_EDITOR_STATE_UNSAVED = "unsaved"
 internal const val MQ_INTERNAL_EDITOR_STATE_CLOSED = "closed"
 internal const val MQ_INTERNAL_EDITOR_STATE_SELECTED = "selected"
 
+internal fun toUpdateType(msg: String): UpdateType {
+    return when (msg) {
+        MQ_INTERNAL_EDITOR_STATE_CREATED -> UpdateType.CREATED
+        MQ_INTERNAL_EDITOR_STATE_SAVED -> UpdateType.SAVED
+        MQ_INTERNAL_EDITOR_STATE_UNSAVED -> UpdateType.UNSAVED
+        MQ_INTERNAL_EDITOR_STATE_CLOSED -> UpdateType.CLOSED
+        MQ_INTERNAL_EDITOR_STATE_SELECTED -> UpdateType.SELECTED
+        else -> UpdateType.OTHER
+    }
+}

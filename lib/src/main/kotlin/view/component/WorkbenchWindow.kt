@@ -27,6 +27,7 @@ internal fun WorkbenchWindow(
                     informationState = informationState,
                     onActionRequired = onActionRequired,
                     onCloseRequest = {
+                        onActionRequired.invoke(WorkbenchAction.CloseAll(tabRowKey.windowState))
                         onActionRequired.invoke(WorkbenchAction.RemoveWindow(tabRowKey))
                     },
                     tabRowKey = tabRowKey,

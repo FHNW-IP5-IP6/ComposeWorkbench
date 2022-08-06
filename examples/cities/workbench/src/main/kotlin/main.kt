@@ -50,8 +50,8 @@ fun main() {
         type = "Cities",
         title = { it.title() },
         init = { controller, mqtt ->
-            mqtt.subscribeForUpdates("City") { _, msg ->
-                if (msg == "saved" || msg == "closed") controller.reload()
+            mqtt.subscribeForUpdates("City") { _, updateType ->
+                if (updateType == UpdateType.SAVED || updateType == UpdateType.CLOSED) controller.reload()
             }
             mqtt.subscribe("$CITY_MQ_TOPIC/city/#", updateTempChanges(controller))
         },

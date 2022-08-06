@@ -8,10 +8,12 @@ import MQ_INTERNAL_EDITOR_STATE_SAVED
 import MQ_INTERNAL_EDITOR_STATE_SELECTED
 import MQ_INTERNAL_EDITOR_STATE_UNSAVED
 import MQ_INTERNAL_TOPIC_PATH_EDITOR
+import UpdateType
 import com.hivemq.client.mqtt.MqttClient
 import com.hivemq.client.mqtt.datatypes.MqttQos
 import com.hivemq.client.mqtt.mqtt5.Mqtt5BlockingClient
 import com.hivemq.client.mqtt.mqtt5.message.publish.Mqtt5Publish
+import toUpdateType
 import java.net.InetSocketAddress
 import java.util.concurrent.Executor
 
@@ -116,7 +118,7 @@ internal object MQClientImpl: MqClient {
             .send()
     }
 
-    override fun subscribeForUpdates(editorType: String, callBack: (id: Int, msg: String)->Unit) {
+    override fun subscribeForUpdates(editorType: String, callBack: (id: Int, updateType: UpdateType)->Unit) {
         val clbck: (String, String) -> Unit = {topic,msg->
             val splitTopic = topic.split("/")
             var id = -1
@@ -124,7 +126,7 @@ internal object MQClientImpl: MqClient {
                 val dataId = splitTopic[3].toIntOrNull()
                 if (dataId != null) id = dataId
             }
-            callBack(id, msg)
+            callBack(id, toUpdateType(msg))
         }
         subscribe("$MQ_INTERNAL_TOPIC_PATH_EDITOR/$editorType/#", clbck)
     }

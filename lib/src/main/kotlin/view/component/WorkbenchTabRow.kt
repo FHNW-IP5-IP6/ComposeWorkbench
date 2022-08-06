@@ -21,9 +21,6 @@ import controller.Action
 import controller.WorkbenchAction
 import model.data.TabRowKey
 import model.data.WorkbenchModule
-import model.data.enums.OnCloseResponse
-import model.data.enums.PopUpType
-import model.state.PopUpState
 import model.state.WorkbenchInformationState
 import model.state.WorkbenchModuleState
 import util.vertical
@@ -181,7 +178,6 @@ private fun LazyListScope.WorkbenchTabs(
             tabRowKey = tabRowKey,
             selected = selected == item,
             onClick = {
-                        //TODO: Make this a list of actions to trigger
                         onSelect.invoke(item)
                         onActionRequired.invoke(WorkbenchAction.TabSelectorPressed(tabRowKey, item))
                       },

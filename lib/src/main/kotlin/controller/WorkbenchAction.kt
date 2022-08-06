@@ -10,6 +10,7 @@ import model.data.enums.SplitViewMode
 import model.state.PopUpState
 import model.state.WorkbenchDefaultState
 import model.state.WorkbenchModuleState
+import model.state.WorkbenchWindowState
 
 internal sealed class WorkbenchAction(
     val name: String
@@ -17,6 +18,7 @@ internal sealed class WorkbenchAction(
 
     class InitExplorers                                                                                 : WorkbenchAction("Init explorers")
     class SaveAll                                                                                       : WorkbenchAction("Save all")
+    class CloseAll(val windowState: WorkbenchWindowState)                                               : WorkbenchAction("Close all")
     class DropDraggedModule                                                                             : WorkbenchAction("Drop dragged module")
 
     class ClosePopUp()                                                                                  : WorkbenchAction("Close PopUp")

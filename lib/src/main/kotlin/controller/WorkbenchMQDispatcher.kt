@@ -1,7 +1,5 @@
 package controller
 
-import MQ_INTERNAL_EDITOR_STATE_CLOSED
-import MQ_INTERNAL_EDITOR_STATE_SAVED
 import MQ_INTERNAL_EDITOR_STATE_UNSAVED
 import MQ_INTERNAL_TOPIC_PATH_EDITOR
 import model.data.MQClientImpl
