@@ -23,29 +23,17 @@ Editors and Explorers must be registered before they can be used (requested). Th
 
 Use the workbench to register editors and explorers by calling the exposed functions.
 
-<table style="border: none">
-<tr style="border: none">
-<th style="border: none; border-bottom: thin solid;"> 
-
-``Workbench.registerExplorer<C>``
-
-</th>
-<th style="border: none; border-bottom: thin solid;"> 
-
-``Workbench.registerEditor<C>``
-
-</th>
-</tr>
-<tr style="border: none">
-<td style="border: none">
-
+#### Register Explorer
+```kotlin
+Workbench.registerExplorer<C>
+```
 Register an Explorer with the following arguments:
 - C: Any - controller used in view to manage and display data
 - type: String - the type of Data handled by this Module 
 - title: (C) -> String - the display title of the explorer
 - init: (C, MQClient) -> Unit - initialize messaging
 - explorerView: @Composable(C) -> Unit - displayable content
-```
+```kotlin
      workbench.registerExplorer<List<Color>>(
         type = COLORS,
         title = { colors -> "Colors: ${colors.size}" },
@@ -64,10 +52,10 @@ Register an Explorer with the following arguments:
         }
     }
 ```
-
-</td>
-<td style="border: none">
-
+#### Register Editor
+```kotlin
+Workbench.registerEditor<C>
+```
 Register and Editor with the following arguments:
 - C: Any - controller used in view to manage and display data
 - type: String - the type of Data handled by this Module
@@ -76,7 +64,7 @@ Register and Editor with the following arguments:
 - icon: ImageVector - icon used for the editor (Optional)
 - onSave: (C, MQClient) -> ActionResult - callback when saving the editor (Optional)
 - editorView: @Composable(C) -> Unit - displayable content
-```
+```kotlin
     workbench.registerEditor<RgbController>(
         type = COLOR,
         title = { it.rgbState.title() },
@@ -91,10 +79,6 @@ Register and Editor with the following arguments:
     }
 ```
 
-</td>
-</tr>
-</table>
-
 #### OnSave
 Saving an Editor will publish a message even if the callback is not specified. The onSave callback requires an ActionResult as return value. This ActionResult has a success flag which is a Boolean and a message. Use the predefined functions success() and failure(msg: String). The current action will be aborted should the returned ActionResults success flag be false. OnSave is called whenever Save All is executed or the Editor has unsaved state and is closed: Use this for validation or to execute additional actions or custom messages
 
@@ -102,58 +86,42 @@ Saving an Editor will publish a message even if the callback is not specified. T
 Once a Module is registered it can be requested. Explorers and Editors can be requested multiple times. An Explorer for example can be requested with different data subsets, like one explorer for employees grouped by country. It is also possible to have one Explorer for Lists which can handle all needed Data. Editors are requested whenever a data record needs editing.
 Use the workbench to request editors and explorers by calling the exposed functions.
 
-<table style="border: none">
-<tr style="border: none">
-<th style="border: none; border-bottom: thin solid;"> 
-
-``Workbench.requestExplorer<C>``
-
-</th>
-<th style="border: none; border-bottom: thin solid;"> 
-
-``Workbench.requestEditor<C>``
-
-</th>
-</tr>
-<tr style="border: none">
-<td style="border: none">
-
+#### Request Explorer
+```kotlin
+Workbench.requestExplorer<C>
+```
 Request an Explorer with the following arguments:
 - type: String - the type of Data for which an Explorer is requested
 - c: C - controller used in view to manage and display data
 - listed: boolean - defines if explorer is added to menu and can be reopened (Optional)
 - location: ExplorerLocation - the location for this Explorer (Optional)
 - shown: boolean - defines if the explorer is shown when starting the Workbench (Optional)
-```
+```kotlin
     workbench.requestExplorer<List<Color>>(
         type = COLORS,
         c = colors, 
         listed = true
     )
 ``` 
-
-</td>
-<td style="border: none">
-
+#### Request Editor
+```kotlin
+Workbench.requestEditor<C>
+```
 Request an Editor with the following arguments:
 - type: String -
 - id: Int -
-```
+```kotlin
     workbench.requestEditor(
         type = COLOR,
         id = i
     )
 ```
 
-</td>
-</tr>
-</table>
-
 The most common use case to request Editors is when clicking on and item in the Explorer. An Editor for a given id and type can only be requested once. Should the Editor be requested again the workbench is simply selecting the already displayed Editor.
 There can be multiple Editors for the same Type. The location of a city for example can be edited by providing a set of coordinates but also by selecting a location on a Map.
 If there are multiple editors for the Same Type the Workbench is defaulting to the Editor which was registered first, and the User can then switch between the available Editors.
 
-![screen-gif](./doku/readme/EditorSelect.gif)
+<img alt="Switch between Editors" src="./doku/readme/EditorSelect.gif" height="431" />
 
 ### Commands
 //TODO: is this a thing?
