@@ -30,6 +30,7 @@ import view.component.WorkbenchDragAnimation
 import view.component.WorkbenchWindow
 import view.themes.LightColors
 import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 
 
 class Workbench(private val appTitle: String = "", private val enableMQ: Boolean = false) {
@@ -218,11 +219,13 @@ class Workbench(private val appTitle: String = "", private val enableMQ: Boolean
     /**
      * Run the Workbench
      */
+    @OptIn(InternalCoroutinesApi::class)
     fun run(onExit: () -> ActionResult) {
         // if already initialized invokeOnCompletion is called immediately
-        initJob.invokeOnCompletion {
-            controller.triggerAction(WorkbenchAction.InitExplorers())
+        initJob.invokeOnCompletion(onCancelling = false) {
+            if(workbenchState == WorkbenchState.TERMINATING) return@invokeOnCompletion
             workbenchState = WorkbenchState.RUNNING
+            controller.triggerAction(WorkbenchAction.InitExplorers())
             controller.dispatchCommands()
         }
         initUI(onExit)
@@ -241,6 +244,8 @@ class Workbench(private val appTitle: String = "", private val enableMQ: Boolean
                 workbenchState = workbenchState,
             ) {
                 if (onExit.invoke().successful) {
+                    workbenchState = WorkbenchState.TERMINATING
+                    initJob.cancel()
                     terminatingWorkbenchAsync(this)
                 }
             }
@@ -257,12 +262,12 @@ class Workbench(private val appTitle: String = "", private val enableMQ: Boolean
     }
 
     private fun terminatingWorkbenchAsync(applicationScope: ApplicationScope) = CoroutineScope(Dispatchers.Default).launch {
-        workbenchState = WorkbenchState.TERMINATING
         try {
             hiveMQ?.stop()?.join()
         } catch (ex: Exception ) {
             ex.printStackTrace()
         }finally {
+            actionChannel.close()
             applicationScope.exitApplication()
         }
     }

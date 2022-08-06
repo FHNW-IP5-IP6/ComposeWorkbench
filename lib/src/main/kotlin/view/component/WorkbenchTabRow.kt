@@ -179,7 +179,7 @@ private fun handlePopUps(
         val selected = informationState.getSelectedModule(tabRowKey)!!
         val popUpState = informationState.tabRowState[tabRowKey]!!.popUpState!!
         when (popUpState.type) {
-            PopUpType.SAVE ->  WorkbenchPopupSave({resp ->
+            PopUpType.SAVE -> WorkbenchPopupSave({resp ->
                 when (resp) {
                     OnCloseResponse.DISCARD -> popUpState.action.invoke()
                     OnCloseResponse.SAVE -> onActionRequired.invoke(WorkbenchAction.SaveModuleState(selected, popUpState.action))
