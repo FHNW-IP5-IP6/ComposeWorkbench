@@ -76,7 +76,6 @@ fun main() {
 }
 
 private fun updateTempChanges(controller: CitiesController) = { topic: String, msg: String ->
-    println(topic)
     val topicSplit = topic.split("/")
     if (topicSplit.size == 4) {
         val id = topicSplit[2].toIntOrNull()

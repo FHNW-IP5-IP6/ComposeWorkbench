@@ -7,7 +7,6 @@ import model.data.TabRowKey
 import model.data.enums.DisplayType
 import model.data.enums.ModuleType
 import model.data.enums.SplitViewMode
-import model.state.WorkbenchDragState
 import model.state.WorkbenchInformationState
 import model.state.WorkbenchModuleState
 import org.jetbrains.compose.splitpane.ExperimentalSplitPaneApi
@@ -20,7 +19,6 @@ import org.jetbrains.compose.splitpane.rememberSplitPaneState
 @Composable
 internal fun WorkbenchEditorSpace(
     informationState: WorkbenchInformationState,
-    dragState: WorkbenchDragState,
     onActionRequired: (Action) -> Unit,
 ){
     val editorTabRowKey1 = TabRowKey(displayType = DisplayType.TAB1, moduleType = ModuleType.EDITOR, windowState = informationState.mainWindow)
@@ -34,7 +32,6 @@ internal fun WorkbenchEditorSpace(
                 first {
                     EditorSpaceDropTarget(
                         informationState = informationState,
-                        dragState = dragState,
                         onActionRequired = onActionRequired,
                         tabRowKey = editorTabRowKey1,
                         onSelect =  { onActionRequired.invoke(WorkbenchAction.UpdateCurrentTabSpace(DisplayType.TAB1)) }
@@ -43,7 +40,6 @@ internal fun WorkbenchEditorSpace(
                 second {
                     EditorSpaceDropTarget(
                         informationState = informationState,
-                        dragState = dragState,
                         onActionRequired = onActionRequired,
                         tabRowKey = editorTabRowKey2,
                         onSelect =  {onActionRequired.invoke(WorkbenchAction.UpdateCurrentTabSpace(DisplayType.TAB2)) }
@@ -57,7 +53,6 @@ internal fun WorkbenchEditorSpace(
                 first {
                     EditorSpaceDropTarget(
                         informationState = informationState,
-                        dragState = dragState,
                         onActionRequired = onActionRequired,
                         tabRowKey = editorTabRowKey1,
                         onSelect =  {onActionRequired.invoke(WorkbenchAction.UpdateCurrentTabSpace(DisplayType.TAB1)) }
@@ -66,7 +61,6 @@ internal fun WorkbenchEditorSpace(
                 second {
                     EditorSpaceDropTarget(
                         informationState = informationState,
-                        dragState = dragState,
                         onActionRequired = onActionRequired,
                         tabRowKey = editorTabRowKey2,
                         onSelect =  {onActionRequired.invoke(WorkbenchAction.UpdateCurrentTabSpace(DisplayType.TAB2)) }
@@ -77,7 +71,6 @@ internal fun WorkbenchEditorSpace(
         else -> {
             EditorSpaceDropTarget(
                 informationState = informationState,
-                dragState = dragState,
                 onActionRequired = onActionRequired,
                 tabRowKey = editorTabRowKey1,
                 onSelect =  {onActionRequired.invoke(WorkbenchAction.UpdateCurrentTabSpace(DisplayType.TAB1)) }
@@ -89,12 +82,11 @@ internal fun WorkbenchEditorSpace(
 @Composable
 private fun EditorSpaceDropTarget(
     informationState: WorkbenchInformationState,
-    dragState: WorkbenchDragState,
     onActionRequired: (Action) -> Unit,
     tabRowKey: TabRowKey,
     onSelect: (WorkbenchModuleState<*>) -> Unit
 ){
-    DropTarget(informationState = informationState, onActionRequired = onActionRequired, dragState = dragState, tabRowKey = tabRowKey) {
-        TabSpace(informationState, dragState, onActionRequired, tabRowKey, onSelect)
+    DropTarget(onActionRequired = onActionRequired, tabRowKey = tabRowKey) {
+        TabSpace(informationState, onActionRequired, tabRowKey, onSelect)
     }
 }

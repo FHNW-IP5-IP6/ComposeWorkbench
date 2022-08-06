@@ -4,24 +4,20 @@ import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.awt.awtEventOrNull
 import androidx.compose.ui.geometry.Rect
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.input.pointer.PointerEventType
-import androidx.compose.ui.input.pointer.consumeAllChanges
-import androidx.compose.ui.input.pointer.onPointerEvent
-import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.*
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.unit.*
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.DpOffset
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.FrameWindowScope
 import androidx.compose.ui.window.Window
-import androidx.compose.ui.window.WindowPosition
-import androidx.compose.ui.window.WindowState
 import controller.Action
 import controller.DragAndDropAction
 import controller.WorkbenchAction
@@ -41,7 +37,6 @@ import java.awt.event.WindowFocusListener
 @Composable
 internal fun DragAndDropWindow(
     informationState: WorkbenchInformationState,
-    dragState: WorkbenchDragState,
     onActionRequired: (Action) -> Unit,
     tabRowKey: TabRowKey,
     onCloseRequest: () -> Unit,
@@ -53,6 +48,7 @@ internal fun DragAndDropWindow(
         title = informationState.appTitle,
         state = tabRowKey.windowState.windowState
     ) {
+        val density = LocalDensity.current
         window.addWindowFocusListener(object : WindowFocusListener {
             override fun windowGainedFocus(e: WindowEvent) {
                 tabRowKey.windowState.hasFocus = true
@@ -62,18 +58,11 @@ internal fun DragAndDropWindow(
                 tabRowKey.windowState.hasFocus = false
             }
         })
-
-        val density = LocalDensity.current
         Box(modifier = Modifier.fillMaxSize().onGloballyPositioned {
-            updateTarget(
-                onActionRequired, dragState, tabRowKey,
-                getBounds(true, tabRowKey.windowState, it.boundsInWindow(), density),
-                true
-            )
+            onActionRequired.invoke(DragAndDropAction.AddDropTarget(tabRowKey, getBounds(true, tabRowKey.windowState, it.boundsInWindow(), density), true))
         }) {
             windowScope()
             content()
-            DragAnimation(dragState, tabRowKey.windowState)
         }
     }
 }
@@ -84,8 +73,6 @@ internal fun DragAndDropWindow(
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 internal fun DropTarget(
-    informationState: WorkbenchInformationState,
-    dragState: WorkbenchDragState,
     onActionRequired: (Action) -> Unit,
     tabRowKey: TabRowKey,
     modifier: Modifier = Modifier,
@@ -94,19 +81,9 @@ internal fun DropTarget(
     val density = LocalDensity.current
     Box(
         modifier = modifier.onGloballyPositioned {
-            updateTarget(
-                onActionRequired, dragState, tabRowKey,
-                getBounds(false, tabRowKey.windowState, it.boundsInWindow(), density),
-                false
-            )
+            onActionRequired.invoke(DragAndDropAction.AddDropTarget(tabRowKey, getBounds(false, tabRowKey.windowState, it.boundsInWindow(), density), false))
         }
     ) {
-        //TODO: Can this be handled when changing the drag position??
-        if (dragState.isCurrentDropTarget(tabRowKey) && dragState.isValidDropTarget(tabRowKey, informationState)) {
-            onActionRequired.invoke(WorkbenchAction.UpdatePreviewTitle(tabRowKey, dragState.module!!.getTitle()))
-        } else if (informationState.tabRowState[tabRowKey]?.preview != null){
-            onActionRequired.invoke(WorkbenchAction.UpdatePreviewTitle(tabRowKey, null))
-        }
         content()
     }
 }
@@ -117,7 +94,6 @@ internal fun DropTarget(
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 internal fun DragTarget(
-    dragState: WorkbenchDragState,
     onActionRequired: (Action) -> Unit,
     modifier: Modifier = Modifier,
     module: WorkbenchModuleState<*>,
@@ -125,18 +101,20 @@ internal fun DragTarget(
 ) {
     Box(modifier = modifier
         .onPointerEvent(PointerEventType.Move) {
-            if (dragState.isDragging) {
-                val awtEvent = it.awtEventOrNull
-                if(awtEvent!= null) {
-                    onActionRequired.invoke(
-                        DragAndDropAction.SetPosition(
-                            DpOffset(
-                                awtEvent.xOnScreen.dp,
-                                awtEvent.yOnScreen.dp
-                            )
+            /*
+                Get the absolute mouse position. The PointerInputScope.detectDragGesture is only providing an offset
+                which is not helpful in globally positioning tha animation window
+             */
+            val awtEvent = it.awtEventOrNull
+            if(awtEvent!= null && it.buttons.isPrimaryPressed) {
+                onActionRequired.invoke(
+                    DragAndDropAction.SetPosition(
+                        DpOffset(
+                            awtEvent.xOnScreen.dp,
+                            awtEvent.yOnScreen.dp
                         )
                     )
-                }
+                )
             }
         }
         .pointerInput(key1 = module) {
@@ -151,52 +129,6 @@ internal fun DragTarget(
             })
         }) {
         content()
-    }
-}
-
-@Composable
-private fun DragAnimation(
-    dragState: WorkbenchDragState,
-    currentWindow: WorkbenchWindowState
-) {
-    if(dragState.positionOnScreen.isSpecified) {
-        val dropTarget = dragState.getCurrentReverseDopTarget()
-        var dragAnimationSize by remember { mutableStateOf(IntSize.Zero) }
-
-        if (dragState.isDragging) {
-            if (dropTarget == null) {
-                Window(
-                    onCloseRequest = {},
-                    transparent = false,
-                    resizable = false,
-                    undecorated = true,
-                    state = WindowState(
-                        size = DpSize(dragAnimationSize.width.dp / 2, dragAnimationSize.height.dp / 2),
-                        position = WindowPosition(dragState.positionOnScreen.x, dragState.positionOnScreen.y)
-                    )
-                ) {
-                    Box {
-                        dragState.module?.content()
-                    }
-                }
-            } else if (currentWindow == dropTarget.tabRowKey.windowState) {
-                val offset = dragState.toOffset(dropTarget.tabRowKey.windowState)
-                Box(modifier = Modifier
-                    .graphicsLayer {
-                        scaleX = 0.5f
-                        scaleY = 0.5f
-                        alpha = if (dragAnimationSize == IntSize.Zero) 0f else .9f
-                        translationX = offset.x.minus(dragAnimationSize.width * 0.25f)
-                        translationY = offset.y.minus(dragAnimationSize.height * 0.25f)
-                    }
-                    .onGloballyPositioned {
-                        dragAnimationSize = it.size
-                    }
-                ) {
-                    dragState.module?.content()
-                }
-            }
-        }
     }
 }
 
@@ -228,21 +160,21 @@ private fun getBounds(
     }
 }
 
-private fun updateTarget(
-    onActionRequired: (Action) -> Unit,
+@Composable
+internal fun WorkbenchDragAnimation(
     dragState: WorkbenchDragState,
-    tabRowKey: TabRowKey,
-    bounds: Rect,
-    isReverse: Boolean
 ) {
-    val same = dragState.dropTargets.filter { it.tabRowKey == tabRowKey && it.isReverse == isReverse }.find { it.bounds == bounds }
-    if (same == null) {
-        onActionRequired.invoke(
-            DragAndDropAction.AddDropTarget(
-                tabRowKey,
-                bounds,
-                isReverse
-            )
-        )
+    if (dragState.isDragging) {
+        Window(
+            onCloseRequest = {},
+            transparent = false,
+            resizable = false,
+            undecorated = true,
+            state = dragState.dragWindowState
+        ) {
+            Box {
+                dragState.module?.content()
+            }
+        }
     }
 }

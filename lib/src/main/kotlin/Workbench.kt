@@ -15,7 +15,6 @@ import controller.WorkbenchAction
 import controller.WorkbenchController
 import controller.WorkbenchMQDispatcher
 import kotlinx.coroutines.*
-import kotlinx.coroutines.GlobalScope.coroutineContext
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.consumeEach
 import model.data.Command
@@ -28,11 +27,10 @@ import model.data.enums.WorkbenchState
 import model.state.WorkbenchDefaultState
 import util.WorkbenchDefaultIcon
 import view.WorkbenchUI
+import view.component.WorkbenchDragAnimation
 import view.component.WorkbenchWindow
 import view.themes.LightColors
 import java.util.concurrent.Executors
-import kotlin.coroutines.CoroutineContext
-import kotlin.coroutines.coroutineContext
 
 
 class Workbench(private val appTitle: String = "", private val enableMQ: Boolean = false) {
@@ -223,16 +221,13 @@ class Workbench(private val appTitle: String = "", private val enableMQ: Boolean
     private fun initUI (onExit: () -> ActionResult) = application {
         // init main window
         val informationState = controller.informationState
-        val dragState = controller.dragState
         MaterialTheme(
             colors = LightColors,
             typography = NotoSansTypography,
         ) {
             WorkbenchUI(
                 informationState = informationState,
-                dragState = dragState,
                 onActionRequired = { triggerAction(it) },
-
                 workbenchState = workbenchState,
             ) {
                 if (onExit.invoke().successful) {
@@ -243,10 +238,11 @@ class Workbench(private val appTitle: String = "", private val enableMQ: Boolean
             // init separated windows
             WorkbenchWindow(
                 informationState = informationState,
-                dragState = dragState,
                 onActionRequired = { triggerAction(it) },
                 workbenchState = workbenchState
             )
+
+            WorkbenchDragAnimation(dragState = controller.dragState)
         }
     }
 

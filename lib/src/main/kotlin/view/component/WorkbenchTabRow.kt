@@ -24,7 +24,6 @@ import model.data.WorkbenchModule
 import model.data.enums.OnCloseResponse
 import model.data.enums.PopUpType
 import model.state.PopUpState
-import model.state.WorkbenchDragState
 import model.state.WorkbenchInformationState
 import model.state.WorkbenchModuleState
 import util.vertical
@@ -35,13 +34,12 @@ import util.vertical
 @Composable
 internal fun TabSpace(
     informationState: WorkbenchInformationState,
-    dragState: WorkbenchDragState,
     onActionRequired: (Action) -> Unit,
     tabRowKey: TabRowKey,
     onSelect: (WorkbenchModuleState<*>) -> Unit
 ){
     Column {
-        WorkbenchTabRow(informationState, dragState, onActionRequired, tabRowKey, onSelect)
+        WorkbenchTabRow(informationState, onActionRequired, tabRowKey, onSelect)
         WorkbenchTabBody(informationState, onActionRequired, tabRowKey)
     }
 }
@@ -52,18 +50,17 @@ internal fun TabSpace(
 @Composable
 internal fun WorkbenchTabRow(
     informationState: WorkbenchInformationState,
-    dragState: WorkbenchDragState,
     onActionRequired: (Action) -> Unit,
     tabRowKey: TabRowKey,
     onSelect: (WorkbenchModuleState<*>) -> Unit = {}
 ) {
     if (tabRowKey.displayType.orientation.toInt() != 0) {
         Box {
-            VerticalWorkbenchTabRow(informationState, dragState, onActionRequired, tabRowKey, onSelect)
+            VerticalWorkbenchTabRow(informationState, onActionRequired, tabRowKey, onSelect)
         }
     } else {
         Box {
-           HorizontalWorkbenchTabRow(informationState, dragState, onActionRequired, tabRowKey, onSelect)
+           HorizontalWorkbenchTabRow(informationState, onActionRequired, tabRowKey, onSelect)
         }
     }
     handlePopUps(informationState, onActionRequired, tabRowKey)
@@ -129,7 +126,6 @@ internal fun WorkbenchEditorSelector(
 @Composable
 private fun HorizontalWorkbenchTabRow(
     informationState: WorkbenchInformationState,
-    dragState: WorkbenchDragState,
     onActionRequired: (Action) -> Unit,
     tabRowKey: TabRowKey,
     onSelect: (WorkbenchModuleState<*>) -> Unit
@@ -141,7 +137,7 @@ private fun HorizontalWorkbenchTabRow(
     ScrollToSelected(informationState, tabRowKey, scrollState)
     Column {
         LazyRow(state = scrollState) {
-            WorkbenchTabs(informationState, dragState, onActionRequired, selected, preview, moduleStates, tabRowKey, onSelect)
+            WorkbenchTabs(informationState, onActionRequired, selected, preview, moduleStates, tabRowKey, onSelect)
         }
         HorizontalScrollbar(
             modifier = Modifier.align(Alignment.CenterHorizontally),
@@ -153,7 +149,6 @@ private fun HorizontalWorkbenchTabRow(
 @Composable
 private fun VerticalWorkbenchTabRow(
     informationState: WorkbenchInformationState,
-    dragState: WorkbenchDragState,
     onActionRequired: (Action) -> Unit,
     tabRowKey: TabRowKey,
     onSelect: (WorkbenchModuleState<*>) -> Unit
@@ -165,7 +160,7 @@ private fun VerticalWorkbenchTabRow(
     ScrollToSelected(informationState, tabRowKey, scrollState)
     Row {
         LazyColumn(state = scrollState) {
-            WorkbenchTabs(informationState, dragState, onActionRequired, selected, preview, moduleStates, tabRowKey, onSelect)
+            WorkbenchTabs(informationState, onActionRequired, selected, preview, moduleStates, tabRowKey, onSelect)
         }
         VerticalScrollbar(
             modifier = Modifier.align(Alignment.CenterVertically),
@@ -207,7 +202,6 @@ private fun ScrollToSelected(informationState: WorkbenchInformationState, tabRow
 
 private fun LazyListScope.WorkbenchTabs(
     informationState: WorkbenchInformationState,
-    dragState: WorkbenchDragState,
     onActionRequired: (Action) -> Unit,
     selected: WorkbenchModuleState<*>?,
     preview: String?,
@@ -220,11 +214,11 @@ private fun LazyListScope.WorkbenchTabs(
         WorkbenchTab(
             informationState = informationState,
             onActionRequired = onActionRequired,
-            dragState = dragState,
             moduleState = item,
             tabRowKey = tabRowKey,
             selected = selected == item,
             onClick = {
+                        //TODO: Make this a list of actions to trigger
                         onSelect.invoke(item)
                         onActionRequired.invoke(WorkbenchAction.TabSelectorPressed(tabRowKey, item))
                       },
@@ -246,7 +240,6 @@ private fun LazyListScope.preview(preview: String?, tabRowKey: TabRowKey) {
 @Composable
 private fun WorkbenchTab(
     informationState: WorkbenchInformationState,
-    dragState: WorkbenchDragState,
     onActionRequired: (Action) -> Unit,
     moduleState: WorkbenchModuleState<*>,
     tabRowKey: TabRowKey,
@@ -255,11 +248,10 @@ private fun WorkbenchTab(
 ) {
     val writerModifier = getTabModifier(tabRowKey, selected, onClick)
 
-    DragTarget(module = moduleState, dragState = dragState, onActionRequired = onActionRequired) {
+    DragTarget(module = moduleState, onActionRequired = onActionRequired) {
         ContextMenuArea(items = {
             listOf(
                 ContextMenuItem("Open in Window") {
-                    onActionRequired.invoke(WorkbenchAction.ReselectModuleState(moduleState))
                     onActionRequired.invoke(WorkbenchAction.ModuleToWindow(moduleState)) },
             )
         }) {

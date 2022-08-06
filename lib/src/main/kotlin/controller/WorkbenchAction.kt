@@ -38,7 +38,6 @@ internal sealed class WorkbenchAction(
 
 
     class VerifySplitViewMode(val tabRowKey1: TabRowKey, val tabRowKey2: TabRowKey)                     : WorkbenchAction("Verify split view mode")
-    class UpdatePreviewTitle(val tabRowKey: TabRowKey, val title: String?)                              : WorkbenchAction("Update preview title")
     class UpdateSelection(val tabRowKey: TabRowKey, val moduleState: WorkbenchModuleState<*>?)          : WorkbenchAction("Update selection")
     class TabSelectorPressed(val tabRowKey: TabRowKey,val moduleState: WorkbenchModuleState<*>)         : WorkbenchAction("Tab selector pressed")
 

@@ -3,10 +3,12 @@ package model.state
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.unit.DpOffset
+import androidx.compose.ui.unit.DpSize
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.isUnspecified
 import androidx.compose.ui.window.WindowPosition
+import androidx.compose.ui.window.WindowState
 import model.data.TabRowKey
-import model.data.enums.ModuleType
 import util.toOffset
 
 /**
@@ -15,19 +17,18 @@ import util.toOffset
 internal data class WorkbenchDragState(
     val isDragging: Boolean,
     val module: WorkbenchModuleState<*>?,
-    val positionOnScreen: DpOffset,
-    val dropTargets: List<DropTarget>
+    val dropTargets: List<DropTarget>,
+    val dragWindowState: WindowState,
 ){
-    internal fun isCurrentDropTarget(tabRowKey: TabRowKey): Boolean {
-        val reverseDropTarget = getCurrentReverseDopTarget() ?: return false //If there is no reverse target active the drop target is outside any window
-        val dropTarget = getCurrentDopTarget(reverseDropTarget.tabRowKey.windowState)
-        return  dropTarget != null && dropTarget.tabRowKey == tabRowKey
+    internal fun getCurrentDropTarget(): DropTarget? {
+        val reverseDropTarget = getCurrentReverseDopTarget() ?: return null //If there is no reverse target active the drop target is outside any window
+        return getCurrentDopTarget(reverseDropTarget.tabRowKey.windowState)
     }
 
     internal fun getCurrentReverseDopTarget(): DropTarget? {
-        if(positionOnScreen.isUnspecified) return null
+        if(getPositionOnScreen().isUnspecified) return null
         val targets = dropTargets.filter { it.isReverse && it.bounds.contains(
-            positionOnScreen.toOffset()) }
+            getPositionOnScreen().toOffset()) }
         return when (targets.isEmpty()){
             true -> null
             false -> {
@@ -38,28 +39,27 @@ internal data class WorkbenchDragState(
     }
 
     internal fun toOffset(windowState: WorkbenchWindowState): Offset {
-        val x = positionOnScreen.x - windowState.windowState.position.x
-        val y = positionOnScreen.y - windowState.windowState.position.y
+        val x = getPositionOnScreen().x - windowState.windowState.position.x
+        val y = getPositionOnScreen().y - windowState.windowState.position.y
         return Offset(x.value,y.value)
     }
 
     internal fun getWindowPosition(): WindowPosition {
-        if(positionOnScreen.isUnspecified) return WindowPosition.PlatformDefault
-        return WindowPosition(x = positionOnScreen.x, y = positionOnScreen.y)
+        if(getPositionOnScreen().isUnspecified) return WindowPosition.PlatformDefault
+        return WindowPosition(dragWindowState.position.x, dragWindowState.position.y)
     }
 
     internal fun getCurrentDopTarget(windowState: WorkbenchWindowState): DropTarget? {
-        if(positionOnScreen.isUnspecified) return null
+        if(getPositionOnScreen().isUnspecified) return null
         return dropTargets.find { !it.isReverse && it.bounds.contains(
-            positionOnScreen.toOffset()) && it.tabRowKey.windowState == windowState }
+            getPositionOnScreen().toOffset()) && it.tabRowKey.windowState == windowState }
     }
 
-    internal fun isValidDropTarget(tabRowKey: TabRowKey, informationState: WorkbenchInformationState): Boolean {
-        val moduleType = module?.module?.moduleType ?: return false
-        return (ModuleType.BOTH == moduleType
-                || ModuleType.BOTH == tabRowKey.moduleType
-                || moduleType == tabRowKey.moduleType)
-                && !informationState.getModulesFiltered(tabRowKey).contains(module)
+    internal fun getPositionOnScreen(): DpOffset {
+        if(dragWindowState.position.isSpecified) {
+            return DpOffset(dragWindowState.position.x, dragWindowState.position.y)
+        }
+        return DpOffset.Unspecified
     }
 }
 
@@ -74,8 +74,8 @@ internal data class DropTarget(
 internal fun getDefaultWorkbenchDragState(): WorkbenchDragState {
     return WorkbenchDragState(
         isDragging = false,
-        positionOnScreen = DpOffset.Zero,
         module = null,
-        dropTargets = listOf()
+        dropTargets = listOf(),
+        dragWindowState =  WindowState(size = DpSize(350.dp, 300.dp), position = WindowPosition.PlatformDefault)
     )
 }

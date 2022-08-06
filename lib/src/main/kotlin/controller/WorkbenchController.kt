@@ -8,6 +8,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.WindowPosition
 import androidx.compose.ui.window.WindowState
 import model.data.*
 import model.data.enums.*
@@ -52,14 +53,15 @@ internal class WorkbenchController {
     fun getNextKey(): Int = uniqueKey.getAndIncrement()
 
     fun triggerAction(action: Action) {
-        when (action) {
-            is WorkbenchAction -> triggerAction(action)
-            is DragAndDropAction -> triggerAction(action)
+        synchronized(stateUpdateLock) {
+            when (action) {
+                is WorkbenchAction -> triggerAction(action)
+                is DragAndDropAction -> triggerAction(action)
+            }
         }
     }
 
     private fun triggerAction(workbenchAction: WorkbenchAction) {
-        synchronized(stateUpdateLock) {
             val newState = when (workbenchAction) {
                 is WorkbenchAction.AddCommand -> addCommand(workbenchAction.command)
                 is WorkbenchAction.AddDefaultExplorer -> addDefaultExplorer(
@@ -117,10 +119,6 @@ internal class WorkbenchController {
                     workbenchAction.moduleState,
                     workbenchAction.module
                 )
-                is WorkbenchAction.UpdatePreviewTitle -> updatePreviewTitle(
-                    workbenchAction.tabRowKey,
-                    workbenchAction.title
-                )
                 is WorkbenchAction.UpdateSelection -> updateSelection(
                     informationState,
                     workbenchAction.tabRowKey,
@@ -134,7 +132,6 @@ internal class WorkbenchController {
                 is WorkbenchAction.DropDraggedModule -> dropDraggedModule()
             }
             informationState = newState
-        }
     }
 
     /**
@@ -142,7 +139,6 @@ internal class WorkbenchController {
      * - To prevent deadlocks Drag and Drop Actions MUST NEVER trigger any information state actions
      */
     private fun triggerAction(action: DragAndDropAction) {
-        synchronized(stateUpdateLock) {
             val newState = when (action) {
                 is DragAndDropAction.AddDropTarget -> addDropTarget(action.tabRowKey, action.bounds, action.isReverse)
                 is DragAndDropAction.Reset -> reset()
@@ -150,7 +146,6 @@ internal class WorkbenchController {
                 is DragAndDropAction.SetPosition -> setPosition(action.positionOnScreen)
             }
             dragState = newState
-        }
     }
 
     //Drop target cleanup not working!!
@@ -164,13 +159,13 @@ internal class WorkbenchController {
                 result = moduleToWindow(result, module)
             } else {
                 val dropTarget = dragState.getCurrentDopTarget(reverseDropTarget.tabRowKey.windowState)
-                if (dropTarget != null && dragState.isValidDropTarget(dropTarget.tabRowKey, informationState)) {
+                if (dropTarget != null && isValidDropTarget(dropTarget, module)) {
                     result = dropModule(result, dropTarget, module)
                 }
             }
         }
-        triggerAction(DragAndDropAction.Reset())
-        return result
+        dragState = dragState.copy(isDragging = false, module = null)
+        return result.copy(preview = WorkbenchPreviewState(tabRowKey = null, title = ""))
     }
 
     private fun dropModule(
@@ -184,22 +179,57 @@ internal class WorkbenchController {
     }
 
     private fun addDropTarget(tabRowKey: TabRowKey, bounds: Rect, isReverse: Boolean): WorkbenchDragState {
-        val dropTargets = dragState.dropTargets.toMutableList()
-        dropTargets.removeIf { it.isReverse == isReverse && it.tabRowKey == tabRowKey }
-        dropTargets += DropTarget(isReverse = isReverse, bounds = bounds, tabRowKey = tabRowKey)
-        return dragState.copy(dropTargets = dropTargets)
+        val same = dragState.dropTargets.filter { it.tabRowKey == tabRowKey && it.isReverse == isReverse }
+            .find { it.bounds == bounds }
+        return if (same != null) {
+            dragState
+        }else {
+            val dropTargets = dragState.dropTargets.toMutableList()
+            dropTargets.removeIf { it.isReverse == isReverse && it.tabRowKey == tabRowKey }
+            dropTargets += DropTarget(isReverse = isReverse, bounds = bounds, tabRowKey = tabRowKey)
+            dragState.copy(dropTargets = dropTargets)
+        }
     }
 
     private fun reset(): WorkbenchDragState {
-        return dragState.copy(isDragging = false, module = null, positionOnScreen = DpOffset.Unspecified)
+        informationState = informationState.copy(preview = WorkbenchPreviewState(tabRowKey = null, title = ""))
+        return dragState.copy(isDragging = false, module = null)
     }
 
     private fun startDragging(moduleState: WorkbenchModuleState<*>): WorkbenchDragState {
-        return dragState.copy(isDragging = true, module = moduleState, positionOnScreen = DpOffset.Unspecified)
+        dragState.dragWindowState.position = WindowPosition.PlatformDefault
+        return dragState.copy(isDragging = true, module = moduleState)
     }
 
     private fun setPosition(positionOnScreen: DpOffset): WorkbenchDragState {
-        return dragState.copy(positionOnScreen = positionOnScreen)
+        val currentDropTarget = dragState.getCurrentDropTarget()
+        if(dragState.module != null) {
+            if(currentDropTarget != null){
+                if (isValidDropTarget(currentDropTarget, dragState.module!!)) {
+                    setPreviewIfChanged(informationState, currentDropTarget.tabRowKey, dragState.module!!.getTitle())
+                } else {
+                    setPreviewIfChanged(informationState, null, "")
+                }
+            } else {
+                 setPreviewIfChanged(informationState, null, "")
+            }
+        }
+        dragState.dragWindowState.position = WindowPosition(positionOnScreen.x, positionOnScreen.y)
+        return dragState
+    }
+
+    private fun setPreviewIfChanged(newInformationState: WorkbenchInformationState, tabRowKey: TabRowKey?, title: String) {
+        if (newInformationState.preview.tabRowKey != tabRowKey || newInformationState.preview.title != title) {
+            informationState = newInformationState.copy(preview = WorkbenchPreviewState(tabRowKey = tabRowKey, title = title))
+        }
+    }
+
+    private fun isValidDropTarget(dropTarget: DropTarget ,moduleState: WorkbenchModuleState<*>): Boolean {
+        val moduleType = moduleState.module.moduleType
+        return (ModuleType.BOTH == moduleType
+                || ModuleType.BOTH == dropTarget.tabRowKey.moduleType
+                || moduleType == dropTarget.tabRowKey.moduleType)
+                && !informationState.getModulesFiltered(dropTarget.tabRowKey).contains(moduleState)
     }
 
     private fun addCommand(command: Command): WorkbenchInformationState {
@@ -361,18 +391,23 @@ internal class WorkbenchController {
                 modules = modules
             )
         }
+        cleanupDropTargets(informationState.mainWindow, DisplayType.TAB1)
+        cleanupDropTargets(informationState.mainWindow, DisplayType.TAB2)
         return informationState
     }
 
     private fun removeWindow(newInformationState: WorkbenchInformationState, tabRowKey: TabRowKey): WorkbenchInformationState {
+        //TODO: this should handle the on close and action results of each opened editor in window?
         val windows = newInformationState.windows.toMutableList()
         windows -= tabRowKey.windowState
-        //cleanup drop targets
-        val dropTargets = dragState.dropTargets.toMutableList()
-        dropTargets.removeIf { it.tabRowKey.windowState == tabRowKey.windowState }
-        dragState = dragState.copy(dropTargets = dropTargets)
-
+        cleanupDropTargets(tabRowKey.windowState, tabRowKey.displayType)
         return newInformationState.copy(windows = windows)
+    }
+
+    private fun cleanupDropTargets(windowState: WorkbenchWindowState, displayType: DisplayType) {
+        val dropTargets = dragState.dropTargets.toMutableList()
+        dropTargets.removeIf { it.tabRowKey.windowState == windowState && displayType == displayType }
+        dragState = dragState.copy(dropTargets = dropTargets)
     }
 
     private fun reselect(
@@ -414,17 +449,6 @@ internal class WorkbenchController {
         return result.copy(windows = windows)
     }
 
-    private fun updatePreviewTitle(tabRowKey: TabRowKey, title: String?): WorkbenchInformationState {
-        val tabRowStates = informationState.tabRowState.toMutableMap()
-        if (informationState.tabRowState[tabRowKey] == null) {
-            tabRowStates[tabRowKey] =
-                WorkbenchTabRowState(tabRowKey = tabRowKey, selected = null, preview = title, popUpState = null)
-        } else {
-            tabRowStates[tabRowKey] = informationState.tabRowState[tabRowKey]!!.copy(preview = title)
-        }
-        return informationState.copy(tabRowState = tabRowStates)
-    }
-
     private fun updateSelection(
         newInformationState: WorkbenchInformationState,
         tabRowKey: TabRowKey,
@@ -433,7 +457,7 @@ internal class WorkbenchController {
         val tabRowStates = newInformationState.tabRowState.toMutableMap()
         if (informationState.tabRowState[tabRowKey] == null) {
             tabRowStates[tabRowKey] =
-                WorkbenchTabRowState(tabRowKey = tabRowKey, selected = moduleState, preview = null, popUpState = null)
+                WorkbenchTabRowState(tabRowKey = tabRowKey, selected = moduleState, popUpState = null)
         } else {
             tabRowStates[tabRowKey] = informationState.tabRowState[tabRowKey]!!.copy(selected = moduleState)
         }

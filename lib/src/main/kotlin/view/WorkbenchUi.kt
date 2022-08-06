@@ -5,35 +5,29 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.ui.theme.NotoSansTypography
 import controller.Action
 import model.data.TabRowKey
 import model.data.enums.DisplayType
 import model.data.enums.ModuleType
 import model.data.enums.WorkbenchState
-import model.state.WorkbenchDragState
 import model.state.WorkbenchInformationState
 import org.jetbrains.compose.splitpane.ExperimentalSplitPaneApi
 import view.component.*
-import view.themes.LightColors
 
 @Composable
 internal fun WorkbenchUI(
     informationState: WorkbenchInformationState,
-    dragState: WorkbenchDragState,
     onActionRequired: (Action) -> Unit,
     workbenchState: WorkbenchState,
     closeRequest: ()->Unit
 ) {
     DragAndDropWindow(
         informationState = informationState,
-        dragState = dragState,
         onActionRequired = onActionRequired,
         onCloseRequest = closeRequest,
         tabRowKey = TabRowKey(
@@ -45,7 +39,7 @@ internal fun WorkbenchUI(
     ) {
         when (workbenchState) {
             WorkbenchState.RUNNING -> {
-                WorkbenchBody(informationState, dragState, onActionRequired)
+                WorkbenchBody(informationState, onActionRequired)
             }
             WorkbenchState.STARTING -> {
                 WorkbenchStateInfo("Application is starting.")
@@ -61,7 +55,6 @@ internal fun WorkbenchUI(
 @OptIn(ExperimentalSplitPaneApi::class)
 private fun WorkbenchBody(
     informationState: WorkbenchInformationState,
-    dragState: WorkbenchDragState,
     onActionRequired: (Action) -> Unit,
 ) {
     Scaffold(
@@ -77,13 +70,13 @@ private fun WorkbenchBody(
             moduleType = ModuleType.EXPLORER,
             windowState = informationState.mainWindow
         )
-        val hasBottomTabs = informationState.hasModules(bottomExplorerTabRowKey)
+        val hasBottomTabs = informationState.hasModules(bottomExplorerTabRowKey) || informationState.hasPreview(bottomExplorerTabRowKey)
         Column {
             Row(
                 modifier = Modifier.weight(if (hasBottomTabs) 0.9f else 1f)
             ) {
-                DropTarget(tabRowKey = leftExplorerTabRowKey, informationState = informationState, onActionRequired = onActionRequired, dragState = dragState) {
-                    WorkbenchTabRow(informationState, dragState, onActionRequired, leftExplorerTabRowKey)
+                DropTarget(tabRowKey = leftExplorerTabRowKey, onActionRequired = onActionRequired) {
+                    WorkbenchTabRow(informationState, onActionRequired, leftExplorerTabRowKey)
                 }
                 WorkbenchVerticalSplitPane(splitPaneState = informationState.bottomSplitState) {
                     first {
@@ -92,7 +85,7 @@ private fun WorkbenchBody(
                                 WorkbenchTabBody(informationState, onActionRequired, leftExplorerTabRowKey)
                             }
                             second {
-                                WorkbenchEditorSpace(informationState, dragState, onActionRequired)
+                                WorkbenchEditorSpace(informationState, onActionRequired)
                             }
                         }
                     }
@@ -107,8 +100,8 @@ private fun WorkbenchBody(
                 verticalAlignment = Alignment.Bottom,
                 horizontalArrangement = Arrangement.Start
             ) {
-                DropTarget(tabRowKey = bottomExplorerTabRowKey, dragState = dragState, informationState = informationState, onActionRequired = onActionRequired) {
-                    WorkbenchTabRow(informationState,  dragState, onActionRequired, bottomExplorerTabRowKey)
+                DropTarget(tabRowKey = bottomExplorerTabRowKey, onActionRequired = onActionRequired) {
+                    WorkbenchTabRow(informationState, onActionRequired, bottomExplorerTabRowKey)
                 }
             }
         }

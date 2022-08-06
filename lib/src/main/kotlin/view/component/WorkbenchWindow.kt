@@ -9,35 +9,34 @@ import model.data.TabRowKey
 import model.data.enums.DisplayType
 import model.data.enums.ModuleType
 import model.data.enums.WorkbenchState
-import model.state.WorkbenchDragState
 import model.state.WorkbenchInformationState
 
 @Composable
 internal fun WorkbenchWindow(
     informationState: WorkbenchInformationState,
-    dragState: WorkbenchDragState,
     onActionRequired: (Action) -> Unit,
     workbenchState: WorkbenchState
 ){
     if (workbenchState == WorkbenchState.RUNNING) {
-        key(informationState.windows) {
-            for (state in informationState.windows) {
-                println("recompose window")
+        for (state in informationState.windows) {
+            key(state) {
+                println("window")
                 val tabRowKey =
                     TabRowKey(displayType = DisplayType.WINDOW, moduleType = ModuleType.BOTH, windowState = state)
                 DragAndDropWindow(
                     informationState = informationState,
-                    onActionRequired =  onActionRequired,
+                    onActionRequired = onActionRequired,
                     onCloseRequest = {
-                        informationState.getModulesFiltered(tabRowKey).forEach { it.module.onClose }
                         onActionRequired.invoke(WorkbenchAction.RemoveWindow(tabRowKey))
                     },
                     tabRowKey = tabRowKey,
-                    dragState = dragState
                 ) {
                     Column {
-                        DropTarget(informationState = informationState, tabRowKey = tabRowKey, dragState = dragState, onActionRequired =  onActionRequired) {
-                            WorkbenchTabRow(informationState, dragState, onActionRequired, tabRowKey)
+                        DropTarget(
+                            tabRowKey = tabRowKey,
+                            onActionRequired = onActionRequired
+                        ) {
+                            WorkbenchTabRow(informationState, onActionRequired, tabRowKey)
                         }
                         WorkbenchTabBody(informationState, onActionRequired, tabRowKey)
                     }

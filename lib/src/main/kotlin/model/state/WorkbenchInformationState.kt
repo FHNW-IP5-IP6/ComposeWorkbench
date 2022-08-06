@@ -31,6 +31,7 @@ internal data class WorkbenchInformationState(
     val registeredDefaultExplorers: Map<Int, WorkbenchDefaultState<*>>,
     val registeredEditors: Map<String, MutableList<WorkbenchModule<*>>>,
     val mainWindow: WorkbenchWindowState,
+    val preview: WorkbenchPreviewState,
     val appTitle: String,
 ) {
 
@@ -53,10 +54,16 @@ internal data class WorkbenchInformationState(
         return getRegisteredEditors(moduleState.module.modelType)
     }
 
+    internal fun hasPreview(tabRowKey: TabRowKey): Boolean {
+        return preview.tabRowKey == tabRowKey
+    }
+
+    internal fun getPreviewTitle(tabRowKey: TabRowKey): String? {
+        return if(hasPreview(tabRowKey)) preview?.title else null
+    }
+
     internal fun hasModules(tabRowKey: TabRowKey): Boolean {
-        return tabRowState[tabRowKey]?.preview != null || getModulesFiltered(
-            tabRowKey
-        ).isNotEmpty()
+        return getModulesFiltered(tabRowKey).isNotEmpty()
     }
 
     internal fun getMenuEntry(type: MenuType): MenuEntry {
@@ -83,10 +90,6 @@ internal data class WorkbenchInformationState(
 
     internal fun isShowPopUp(tabRowKey: TabRowKey): Boolean {
         return tabRowState[tabRowKey]?.popUpState != null
-    }
-
-    internal fun getPreviewTitle(tabRowKey: TabRowKey): String? {
-        return tabRowState[tabRowKey]?.preview
     }
 
     internal fun getIndex(moduleId: Int?, tabRowKey: TabRowKey): Int {
@@ -134,6 +137,7 @@ internal fun getDefaultWorkbenchDisplayInformation(): WorkbenchInformationState 
         registeredEditors = mapOf(),
         registeredExplorers = mapOf(),
         mainWindow = getMainWorkbenchWindowState(),
+        preview = WorkbenchPreviewState(null, ""),
         appTitle = ""
     )
 }
