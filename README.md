@@ -121,7 +121,7 @@ The most common use case to request Editors is when clicking on and item in the 
 There can be multiple Editors for the same Type. The location of a city for example can be edited by providing a set of coordinates but also by selecting a location on a Map.
 If there are multiple editors for the Same Type the Workbench is defaulting to the Editor which was registered first, and the User can then switch between the available Editors.
 
-<img alt="Switch between Editors" src="./doku/readme/EditorSelect.gif" height="431" />
+<img alt="Switch between Editors" src="editor_select.gif" height="431" />
 
 ### Commands
 //TODO: is this a thing?
