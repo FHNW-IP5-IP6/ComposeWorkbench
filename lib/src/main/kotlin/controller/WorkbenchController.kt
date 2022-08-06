@@ -223,7 +223,7 @@ internal class WorkbenchController {
         }
     }
 
-    private fun isValidDropTarget(dropTarget: DropTarget ,moduleState: WorkbenchModuleState<*>): Boolean {
+    fun isValidDropTarget(dropTarget: DropTarget ,moduleState: WorkbenchModuleState<*>): Boolean {
         val moduleType = moduleState.module.moduleType
         return (ModuleType.BOTH == moduleType
                 || ModuleType.BOTH == dropTarget.tabRowKey.moduleType

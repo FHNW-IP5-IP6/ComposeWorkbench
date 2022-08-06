@@ -4,6 +4,7 @@ import Workbench
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.WindowPosition
 import model.data.TabRowKey
 import model.data.WorkbenchModule
 import model.data.enums.DisplayType
@@ -12,10 +13,8 @@ import model.state.DropTarget
 import model.state.WorkbenchModuleState
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertNull
-import kotlin.test.assertTrue
+import util.toDpOffset
+import kotlin.test.*
 
 class WorkbenchDragTest {
 
@@ -32,7 +31,7 @@ class WorkbenchDragTest {
     fun initialState() {
         assertFalse { sut.dragState.isDragging }
         assertNull(sut.dragState.module)
-        assertEquals(DpOffset.Zero, sut.dragState.positionOnScreen)
+        assertEquals(WindowPosition.PlatformDefault, sut.dragState.dragWindowState.position)
     }
 
     @Test
@@ -48,12 +47,11 @@ class WorkbenchDragTest {
 
         assertTrue { sut.dragState.isDragging }
         assertEquals(moduleState, sut.dragState.module)
-        assertEquals(DpOffset(20.dp, 10.dp), sut.dragState.positionOnScreen)
+        assertEquals(DpOffset(20.dp, 10.dp), sut.dragState.dragWindowState.position.toDpOffset())
 
         sut.triggerAction(DragAndDropAction.Reset())
         assertFalse { sut.dragState.isDragging }
         assertNull(sut.dragState.module)
-        assertEquals(DpOffset.Unspecified, sut.dragState.positionOnScreen)
     }
 
     @Test
@@ -101,13 +99,13 @@ class WorkbenchDragTest {
         val target = DropTarget(false, tabRowKeyBottom, Rect(0f, 50f, 100f, 100f))
 
         sut.triggerAction(DragAndDropAction.StartDragging(explorerLeft))
-        assertTrue { sut.dragState.isValidDropTarget(target.tabRowKey, sut.informationState) }
+        assertTrue { sut.isValidDropTarget(target, explorerLeft) }
 
         sut.triggerAction(DragAndDropAction.StartDragging(explorerBottom))
-        assertFalse { sut.dragState.isValidDropTarget(target.tabRowKey, sut.informationState) }
+        assertFalse { sut.isValidDropTarget(target, explorerBottom) }
 
         sut.triggerAction(DragAndDropAction.Reset())
-        assertFalse { sut.dragState.isValidDropTarget(target.tabRowKey, sut.informationState) }
+        assertFalse { sut.isValidDropTarget(target, explorerBottom) }
     }
 
     @Test
@@ -136,6 +134,7 @@ class WorkbenchDragTest {
         val editorTabRowKey2 = TabRowKey(DisplayType.TAB2, ModuleType.EDITOR, sut.informationState.mainWindow)
         val explorerTabRowKey = TabRowKey(DisplayType.LEFT, ModuleType.EXPLORER, sut.informationState.mainWindow)
 
+        sut.triggerAction(DragAndDropAction.SetPosition(DpOffset(0.dp, 0.dp)))
         //Only one reverse target (main window)
         sut.triggerAction(
             DragAndDropAction.AddDropTarget(
@@ -151,9 +150,7 @@ class WorkbenchDragTest {
             sut.informationState.mainWindow,
             sut.dragState.getCurrentReverseDopTarget()?.tabRowKey?.windowState
         )
-        assertFalse { sut.dragState.isCurrentDropTarget(explorerTabRowKey) }
-        assertFalse { sut.dragState.isCurrentDropTarget(editorTabRowKey1) }
-        assertFalse { sut.dragState.isCurrentDropTarget(editorTabRowKey2) }
+        assertNull(sut.dragState.getCurrentDropTarget())
 
         sut.triggerAction(DragAndDropAction.StartDragging(editor1))
         sut.triggerAction(DragAndDropAction.AddDropTarget(editorTabRowKey1, Rect(0f, 0f, 10f, 10f), false))
@@ -161,20 +158,21 @@ class WorkbenchDragTest {
         sut.triggerAction(DragAndDropAction.AddDropTarget(explorerTabRowKey, Rect(50f, 50f, 100f, 100f), false))
         assertEquals(4, sut.dragState.dropTargets.size)
 
-        //one drop target is valid and position matches bounds
         sut.triggerAction(DragAndDropAction.SetPosition(DpOffset(25.dp, 25.dp)))
-        assertFalse { sut.dragState.isCurrentDropTarget(explorerTabRowKey) }
-        assertFalse { sut.dragState.isCurrentDropTarget(editorTabRowKey1) }
-        assertTrue { sut.dragState.isCurrentDropTarget(editorTabRowKey2) }
-        assertTrue { sut.dragState.isValidDropTarget(editorTabRowKey2, sut.informationState) }
+        var dropTarget = sut.dragState.getCurrentDropTarget()
+        assertNotNull(dropTarget)
+        assertFalse { sut.isValidDropTarget(dropTarget!!, editor2) }
+
+        sut.triggerAction(DragAndDropAction.SetPosition(DpOffset(5.dp, 5.dp)))
+        dropTarget = sut.dragState.getCurrentDropTarget()
+        assertNotNull(dropTarget)
+        assertTrue { sut.isValidDropTarget(dropTarget!!, editor2) }
 
         sut.triggerAction(DragAndDropAction.StartDragging(explorer))
-
         //drop target is no longer valid, position matches bounds
         sut.triggerAction(DragAndDropAction.SetPosition(DpOffset(25.dp, 25.dp)))
-        assertFalse { sut.dragState.isCurrentDropTarget(explorerTabRowKey) }
-        assertFalse { sut.dragState.isCurrentDropTarget(editorTabRowKey1) }
-        assertTrue { sut.dragState.isCurrentDropTarget(editorTabRowKey2) }
-        assertFalse { sut.dragState.isValidDropTarget(editorTabRowKey2, sut.informationState) }
+        dropTarget = sut.dragState.getCurrentDropTarget()
+        assertNotNull(dropTarget)
+        assertFalse { sut.isValidDropTarget(dropTarget!!, explorer) }
     }
 }

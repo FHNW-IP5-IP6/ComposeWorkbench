@@ -11,9 +11,6 @@ import com.example.ui.theme.NotoSansTypography
 import com.hivemq.embedded.EmbeddedHiveMQ
 import com.hivemq.embedded.EmbeddedHiveMQBuilder
 import controller.*
-import controller.WorkbenchAction
-import controller.WorkbenchController
-import controller.WorkbenchMQDispatcher
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.consumeEach
@@ -24,7 +21,9 @@ import model.data.WorkbenchModule
 import model.data.enums.MenuType
 import model.data.enums.ModuleType
 import model.data.enums.WorkbenchState
+import model.data.enums.toDisplayType
 import model.state.WorkbenchDefaultState
+import model.state.WorkbenchModuleState
 import util.WorkbenchDefaultIcon
 import view.WorkbenchUI
 import view.component.WorkbenchDragAnimation
@@ -172,7 +171,7 @@ class Workbench(private val appTitle: String = "", private val enableMQ: Boolean
         shown: Boolean = true
     ) {
         val id = controller.getNextKey()
-        val explorer = controller.informationState.getRegisteredExplorer<Any>(type)
+        val explorer = controller.informationState.getRegisteredExplorer<C>(type)
         val defaultExplorer = WorkbenchDefaultState(explorer.modelType, c, explorer.title, location, shown, listed)
         triggerAction(WorkbenchActionSync.AddDefaultExplorer(id, defaultExplorer))
         if (listed) {
@@ -188,6 +187,16 @@ class Workbench(private val appTitle: String = "", private val enableMQ: Boolean
                     )
                 )
             )
+        }
+        if (WorkbenchState.RUNNING == workbenchState) {
+            val moduleState = WorkbenchModuleState<C>(
+                id = id,
+                controller = c,
+                module = explorer,
+                window = controller.informationState.mainWindow,
+                displayType = toDisplayType(location),
+            )
+            triggerAction(WorkbenchActionSync.RequestExplorerState(moduleState = moduleState))
         }
     }
 

@@ -11,6 +11,7 @@ import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.unit.DpOffset
+import androidx.compose.ui.window.WindowPosition
 import java.awt.Cursor
 
 //https://stackoverflow.com/questions/70057396/how-to-show-vertical-text-with-proper-size-layout-in-jetpack-compose
@@ -48,3 +49,5 @@ internal fun Modifier.cursorForVerticalResize(): Modifier =
 @OptIn(ExperimentalComposeUiApi::class)
 internal fun Modifier.cursorForClickable(): Modifier =
     pointerHoverIcon(PointerIcon(Cursor(Cursor.HAND_CURSOR)))
+
+internal fun WindowPosition.toDpOffset(): DpOffset = DpOffset(x, y)

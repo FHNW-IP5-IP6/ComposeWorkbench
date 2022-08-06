@@ -14,7 +14,6 @@ internal class WorkbenchModuleState <C> (
     var module: WorkbenchModule<C>,
     var window: WorkbenchWindowState,
     var displayType: DisplayType,
-    var isPreview: Boolean = false
 ){
 
     init {
@@ -32,7 +31,6 @@ internal class WorkbenchModuleState <C> (
             module = module,
             window = this.window,
             displayType = this.displayType,
-            isPreview = this.isPreview
         )
     }
 
@@ -44,7 +42,6 @@ internal class WorkbenchModuleState <C> (
             module = this.module,
             window = window,
             displayType = displayType,
-            isPreview = this.isPreview
         )
     }
 
