@@ -67,11 +67,11 @@ class Workbench(private val appTitle: String = "", private val enableMQ: Boolean
 
     init {
         startConsumingActions()
+        triggerAction(WorkbenchAction.SetAppTitle(appTitle))
         initJob = initMQInfrastructure()
     }
 
     private fun initMQInfrastructure() = CoroutineScope(Dispatchers.Default).launch {
-        triggerAction(WorkbenchAction.SetAppTitle(appTitle))
         if (enableMQ) {
             try {
                 val embeddedHiveMQBuilder: EmbeddedHiveMQBuilder = EmbeddedHiveMQ.builder()
@@ -85,14 +85,9 @@ class Workbench(private val appTitle: String = "", private val enableMQ: Boolean
                     ::logMQ,
                     Executors.newSingleThreadExecutor()
                 )
-
-                // init internal MQDispatcher after broker is initialized
-                mqController = WorkbenchMQDispatcher { triggerAction(it) }
-
-                triggerAction(WorkbenchAction.InitExplorers())
-                workbenchState = WorkbenchState.RUNNING
-                controller.dispatchCommands()
-
+                mqController = WorkbenchMQDispatcher {
+                    triggerAction(it)
+                }
             } catch (ex: Exception) {
                 ex.printStackTrace()
             }
