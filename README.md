@@ -1,11 +1,16 @@
 # ComposeWorkbench
 Compose desktop library to build large Applications by combining existing Modules.
+
+<img alt="Workbench Examples" src="./Doku/images/workbench_examples.png" height="413" />
+
 # What is a ComposeWorkbench
 The ComposeWorkbench provides common application structures to custom modules. It supports two types of modules, explorers and editors. Once embedded in the ComposeWorkbench these modules can be dragged and dropped and the window management is taken care of. There is also support for custom commands and a messaging system that allows communication between the individual modules.
 
 Explorer: An Explorer is a module who's main purpose is to display data. For example: a list of customers or products.
 
 Editor: An Editor is a module who's main purpose is to edit a given data record. For example a single customer or product.
+
+One major goal of this project is to allow Editor and Explorer implementations which are completely ignorant of each other. The only interface between them is an id (Int) which can be an id from a DB but also something as simple as an index from a publicly accessible list.
 
 # Implementation
 ## Gradle
@@ -118,12 +123,19 @@ Request an Editor with the following arguments:
 ```
 
 The most common use case to request Editors is when clicking on and item in the Explorer. An Editor for a given id and type can only be requested once. Should the Editor be requested again the workbench is simply selecting the already displayed Editor.
-There can be multiple Editors for the same Type. The location of a city for example can be edited by providing a set of coordinates but also by selecting a location on a Map.
-If there are multiple editors for the Same Type the Workbench is defaulting to the Editor which was registered first, and the User can then switch between the available Editors.
+There can be multiple Editors for the same type. The location of a city for example can be edited by providing a set of coordinates but also by selecting a location on a Map.
+If there are multiple editors for the same type the Workbench is defaulting to the Editor which was registered first, and the user can then switch between the available Editors.
 
-<img alt="Switch between Editors" src="./Doku/gifs/editor_select.gif" height="431" />
+<img alt="Switch between Editors" src="./Doku/images/editor_select.gif" height="431" />
 
-### Commands
-//TODO: is this a thing?
+Since each Editor can have its own controller and internal datastructures changes must be saved or discarded before switching between Editors.
 
 ### Messaging
+Most of the provided callbacks grant access to the Workbench internal Mq Client. This is implemented with an embedded version of a MQTT Broker (https://github.com/hivemq/hivemq-community-edition). This Mq Client enables the Modules to communicate with each other and the Workbench. 
+Use the init callback on the Explorer and the initController callback on the Editor registration to initialize message subscriptions.
+
+#### Unsaved Changes
+To enable the Workbench's Save Button and all its features the Editor must inform the Workbench about unsaved changes. 
+```kotlin
+ mqtt.publishUnsaved(COLOR, i)
+ ```

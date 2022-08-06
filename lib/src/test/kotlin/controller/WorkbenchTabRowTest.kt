@@ -24,14 +24,14 @@ class WorkbenchTabRowTest {
     @BeforeEach
     fun setup(){
         sut = WorkbenchController()
-        sut.triggerAction(WorkbenchAction.SetAppTitle("appTitle"))
+        sut.executeAction(WorkbenchAction.SetAppTitle("appTitle"))
         tabRowKey = TabRowKey(displayType, moduleType, sut.informationState.mainWindow)
     }
 
     @Test
     fun removeModule_NoModules() {
         assertEquals(0, sut.informationState.getModulesFiltered(tabRowKey).size)
-        sut.triggerAction(WorkbenchAction.RemoveModuleState(getNewModuleState()))
+        sut.executeAction(WorkbenchAction.RemoveModuleState(getNewModuleState()))
 
         assertEquals(0, sut.informationState.getModulesFiltered(tabRowKey).size)
     }
@@ -39,11 +39,11 @@ class WorkbenchTabRowTest {
     @Test
     fun removeModule_RemoveModule() {
         val moduleState = getNewModuleState()
-        sut.triggerAction(WorkbenchAction.AddModuleState(moduleState))
+        sut.executeAction(WorkbenchAction.AddModuleState(moduleState))
         assertTrue { sut.informationState.getModulesFiltered(tabRowKey).contains(moduleState) }
         assertEquals(moduleState, sut.informationState.getSelectedModule(tabRowKey))
 
-        sut.triggerAction(WorkbenchAction.RemoveModuleState(moduleState))
+        sut.executeAction(WorkbenchAction.RemoveModuleState(moduleState))
         assertEquals(0, sut.informationState.getModulesFiltered(tabRowKey).size)
     }
 
@@ -70,11 +70,11 @@ class WorkbenchTabRowTest {
     @Test
     fun getIndex_ExplorerInList() {
         val explorerModule = getModule()
-        sut.triggerAction(WorkbenchActionSync.RegisterExplorer("String", explorerModule))
+        sut.executeAction(WorkbenchActionSync.RegisterExplorer("String", explorerModule))
         val explorer1 = WorkbenchModuleState(module =  explorerModule, controller = "c1", displayType = DisplayType.LEFT, id = 456, window = sut.informationState.mainWindow)
         val explorer2 = WorkbenchModuleState(module =  explorerModule, controller = "c2", displayType = DisplayType.LEFT, id = 897, window = sut.informationState.mainWindow)
-        sut.triggerAction(WorkbenchActionSync.RequestExplorerState(explorer1))
-        sut.triggerAction(WorkbenchActionSync.RequestExplorerState(explorer2))
+        sut.executeAction(WorkbenchActionSync.RequestExplorerState(explorer1))
+        sut.executeAction(WorkbenchActionSync.RequestExplorerState(explorer2))
 
         assertEquals(0, sut.informationState.getIndex(explorer2.id, TabRowKey(explorer2)))
         assertEquals(1, sut.informationState.getIndex(explorer1.id, TabRowKey(explorer1)))
@@ -83,23 +83,23 @@ class WorkbenchTabRowTest {
     @Test
     fun explorerSelectorPresser_NoExplorerSelected(){
         val explorer1 = registerAndRequestEditor(1)
-        sut.triggerAction(WorkbenchAction.UpdateSelection(TabRowKey(explorer1), null))
+        sut.executeAction(WorkbenchAction.UpdateSelection(TabRowKey(explorer1), null))
         assertFalse { sut.informationState.getSelectedModule(TabRowKey(explorer1)) == explorer1 }
-        sut.triggerAction(WorkbenchAction.TabSelectorPressed(TabRowKey(explorer1), explorer1))
+        sut.executeAction(WorkbenchAction.TabSelectorPressed(TabRowKey(explorer1), explorer1))
         assertEquals(explorer1, sut.informationState.getSelectedModule(TabRowKey(explorer1)))
     }
 
     @Test
     fun explorerSelectorPresser_DifferentExplorerSelected(){
         val explorerModule = getModule()
-        sut.triggerAction(WorkbenchActionSync.RegisterExplorer("String", explorerModule))
+        sut.executeAction(WorkbenchActionSync.RegisterExplorer("String", explorerModule))
         val explorer1 = WorkbenchModuleState(module =  explorerModule, controller = "c1", displayType = DisplayType.LEFT, id = 456, window = sut.informationState.mainWindow)
         val explorer2 = WorkbenchModuleState(module =  explorerModule, controller = "c2", displayType = DisplayType.LEFT, id = 897, window = sut.informationState.mainWindow)
-        sut.triggerAction(WorkbenchActionSync.RequestExplorerState(explorer1))
-        sut.triggerAction(WorkbenchActionSync.RequestExplorerState(explorer2))
+        sut.executeAction(WorkbenchActionSync.RequestExplorerState(explorer1))
+        sut.executeAction(WorkbenchActionSync.RequestExplorerState(explorer2))
 
         assertEquals(explorer2, sut.informationState.getSelectedModule(tabRowKey))
-        sut.triggerAction(WorkbenchAction.TabSelectorPressed(TabRowKey(explorer1), explorer1))
+        sut.executeAction(WorkbenchAction.TabSelectorPressed(TabRowKey(explorer1), explorer1))
         assertEquals(explorer1, sut.informationState.getSelectedModule(tabRowKey))
     }
 
@@ -107,7 +107,7 @@ class WorkbenchTabRowTest {
     fun explorerSelectorPresser_ExplorerIsSelected(){
         val explorer1 = registerAndRequestEditor(1)
 
-        sut.triggerAction(WorkbenchAction.TabSelectorPressed(TabRowKey(explorer1), explorer1))
+        sut.executeAction(WorkbenchAction.TabSelectorPressed(TabRowKey(explorer1), explorer1))
         assertNull(sut.informationState.getSelectedModule(tabRowKey))
     }
 
@@ -119,7 +119,7 @@ class WorkbenchTabRowTest {
         assertTrue { sut.informationState.leftSplitState.moveEnabled }
         assertEquals( 0.25f, sut.informationState.leftSplitState.positionPercentage )
 
-        sut.triggerAction(WorkbenchAction.TabSelectorPressed(tabRowKey, explorer))
+        sut.executeAction(WorkbenchAction.TabSelectorPressed(tabRowKey, explorer))
         assertNull(sut.informationState.getSelectedModule(tabRowKey))
         assertFalse { sut.informationState.leftSplitState.moveEnabled }
         assertEquals( 0f, sut.informationState.leftSplitState.positionPercentage )
@@ -128,36 +128,36 @@ class WorkbenchTabRowTest {
     @Test
     fun reselectState_StateIsSelected() {
         val explorerModule = getModule()
-        sut.triggerAction(WorkbenchActionSync.RegisterExplorer("String", explorerModule))
+        sut.executeAction(WorkbenchActionSync.RegisterExplorer("String", explorerModule))
         val explorer1 = WorkbenchModuleState(module =  explorerModule, controller = "c1", displayType = DisplayType.LEFT, id = 1, window = sut.informationState.mainWindow)
         val explorer2 = WorkbenchModuleState(module =  explorerModule, controller = "c2", displayType = DisplayType.LEFT, id = 2, window = sut.informationState.mainWindow)
         val explorer3 = WorkbenchModuleState(module =  explorerModule, controller = "c3", displayType = DisplayType.LEFT, id = 3, window = sut.informationState.mainWindow)
-        sut.triggerAction(WorkbenchActionSync.RequestExplorerState(explorer1))
-        sut.triggerAction(WorkbenchActionSync.RequestExplorerState(explorer2))
-        sut.triggerAction(WorkbenchActionSync.RequestExplorerState(explorer3))
+        sut.executeAction(WorkbenchActionSync.RequestExplorerState(explorer1))
+        sut.executeAction(WorkbenchActionSync.RequestExplorerState(explorer2))
+        sut.executeAction(WorkbenchActionSync.RequestExplorerState(explorer3))
 
         assertEquals(explorer3, sut.informationState.getSelectedModule(tabRowKey))
 
-        sut.triggerAction(WorkbenchAction.TabSelectorPressed(tabRowKey, explorer2))
+        sut.executeAction(WorkbenchAction.TabSelectorPressed(tabRowKey, explorer2))
         assertEquals(explorer2, sut.informationState.getSelectedModule(tabRowKey))
-        sut.triggerAction(WorkbenchAction.ReselectModuleState(explorer2))
+        sut.executeAction(WorkbenchAction.ReselectModuleState(explorer2))
         assertEquals(explorer3, sut.informationState.getSelectedModule(tabRowKey))
     }
 
     @Test
     fun reselectState_StateNotSelected() {
         val explorerModule = getModule()
-        sut.triggerAction(WorkbenchActionSync.RegisterExplorer("String", explorerModule))
+        sut.executeAction(WorkbenchActionSync.RegisterExplorer("String", explorerModule))
         val explorer1 = WorkbenchModuleState(module =  explorerModule, controller = "c1", displayType = DisplayType.LEFT, id = 1, window = sut.informationState.mainWindow)
         val explorer2 = WorkbenchModuleState(module =  explorerModule, controller = "c2", displayType = DisplayType.LEFT, id = 2, window = sut.informationState.mainWindow)
         val explorer3 = WorkbenchModuleState(module =  explorerModule, controller = "c3", displayType = DisplayType.LEFT, id = 3, window = sut.informationState.mainWindow)
-        sut.triggerAction(WorkbenchActionSync.RequestExplorerState(explorer1))
-        sut.triggerAction(WorkbenchActionSync.RequestExplorerState(explorer2))
-        sut.triggerAction(WorkbenchActionSync.RequestExplorerState(explorer3))
+        sut.executeAction(WorkbenchActionSync.RequestExplorerState(explorer1))
+        sut.executeAction(WorkbenchActionSync.RequestExplorerState(explorer2))
+        sut.executeAction(WorkbenchActionSync.RequestExplorerState(explorer3))
 
         assertEquals(explorer3, sut.informationState.getSelectedModule(tabRowKey))
 
-        sut.triggerAction(WorkbenchAction.ReselectModuleState(explorer2))
+        sut.executeAction(WorkbenchAction.ReselectModuleState(explorer2))
         assertEquals(explorer3, sut.informationState.getSelectedModule(tabRowKey))
     }
 
@@ -172,9 +172,9 @@ class WorkbenchTabRowTest {
 
     private fun registerAndRequestEditor(id: Int, type: String = "type", displayType: DisplayType = DisplayType.LEFT): WorkbenchModuleState<*>{
         val explorerModule = getModule()
-        sut.triggerAction(WorkbenchActionSync.RegisterExplorer(type, explorerModule))
+        sut.executeAction(WorkbenchActionSync.RegisterExplorer(type, explorerModule))
         val explorer = WorkbenchModuleState(module =  explorerModule, controller = "controller", displayType = displayType, id = id, window = sut.informationState.mainWindow)
-        sut.triggerAction(WorkbenchActionSync.RequestExplorerState(explorer))
+        sut.executeAction(WorkbenchActionSync.RequestExplorerState(explorer))
         return explorer
     }
 

@@ -50,14 +50,14 @@ internal class WorkbenchController {
 
     fun getNextKey(): Int = uniqueKey.getAndIncrement()
 
-    fun triggerAction(action: Action) {
+    fun executeAction(action: Action) {
         when (action) {
-            is WorkbenchAction -> triggerAction(action)
-            is DragAndDropAction -> triggerAction(action)
+            is WorkbenchAction -> executeAction(action)
+            is DragAndDropAction -> executeAction(action)
         }
     }
 
-    private fun triggerAction(workbenchAction: WorkbenchAction) {
+    private fun executeAction(workbenchAction: WorkbenchAction) {
         val newState = when (workbenchAction) {
             is WorkbenchActionSync.AddCommand -> informationState.addCommand(workbenchAction.command)
             is WorkbenchActionSync.AddDefaultExplorer -> informationState.addDefaultExplorer(
@@ -132,6 +132,16 @@ internal class WorkbenchController {
         informationState = newState
     }
 
+    private fun executeAction(action: DragAndDropAction) {
+        val newState = when (action) {
+            is DragAndDropAction.AddDropTarget -> addDropTarget(action.tabRowKey, action.bounds, action.isReverse)
+            is DragAndDropAction.Reset -> reset()
+            is DragAndDropAction.StartDragging -> startDragging(action.moduleState)
+            is DragAndDropAction.SetPosition -> setPosition(action.positionOnScreen)
+        }
+        dragState = newState
+    }
+
     private fun WorkbenchInformationState.saveAndClose(moduleState: WorkbenchModuleState<*>, popUpState: PopUpState): WorkbenchInformationState {
         val result = save(moduleState)
         return if (popUpState.type==PopUpType.ON_EDITOR_SWITCH) result.updateEditor(moduleState, popUpState.module) else result.close(moduleState)
@@ -142,21 +152,6 @@ internal class WorkbenchController {
         return if (popUpState.type==PopUpType.ON_EDITOR_SWITCH) result.updateEditor(moduleState, popUpState.module) else result.close(moduleState)
     }
 
-    /**
-     * IMPORTANT!! some actions from the triggerAction(Action) function will call this function
-     * - To prevent deadlocks Drag and Drop Actions MUST NEVER trigger any information state actions
-     */
-    private fun triggerAction(action: DragAndDropAction) {
-        val newState = when (action) {
-            is DragAndDropAction.AddDropTarget -> addDropTarget(action.tabRowKey, action.bounds, action.isReverse)
-            is DragAndDropAction.Reset -> reset()
-            is DragAndDropAction.StartDragging -> startDragging(action.moduleState)
-            is DragAndDropAction.SetPosition -> setPosition(action.positionOnScreen)
-        }
-        dragState = newState
-    }
-
-    //Drop target cleanup not working!!
     private fun WorkbenchInformationState.dropDraggedModule(): WorkbenchInformationState {
         var result = this
         if (dragState.module != null) {
@@ -263,7 +258,6 @@ internal class WorkbenchController {
     }
 
     private fun WorkbenchInformationState.refreshSaveState(unsavedEditors: MutableMap<String, MutableSet<Int>>): WorkbenchInformationState {
-        // remove type key if set is empty
         unsavedEditors.forEach {
             if (it.value.isEmpty())
                 unsavedEditors.remove(it.key)
@@ -301,9 +295,8 @@ internal class WorkbenchController {
     }
 
     private fun WorkbenchInformationState.closeRequest(moduleState: WorkbenchModuleState<*>): WorkbenchInformationState {
-        // if unsaved, ask User by Popup what to do
         if (isUnsaved(moduleState)) {
-            return openPopUp(PopUpType.ON_CLOSE, moduleState, moduleState.module, "ll")
+            return openPopUp(PopUpType.ON_CLOSE, moduleState, moduleState.module, "")
         }
         return close(moduleState)
     }
@@ -444,6 +437,9 @@ internal class WorkbenchController {
                 WorkbenchTabRowState(tabRowKey = tabRowKey, selected = moduleState)
         } else {
             tabRowStates[tabRowKey] = tabRowState[tabRowKey]!!.copy(selected = moduleState)
+        }
+        if(moduleState != null){
+            MQClientImpl.publishSelected(moduleState.module.modelType, moduleState.dataId ?: moduleState.id)
         }
         return copy(tabRowState = tabRowStates)
     }

@@ -45,10 +45,6 @@ internal class WorkbenchModuleState <C> (
         )
     }
 
-    fun selected() {
-        MQClientImpl.publishSelected(module.modelType, dataId ?: id)
-    }
-
     fun getTitle() : String {
         return module.title(controller)
     }

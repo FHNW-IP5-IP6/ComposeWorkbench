@@ -30,7 +30,6 @@ import view.component.WorkbenchDragAnimation
 import view.component.WorkbenchWindow
 import view.themes.LightColors
 import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
 
 
 class Workbench(private val appTitle: String = "", private val enableMQ: Boolean = false) {
@@ -57,7 +56,7 @@ class Workbench(private val appTitle: String = "", private val enableMQ: Boolean
     private fun startConsumingActions() {
         CoroutineScope(Dispatchers.Default).launch {
             actionChannel.consumeEach { action ->
-                controller.triggerAction(action)
+                controller.executeAction(action)
                 if (action is WorkbenchActionSync) {
                     action.response.complete(0)
                 }
@@ -174,7 +173,7 @@ class Workbench(private val appTitle: String = "", private val enableMQ: Boolean
         val defaultExplorer = WorkbenchDefaultState(explorer.modelType, c, explorer.title, location, shown, listed)
         triggerAction(WorkbenchActionSync.AddDefaultExplorer(id, defaultExplorer))
         if (listed) {
-            controller.triggerAction(
+            controller.executeAction(
                 WorkbenchActionSync.AddCommand(
                     Command(
                         text = controller.informationState.getRegisteredExplorer<C>(type).title(c),
@@ -222,7 +221,7 @@ class Workbench(private val appTitle: String = "", private val enableMQ: Boolean
         initJob.invokeOnCompletion(onCancelling = false) {
             if(workbenchState == WorkbenchState.TERMINATING) return@invokeOnCompletion
             workbenchState = WorkbenchState.RUNNING
-            controller.triggerAction(WorkbenchAction.InitExplorers())
+            controller.executeAction(WorkbenchAction.InitExplorers())
             controller.dispatchCommands()
         }
         initUI(onExit)

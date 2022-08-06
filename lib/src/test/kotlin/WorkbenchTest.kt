@@ -57,7 +57,7 @@ internal class WorkbenchTest{
         sut.registerEditor(type = "String", initController = { _, _ -> "test"}, title = { "title" }){}
         sut.requestEditor("String", 0)
         val tabRowKey = TabRowKey(displayType = DisplayType.TAB1, moduleType = ModuleType.EDITOR, windowState = controller.informationState.mainWindow)
-        controller.triggerAction(WorkbenchAction.InitExplorers())
+        controller.executeAction(WorkbenchAction.InitExplorers())
 
         assertEquals(1, controller.informationState.getModulesFiltered(tabRowKey).size)
     }
