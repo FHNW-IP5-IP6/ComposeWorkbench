@@ -35,20 +35,17 @@ import java.util.concurrent.Executors
 
 class Workbench(private val appTitle: String = "", private val enableMQ: Boolean = false) {
 
-    private val mainScope = CoroutineScope(Dispatchers.Main.immediate + SupervisorJob())
     private val actionChannel = Channel<Action> (capacity = Channel.UNLIMITED)
 
     private var workbenchState by mutableStateOf(WorkbenchState.STARTING)
     private val controller = WorkbenchController()
 
-    // HiveMQ infrastructure
-    // IMPORTANT!!! has to be first instance to initiate, otherwise early clients won't connect to broker
     private var hiveMQ: EmbeddedHiveMQ? = null
     private var mqController: WorkbenchMQDispatcher? = null
 
     private val initJob: Job
 
-    private fun triggerAction(action: Action) = runBlocking(Dispatchers.Main) {
+    private fun triggerAction(action: Action) = runBlocking {
         launch {
             actionChannel.send(action)
         }
