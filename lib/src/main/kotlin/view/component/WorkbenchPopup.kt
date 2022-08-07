@@ -12,13 +12,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.focus.focusTarget
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import controller.Action
 import controller.WorkbenchAction
 import model.data.TabRowKey
 import model.data.enums.PopUpType
 import model.state.PopUpState
 import model.state.WorkbenchInformationState
+import java.util.*
 
 
 @Composable
@@ -51,24 +55,24 @@ internal fun WorkbenchPopupOnClose (
             }
         },
         title = {
-            Text(text = "Do you want to save the changes to this Editor?")
+            PopUpTitle("Unsaved Changes")
         },
         text = {
-            Text("If you don't save, your changes will be lost.")
+            PopUpMessage("You have made changes. Do you want to save or discard them?")
         },
         buttons = {
-            Row( modifier = Modifier.padding(start = 8.dp, end = 8.dp) ) {
-                Button(
-                    onClick = { onActionRequired(WorkbenchAction.DiscardChanges(popUpState.moduleState, popUpState)) }
-                ) {
-                    Text("Discard")
-                }
-                Spacer(Modifier.width(45.dp))
+            Row( modifier = Modifier.padding(start = 8.dp, end = 8.dp, bottom = 4.dp) ) {
                 Button(
                     onClick = { onActionRequired(WorkbenchAction.ClosePopUp(popUpState)) }
                 ) {
                     Text("Cancel")
-                }gi
+                }
+                Spacer(Modifier.width(45.dp))
+                Button(
+                    onClick = { onActionRequired(WorkbenchAction.DiscardChanges(popUpState.moduleState, popUpState))}
+                ) {
+                    Text("Discard")
+                }
                 Spacer(Modifier.width(8.dp))
                 Button(
                     modifier = Modifier.focusTarget(),
@@ -96,13 +100,13 @@ internal fun WorkbenchPopupSaveFailed (
             }
         },
         title = {
-            Text(text = "Can not save")
+            PopUpTitle("Save Failed")
         },
         text = {
-            Text(popUpState.message)
+            PopUpMessage("You can not save, due to invalid changes.")
         },
         buttons = {
-            Row( modifier = Modifier.padding(start = 40.dp, end = 40.dp) ) {
+            Row( modifier = Modifier.padding(start = 60.dp, end = 60.dp, bottom = 4.dp) ) {
                 Button(
                     onClick = { onActionRequired(WorkbenchAction.ClosePopUp(popUpState)) }
                 ) {
@@ -112,6 +116,28 @@ internal fun WorkbenchPopupSaveFailed (
         },
         shape = RoundedCornerShape(20.dp),
     )
+}
+
+@Composable
+private fun PopUpTitle(text: String) {
+    Column (
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(text = text.uppercase(Locale.getDefault()), color = MaterialTheme.colors.primary.copy(alpha = 0.7f), fontSize = 13.sp,  textAlign = TextAlign.Center)
+    }
+}
+
+@Composable
+private fun PopUpMessage(text: String) {
+    Column (
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(text, color = MaterialTheme.colors.onBackground, fontSize = 12.sp, textAlign = TextAlign.Center)
+    }
 }
 
 // source: https://gist.github.com/EugeneTheDev/a27664cb7e7899f964348b05883cbccd
