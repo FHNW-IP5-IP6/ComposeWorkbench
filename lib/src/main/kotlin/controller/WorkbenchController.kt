@@ -70,7 +70,7 @@ internal class WorkbenchController {
                 workbenchAction.dataId
             )
             is WorkbenchAction.ChangeSplitViewMode -> informationState.changeSplitViewMode(workbenchAction.splitViewMode)
-            is WorkbenchAction.CloseModuleState -> informationState.closeRequest(workbenchAction.moduleState)
+            is WorkbenchAction.CloseModuleState -> informationState.close(workbenchAction.moduleState)
             is WorkbenchAction.CreateExplorerFromDefault -> informationState.createExplorerFromDefault(
                 workbenchAction.id
             )
@@ -86,8 +86,8 @@ internal class WorkbenchController {
                 workbenchAction.explorer
             )
             is WorkbenchAction.RemoveModuleState -> informationState.removeModuleState(workbenchAction.moduleState)
-            is WorkbenchAction.ClosePopUp -> informationState.closePopUp()
-            is WorkbenchAction.RemoveSavedModule -> informationState.removeSavedModule(
+            is WorkbenchAction.ClosePopUp -> informationState.closePopUp(workbenchAction.popUpState)
+            is WorkbenchAction.RemoveSavedModule -> informationState.removeUnsavedModule(
                 workbenchAction.type,
                 workbenchAction.dataId
             )
@@ -98,7 +98,7 @@ internal class WorkbenchController {
             )
             is WorkbenchAction.ReselectModuleState -> informationState.reselect(workbenchAction.moduleState)
             is WorkbenchAction.SaveAll -> informationState.saveAll()
-            is WorkbenchAction.CloseAll -> informationState.closeAll(workbenchAction.windowState)
+            is WorkbenchAction.CloseAll -> informationState.closeAllTabs(workbenchAction.windowState)
             is WorkbenchAction.SaveChanges -> informationState.save(workbenchAction.moduleState)
             is WorkbenchAction.SaveAndClose -> informationState.saveAndClose(workbenchAction.moduleState, workbenchAction.popUpState)
             is WorkbenchAction.DiscardChanges -> informationState.discardChanges(workbenchAction.moduleState, workbenchAction.popUpState)
@@ -144,12 +144,12 @@ internal class WorkbenchController {
     }
 
     private fun WorkbenchInformationState.saveAndClose(moduleState: WorkbenchModuleState<*>, popUpState: PopUpState): WorkbenchInformationState {
-        val result = save(moduleState)
+        val result = save(moduleState).closePopUp(popUpState)
         return if (popUpState.type==PopUpType.ON_EDITOR_SWITCH) result.updateEditor(moduleState, popUpState.module) else result.close(moduleState)
     }
 
     private fun WorkbenchInformationState.discardChanges(moduleState: WorkbenchModuleState<*>, popUpState: PopUpState): WorkbenchInformationState {
-        val result = removeSavedModule(moduleState.module.modelType, moduleState.dataId ?: moduleState.id).closePopUp()
+        val result = removeUnsavedModule(moduleState.module.modelType, moduleState.dataId ?: moduleState.id).closePopUp(popUpState)
         return if (popUpState.type==PopUpType.ON_EDITOR_SWITCH) result.updateEditor(moduleState, popUpState.module) else result.close(moduleState)
     }
 
@@ -247,11 +247,15 @@ internal class WorkbenchController {
         module: WorkbenchModule<*>,
         message: String
     ): WorkbenchInformationState {
-        return copy(popUpState = PopUpState(popUpType, moduleState, module, message))
+        val popups = popUpList.toMutableSet()
+        popups.add(PopUpState(popUpType, moduleState, module, message))
+        return copy(popUpList = popups)
     }
 
-    private fun WorkbenchInformationState.closePopUp(): WorkbenchInformationState {
-        return copy(popUpState = null)
+    private fun WorkbenchInformationState.closePopUp(popUpState: PopUpState): WorkbenchInformationState {
+        val popups = popUpList.toMutableSet()
+        popups.remove(popUpState)
+        return copy(popUpList = popups)
     }
 
     private fun WorkbenchInformationState.updateCurrentTabSpace(currentTabSpace: DisplayType): WorkbenchInformationState {
@@ -275,51 +279,41 @@ internal class WorkbenchController {
         return copy(unsavedEditors = unsaved)
     }
 
-    private fun WorkbenchInformationState.removeSavedModule(type: String, dataId: Int): WorkbenchInformationState {
+    private fun WorkbenchInformationState.removeUnsavedModule(type: String, dataId: Int): WorkbenchInformationState {
         val unsaved = unsavedEditors.toMutableMap()
         unsaved[type]?.remove(dataId)
         MQClientImpl.publishSaved(type, dataId)
         return refreshSaveState(unsaved)
     }
 
-    private fun WorkbenchInformationState.closeAll(windowState: WorkbenchWindowState): WorkbenchInformationState {
-        modules.filter { it.window == windowState }
+    private fun WorkbenchInformationState.closeAllTabs(windowState: WorkbenchWindowState): WorkbenchInformationState {
+        var state = this
+        modules
+            .filter { it.window == windowState }
             .forEach {
-                unsavedEditors.forEach { entry ->
-                    if (it.module.modelType == entry.key) {
-                        if (entry.value.contains(it.dataId ?: it.id)) {
-                            informationState = closeRequest(it)
-                        }
-                    }
-                }
+                state = state.close(it)
             }
-        return refreshSaveState(unsavedEditors.toMutableMap())
+        return state.refreshSaveState(unsavedEditors.toMutableMap())
     }
 
     private fun WorkbenchInformationState.saveAll(): WorkbenchInformationState {
+        var state = this
         modules.forEach {
             unsavedEditors.forEach { entry ->
                 if (it.module.modelType == entry.key) {
                     if (entry.value.contains(it.dataId ?: it.id)) {
-                        informationState = save(it)
+                        state = state.save(it)
                     }
                 }
             }
         }
-        return refreshSaveState(unsavedEditors.toMutableMap())
-    }
-
-    private fun WorkbenchInformationState.closeRequest(moduleState: WorkbenchModuleState<*>): WorkbenchInformationState {
-        if (isUnsaved(moduleState)) {
-            return openPopUp(PopUpType.ON_CLOSE, moduleState, moduleState.module, "")
-        }
-        return close(moduleState)
+        return state.refreshSaveState(unsavedEditors.toMutableMap())
     }
 
 
     private fun WorkbenchInformationState.close(moduleState: WorkbenchModuleState<*>): WorkbenchInformationState {
         if (isUnsaved(moduleState)) {
-            return this
+            return openPopUp(PopUpType.ON_CLOSE, moduleState, moduleState.module, "")
         }
         MQClientImpl.publishClosed(moduleState.module.modelType, moduleState.dataId ?: moduleState.id)
         return removeModuleState(moduleState)
@@ -327,7 +321,7 @@ internal class WorkbenchController {
 
     private fun WorkbenchInformationState.save(moduleState: WorkbenchModuleState<*>): WorkbenchInformationState {
         return if (moduleState.onSave().successful) {
-            removeSavedModule(moduleState.module.modelType, moduleState.dataId ?: moduleState.id).closePopUp()
+            removeUnsavedModule(moduleState.module.modelType, moduleState.dataId ?: moduleState.id)
         } else {
             openPopUp(PopUpType.SAVE_FAILED, moduleState, moduleState.module, "Failed to save.")
         }

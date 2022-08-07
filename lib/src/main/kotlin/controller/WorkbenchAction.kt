@@ -21,7 +21,7 @@ internal sealed class WorkbenchAction(
     class CloseAll(val windowState: WorkbenchWindowState)                                               : WorkbenchAction("Close all")
     class DropDraggedModule                                                                             : WorkbenchAction("Drop dragged module")
 
-    class ClosePopUp()                                                                                  : WorkbenchAction("Close PopUp")
+    class ClosePopUp(val popUpState: PopUpState)                                                        : WorkbenchAction("Close PopUp")
     class OpenPopUp(
         val popUpType: PopUpType,
         val moduleState: WorkbenchModuleState<*>,

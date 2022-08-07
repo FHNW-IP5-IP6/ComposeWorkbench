@@ -15,6 +15,7 @@ import androidx.compose.ui.focus.focusTarget
 import androidx.compose.ui.unit.dp
 import controller.Action
 import controller.WorkbenchAction
+import model.data.TabRowKey
 import model.data.enums.PopUpType
 import model.state.PopUpState
 import model.state.WorkbenchInformationState
@@ -25,11 +26,13 @@ internal fun handlePopUps(
     informationState: WorkbenchInformationState,
     onActionRequired: (Action) -> Unit,
 ){
-    if (informationState.popUpState != null) {
-        when (informationState.popUpState.type) {
-            PopUpType.ON_CLOSE -> WorkbenchPopupOnClose(informationState.popUpState, onActionRequired)
-            PopUpType.ON_EDITOR_SWITCH -> WorkbenchPopupOnClose(informationState.popUpState, onActionRequired)
-            PopUpType.SAVE_FAILED -> WorkbenchPopupSaveFailed(informationState.popUpState, onActionRequired)
+    if (informationState.isShowPopUp()) {
+        val popUp = informationState.popUpList.first()
+        onActionRequired(WorkbenchAction.UpdateSelection(TabRowKey(popUp.moduleState), popUp.moduleState))
+        when (popUp.type) {
+            PopUpType.ON_CLOSE -> WorkbenchPopupOnClose(popUp, onActionRequired)
+            PopUpType.ON_EDITOR_SWITCH -> WorkbenchPopupOnClose(popUp, onActionRequired)
+            PopUpType.SAVE_FAILED -> WorkbenchPopupSaveFailed(popUp, onActionRequired)
         }
     }
 }
@@ -44,7 +47,7 @@ internal fun WorkbenchPopupOnClose (
     AlertDialog(
         onDismissRequest = {
             if (dismissible) {
-                onActionRequired(WorkbenchAction.ClosePopUp())
+                onActionRequired(WorkbenchAction.ClosePopUp(popUpState))
             }
         },
         title = {
@@ -62,10 +65,10 @@ internal fun WorkbenchPopupOnClose (
                 }
                 Spacer(Modifier.width(45.dp))
                 Button(
-                    onClick = { onActionRequired(WorkbenchAction.ClosePopUp()) }
+                    onClick = { onActionRequired(WorkbenchAction.ClosePopUp(popUpState)) }
                 ) {
                     Text("Cancel")
-                }
+                }gi
                 Spacer(Modifier.width(8.dp))
                 Button(
                     modifier = Modifier.focusTarget(),
@@ -89,7 +92,7 @@ internal fun WorkbenchPopupSaveFailed (
     AlertDialog(
         onDismissRequest = {
             if (dismissible) {
-                WorkbenchAction.ClosePopUp()
+                WorkbenchAction.ClosePopUp(popUpState)
             }
         },
         title = {
@@ -101,15 +104,9 @@ internal fun WorkbenchPopupSaveFailed (
         buttons = {
             Row( modifier = Modifier.padding(start = 40.dp, end = 40.dp) ) {
                 Button(
-                    onClick = { onActionRequired(WorkbenchAction.DiscardChanges(popUpState.moduleState, popUpState)) }
+                    onClick = { onActionRequired(WorkbenchAction.ClosePopUp(popUpState)) }
                 ) {
-                    Text("Discard")
-                }
-                Spacer(Modifier.width(45.dp))
-                Button(
-                    onClick = { onActionRequired(WorkbenchAction.ClosePopUp()) }
-                ) {
-                    Text("Cancel")
+                    Text("OK")
                 }
             }
         },
