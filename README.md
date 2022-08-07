@@ -134,8 +134,43 @@ Since each Editor can have its own controller and internal datastructures change
 Most of the provided callbacks grant access to the Workbench internal Mq Client. This is implemented with an embedded version of a MQTT Broker (https://github.com/hivemq/hivemq-community-edition). This Mq Client enables the Modules to communicate with each other and the Workbench. 
 Use the init callback on the Explorer and the initController callback on the Editor registration to initialize message subscriptions.
 
-#### Unsaved Changes
+#### Workbench specific Messages
+
+*Unsaved Changes*
+
 To enable the Workbench's Save Button and all its features the Editor must inform the Workbench about unsaved changes. 
 ```kotlin
- mqtt.publishUnsaved(COLOR, i)
+ mqtt.publishUnsaved(type = COLOR, id = i)
  ```
+
+*Subscribe for any Editor getting selected*
+
+To enable the Workbench's Save Button and all its features the Editor must inform the Workbench about unsaved changes.
+```kotlin
+mqtt.subscribeForSelectedEditor(editorType = COLOR) {id -> controller.selectColor(id)}
+ ```
+
+#### Custom Messages
+
+*Publish to custom Topic*
+
+For example, we want to share changes in a City Editor with an Explorer where Cities are shown.
+Our Topic publishes the change of a field (e.g. Name of the City) with the new value from an Editor.
+```kotlin
+mqtt.publish("my-city-app/city/$id/$field", value)
+```
+
+*Subscribe for custom Topic*
+
+On the Explorer we subscribe for our custom Topic with a MQ multilevel wildcard, to receive changes from any Editor who publishes to this topic.
+The subscription provides a callback, where the published topic and it's send message are passed as arguments.
+```kotlin
+mqtt.subscribe("my-city-app/city/#") { topic, msg ->
+    val topicSplit = topic.split("/")
+    if (topicSplit.size == 4) {
+        val id = topicSplit[2].toInt()
+        val field = topicSplit[3]
+        controller.update(id, field, value)
+    }
+}
+```
