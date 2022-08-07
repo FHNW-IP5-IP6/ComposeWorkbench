@@ -126,7 +126,6 @@ class Workbench(private val appTitle: String = "", private val enableMQ: Boolean
      * @param initController: callback to load model from id
      * @param icon: Icon for this Editor. This is used in case multiple editors are registered for the same type
      * @param title: Callback to get the editors title from a given Model
-     * @param onClose: The callback to be invoked when an editor of this type is closed
      * @param onSave: The callback to be invoked when an editor of this type is saved.
      *                Return true if successful otherwise false.
      *                Will publish a saved message in case of success
