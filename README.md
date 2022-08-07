@@ -10,7 +10,7 @@ Explorer: An Explorer is a module who's main purpose is to display data. For exa
 
 Editor: An Editor is a module who's main purpose is to edit a given data record. For example a single customer or product.
 
-One major goal of this project is to allow Editor and Explorer implementations which are completely ignorant of each other. The only interface between them is an id (Int) which can be an id from a DB but also something as simple as an index from a publicly accessible list.
+One major goal of this project is to allow Editor and Explorer implementations which are completely ignorant of each other. The only interface between them is a Type (String, like "Product" or "Customer") an ID (Int) which can be an id from a DB but also something as simple as an index from a publicly accessible list.
 
 # Implementation
 ## Gradle
@@ -24,7 +24,7 @@ val workbench: Workbench = Workbench("Hello Workbench")
 ``
 
 ### Register Modules
-Editors and Explorers must be registered before they can be used (requested). The two main attributes in the registration are the content and the key. The content is the actual composable code of the Module the key defines the type of data the Module can handle. By registering Editors and Explorers you tell the ComposeWorkbench which Types of Data are supported and how they can be explored and edited.
+Editors and Explorers must be registered before they can be used (requested). The two main attributes in the registration are the content and the key. The content is the actual composable code (View) of the Module the key defines the type of data the Module can handle. By registering Editors and Explorers you tell the ComposeWorkbench which Types of Data are supported and how they can be explored and edited.
 
 Use the workbench to register editors and explorers by calling the exposed functions.
 
