@@ -351,12 +351,10 @@ internal class WorkbenchController {
         if (!splitViewMode.isUnsplit() && !this.splitViewMode.isUnsplit()) {
             return copy(splitViewMode = splitViewMode)
         }
+        val tab1 = TabRowKey(DisplayType.TAB1, ModuleType.EDITOR, mainWindow)
+        val tab2 = TabRowKey(DisplayType.TAB2, ModuleType.EDITOR, mainWindow)
         if (this.splitViewMode.isUnsplit()) {
-            val selected = tabRowState[TabRowKey(
-                DisplayType.TAB1,
-                ModuleType.EDITOR,
-                mainWindow
-            )]?.selected
+            val selected = tabRowState[tab1]?.selected
             if (selected != null) {
                 var result = reselect(selected)
                 selected.displayType = DisplayType.TAB2
@@ -365,22 +363,10 @@ internal class WorkbenchController {
             }
         } else {
             var newInformationState = this
-            val selectedTab1 = tabRowState[TabRowKey(
-                DisplayType.TAB1,
-                ModuleType.EDITOR,
-                mainWindow
-            )]?.selected
-            if (selectedTab1 == null) {
-                val selectedTab2 = tabRowState[TabRowKey(
-                    DisplayType.TAB2,
-                    ModuleType.EDITOR,
-                    mainWindow
-                )]?.selected
-                newInformationState = newInformationState.updateSelection(
-                    TabRowKey(DisplayType.TAB1, ModuleType.EDITOR, informationState.mainWindow),
-                    selectedTab2
-                )
+            if (tabRowState[tab1]?.selected == null) {
+                newInformationState = newInformationState.updateSelection(tab1, tabRowState[tab2]?.selected)
             }
+            newInformationState = newInformationState.updateSelection(tab2, null)
             val modules = newInformationState.modules.toMutableList()
             modules.forEach { if (DisplayType.TAB2 == it.displayType) it.displayType = DisplayType.TAB1 }
             val currentTabSpace = DisplayType.TAB1

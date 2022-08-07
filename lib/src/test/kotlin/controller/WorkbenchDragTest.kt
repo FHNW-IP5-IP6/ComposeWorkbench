@@ -156,4 +156,31 @@ class WorkbenchDragTest {
         assertNotNull(dropTarget)
         assertFalse { sut.isValidDropTarget(dropTarget, explorer) }
     }
+
+    @Test
+    fun dropDraggedModule() {
+        val editorModule = WorkbenchModule(ModuleType.EDITOR,"type", title ={"title"}, loader = {_, _ -> "model"})  {}
+        sut.executeAction(WorkbenchActionSync.RegisterEditor("type", editorModule))
+        sut.executeAction(WorkbenchActionSync.RequestEditorState("type", 23))
+        sut.executeAction(WorkbenchActionSync.RequestEditorState("type", 24))
+
+        //module1 Dragged to Window
+        sut.executeAction(DragAndDropAction.StartDragging(sut.informationState.modules[0]))
+        sut.executeAction(DragAndDropAction.SetPosition(DpOffset(70.dp,70.dp)))
+        sut.executeAction(WorkbenchAction.DropDraggedModule())
+
+        val moduleInWindow = sut.informationState.modules[1]
+        assertNotEquals(moduleInWindow.window, sut.informationState.mainWindow)
+
+        sut.executeAction(DragAndDropAction.AddDropTarget(tabRowKey = TabRowKey(DisplayType.WINDOW, ModuleType.BOTH, sut.informationState.mainWindow), bounds = Rect(10f,10f,50f,50f), isReverse = true )) //main
+        sut.executeAction(DragAndDropAction.AddDropTarget(tabRowKey = TabRowKey(moduleInWindow), bounds = Rect(60f,60f,100f,100f), isReverse = true )) //window
+        sut.executeAction(DragAndDropAction.AddDropTarget(tabRowKey = TabRowKey(DisplayType.TAB1, ModuleType.EDITOR, sut.informationState.mainWindow), bounds = Rect(15f,15f,40f,40f), isReverse = false )) //editor space
+        //module in window is dragged back to main
+        sut.executeAction(DragAndDropAction.StartDragging(moduleInWindow))
+        sut.executeAction(DragAndDropAction.SetPosition(DpOffset(20.dp,20.dp)))
+        sut.executeAction(WorkbenchAction.DropDraggedModule())
+
+        assertEquals(sut.informationState.modules[0].window, sut.informationState.modules[1].window)
+        assertTrue { sut.dragState.dropTargets.isEmpty() }
+    }
 }
