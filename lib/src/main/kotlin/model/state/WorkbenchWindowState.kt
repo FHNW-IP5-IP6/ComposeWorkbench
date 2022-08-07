@@ -8,7 +8,6 @@ import androidx.compose.ui.window.WindowState
 
 internal class WorkbenchWindowState(
     val windowState: WindowState,
-    var hasFocus: Boolean,
     var windowHeaderOffset: Dp,
 ) {
 }
@@ -16,7 +15,6 @@ internal class WorkbenchWindowState(
 internal fun getMainWorkbenchWindowState() :WorkbenchWindowState {
     return WorkbenchWindowState(
         windowState = WindowState(position = WindowPosition(MAIN_WINDOW_POS_OFFSET, MAIN_WINDOW_POS_OFFSET)),
-        hasFocus =  true,
         windowHeaderOffset = 0.dp
     )
 }

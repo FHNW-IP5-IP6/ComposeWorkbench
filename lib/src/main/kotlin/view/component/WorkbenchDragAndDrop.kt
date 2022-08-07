@@ -26,8 +26,6 @@ import model.state.WorkbenchDragState
 import model.state.WorkbenchInformationState
 import model.state.WorkbenchModuleState
 import model.state.WorkbenchWindowState
-import java.awt.event.WindowEvent
-import java.awt.event.WindowFocusListener
 
 /**
  * Window in which a drag animation is visible
@@ -49,16 +47,8 @@ internal fun DragAndDropWindow(
         state = tabRowKey.windowState.windowState
     ) {
         val density = LocalDensity.current
-        window.addWindowFocusListener(object : WindowFocusListener {
-            override fun windowGainedFocus(e: WindowEvent) {
-                tabRowKey.windowState.hasFocus = true
-            }
-
-            override fun windowLostFocus(e: WindowEvent) {
-                tabRowKey.windowState.hasFocus = false
-            }
-        })
         Box(modifier = Modifier.fillMaxSize().onGloballyPositioned {
+            onActionRequired.invoke(WorkbenchAction.SetWindowOffset(tabRowKey.windowState,  tabRowKey.windowState.windowState.size.height - with (density) {it.boundsInWindow().height.toDp()}))
             onActionRequired.invoke(DragAndDropAction.AddDropTarget(tabRowKey, getBounds(true, tabRowKey.windowState, it.boundsInWindow(), density), true))
         }) {
             windowScope()
@@ -139,9 +129,6 @@ private fun getBounds(
     density: Density
 ): Rect {
     with(density) {
-        if (isWindow) {
-            windowState.windowHeaderOffset = windowState.windowState.size.height - relativeToWindow.height.toDp()
-        }
         var top = windowState.windowState.position.y + relativeToWindow.top.toDp()
         if (!isWindow) {
             top += windowState.windowHeaderOffset

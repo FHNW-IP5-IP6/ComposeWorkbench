@@ -55,25 +55,6 @@ class WorkbenchDragTest {
     }
 
     @Test
-    fun getCurrentReverseDropTarget() {
-        val windowState1 = sut.informationState.mainWindow
-        val windowState2 = sut.informationState.mainWindow
-        val tabRowKey1 = TabRowKey(DisplayType.WINDOW, ModuleType.BOTH, windowState1)
-        val tabRowKey2 = TabRowKey(DisplayType.WINDOW, ModuleType.BOTH, windowState2)
-        sut.executeAction(DragAndDropAction.AddDropTarget(tabRowKey1, Rect(0f, 0f, 100f, 100f), true))
-        sut.executeAction(DragAndDropAction.AddDropTarget(tabRowKey2, Rect(50f, 50f, 100f, 100f), true))
-        windowState1.hasFocus = true
-        windowState2.hasFocus = false
-
-        sut.executeAction(DragAndDropAction.SetPosition(DpOffset(60.dp, 60.dp)))
-        assertEquals(windowState1, sut.dragState.getCurrentReverseDopTarget()?.tabRowKey?.windowState)
-
-        windowState2.hasFocus = true
-        windowState1.hasFocus = false
-        assertEquals(windowState2, sut.dragState.getCurrentReverseDopTarget()?.tabRowKey?.windowState)
-    }
-
-    @Test
     fun isValidDropTarget() {
         val explorerModule = WorkbenchModule<String>(ModuleType.EXPLORER, "type", title = { "title" }) { }
         sut.executeAction(WorkbenchActionSync.RegisterExplorer("type", explorerModule))
@@ -173,6 +154,6 @@ class WorkbenchDragTest {
         sut.executeAction(DragAndDropAction.SetPosition(DpOffset(25.dp, 25.dp)))
         dropTarget = sut.dragState.getCurrentDropTarget()
         assertNotNull(dropTarget)
-        assertFalse { sut.isValidDropTarget(dropTarget!!, explorer) }
+        assertFalse { sut.isValidDropTarget(dropTarget, explorer) }
     }
 }

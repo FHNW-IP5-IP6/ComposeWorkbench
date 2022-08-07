@@ -32,8 +32,8 @@ internal data class WorkbenchDragState(
         return when (targets.isEmpty()){
             true -> null
             false -> {
-                //Prioritize the window witch is currently focused
-                if (targets.find { it.tabRowKey.windowState.hasFocus } == null) targets.first() else targets.find { it.tabRowKey.windowState.hasFocus }!!
+                //TODO: Prioritize window which has focus
+                targets.last()
             }
         }
     }

@@ -5,6 +5,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.WindowPosition
@@ -129,6 +130,7 @@ internal class WorkbenchController {
             )
             is WorkbenchActionSync.RequestExplorerState -> informationState.requestExplorerState(workbenchAction.moduleState)
             is WorkbenchAction.DropDraggedModule -> informationState.dropDraggedModule()
+            is WorkbenchAction.SetWindowOffset -> setWindowOffset(workbenchAction.window, workbenchAction.offset)
         }
         informationState = newState
     }
@@ -153,6 +155,12 @@ internal class WorkbenchController {
         return if (popUpState.type==PopUpType.ON_EDITOR_SWITCH) result.updateEditor(moduleState, popUpState.module) else result.close(moduleState)
     }
 
+    //TODO: window state should be immutable -> remove from module state and tabrowkey
+    private  fun setWindowOffset(windowState: WorkbenchWindowState, offset: Dp): WorkbenchInformationState {
+        windowState.windowHeaderOffset = offset
+        return informationState
+    }
+
     private fun WorkbenchInformationState.dropDraggedModule(): WorkbenchInformationState {
         var result = this
         if (dragState.module != null) {
@@ -168,7 +176,7 @@ internal class WorkbenchController {
                 }
             }
         }
-        dragState = dragState.copy(isDragging = false, module = null)
+        dragState = dragState.copy(isDragging = false, module = null, dropTargets = listOf())
         return result.copy(preview = WorkbenchPreviewState(tabRowKey = null, title = ""))
     }
 
@@ -187,6 +195,8 @@ internal class WorkbenchController {
         return if (same != null) {
             dragState
         }else {
+            //check if window still exists - can happen due to channeling
+            if(tabRowKey.windowState != informationState.mainWindow && !informationState.windows.contains(tabRowKey.windowState)) return dragState
             val dropTargets = dragState.dropTargets.toMutableList()
             dropTargets.removeIf { it.isReverse == isReverse && it.tabRowKey == tabRowKey }
             dropTargets += DropTarget(isReverse = isReverse, bounds = bounds, tabRowKey = tabRowKey)
@@ -380,22 +390,15 @@ internal class WorkbenchController {
                 modules = modules
             )
         }
-        cleanupDropTargets(mainWindow, DisplayType.TAB1)
-        cleanupDropTargets(mainWindow, DisplayType.TAB2)
+        dragState = dragState.copy(dropTargets = listOf())
         return this
     }
 
     private fun WorkbenchInformationState.removeWindow(tabRowKey: TabRowKey): WorkbenchInformationState {
         val windows = windows.toMutableList()
         windows -= tabRowKey.windowState
-        cleanupDropTargets(tabRowKey.windowState, tabRowKey.displayType)
+        dragState = dragState.copy(dropTargets = listOf())
         return copy(windows = windows)
-    }
-
-    private fun cleanupDropTargets(windowState: WorkbenchWindowState, displayType: DisplayType) {
-        val dropTargets = dragState.dropTargets.toMutableList()
-        dropTargets.removeIf { it.tabRowKey.windowState == windowState && it.tabRowKey.displayType == displayType }
-        dragState = dragState.copy(dropTargets = dropTargets)
     }
 
     private fun WorkbenchInformationState.reselect(
@@ -424,7 +427,6 @@ internal class WorkbenchController {
     ): WorkbenchInformationState {
         val window = WorkbenchWindowState(
             windowState = WindowState(position = dragState.getWindowPosition()),
-            hasFocus = true,
             windowHeaderOffset = 0.dp
         )
         var result = removeModuleState(moduleState)

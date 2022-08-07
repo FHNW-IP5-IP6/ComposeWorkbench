@@ -1,5 +1,6 @@
 package controller
 
+import androidx.compose.ui.unit.Dp
 import kotlinx.coroutines.CompletableDeferred
 import model.data.Command
 import model.data.TabRowKey
@@ -56,6 +57,7 @@ internal sealed class WorkbenchAction(
 
     class CreateExplorerFromDefault(val id: Int)                                                        : WorkbenchAction("Create explorer from default")
     class SetAppTitle(val appTitle: String)                                                             : WorkbenchAction("Set app title")
+    class SetWindowOffset(val window: WorkbenchWindowState, val offset: Dp)                             : WorkbenchAction("Set window offset")
 }
 
 
