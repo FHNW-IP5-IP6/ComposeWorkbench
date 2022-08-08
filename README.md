@@ -1,7 +1,7 @@
 # ComposeWorkbench
 Compose desktop library to build large Applications by combining existing Modules.
 
-<img alt="Workbench Examples" src="./Doku/images/workbench_examples.png" height="413" />
+<img alt="Workbench Examples" src="./Doku/images/workbench_examples.png" height="445" />
 
 # What is a ComposeWorkbench
 The ComposeWorkbench provides common application structures to custom modules. It supports two types of modules, explorers and editors. Once embedded in the ComposeWorkbench these modules can be dragged and dropped and the window management is taken care of. There is also support for custom commands and a messaging system that allows communication between the individual modules.
@@ -174,3 +174,17 @@ mqtt.subscribe("my-city-app/city/#") { topic, msg ->
     }
 }
 ```
+
+## Design guide
+
+### Explorer
+- Keep your Explorer read only.
+- Keep requesting of editors consistent (single click or double click)
+
+### Editor
+- When programming an Editor don't add a "Save" Button to the Editor itself use the Workbench internal save mechanism instead.
+- Publish changes using the publishUnsaved function on the MqClient whenever the Editors state is changed
+
+### General
+Given by the way Explorer and Editors interact, a Type and an Id, the Compose Workbench supports  Modules which are completely ignorant of each other. To fully benefit from this it is recommenced to use one common Database for the Workbench and to use Database ids and Database Tables/Entities as types.
+All Communication between Modules should only happen using the internal messaging.
