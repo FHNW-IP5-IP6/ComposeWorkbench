@@ -20,7 +20,6 @@ internal fun WorkbenchWindow(
     if (workbenchState == WorkbenchState.RUNNING) {
         for (state in informationState.windows) {
             key(state) {
-                println("window")
                 val tabRowKey =
                     TabRowKey(displayType = DisplayType.WINDOW, moduleType = ModuleType.BOTH, windowState = state)
                 DragAndDropWindow(

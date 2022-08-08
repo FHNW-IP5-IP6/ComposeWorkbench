@@ -1,6 +1,5 @@
 package model.state
 
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.DpSize
@@ -38,12 +37,6 @@ internal data class WorkbenchDragState(
         }
     }
 
-    internal fun toOffset(windowState: WorkbenchWindowState): Offset {
-        val x = getPositionOnScreen().x - windowState.windowState.position.x
-        val y = getPositionOnScreen().y - windowState.windowState.position.y
-        return Offset(x.value,y.value)
-    }
-
     internal fun getWindowPosition(): WindowPosition {
         if(getPositionOnScreen().isUnspecified) return WindowPosition.PlatformDefault
         return WindowPosition(dragWindowState.position.x, dragWindowState.position.y)
@@ -55,7 +48,7 @@ internal data class WorkbenchDragState(
             getPositionOnScreen().toOffset()) && it.tabRowKey.windowState == windowState }
     }
 
-    internal fun getPositionOnScreen(): DpOffset {
+    private fun getPositionOnScreen(): DpOffset {
         if(dragWindowState.position.isSpecified) {
             return DpOffset(dragWindowState.position.x, dragWindowState.position.y)
         }
