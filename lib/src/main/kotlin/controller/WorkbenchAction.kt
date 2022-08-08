@@ -18,6 +18,7 @@ internal sealed class WorkbenchAction(
 ): Action {
 
     class InitExplorers                                                                                 : WorkbenchAction("Init explorers")
+    class DispatchCommands                                                                              : WorkbenchAction("Dispatch commands")
     class SaveAll                                                                                       : WorkbenchAction("Save all")
     class CloseAll(val windowState: WorkbenchWindowState)                                               : WorkbenchAction("Close all")
     class DropDraggedModule                                                                             : WorkbenchAction("Drop dragged module")

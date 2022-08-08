@@ -6,6 +6,7 @@ import model.data.Command
 import model.data.TabRowKey
 import model.data.WorkbenchModule
 import model.data.enums.DisplayType
+import model.data.enums.MenuType
 import model.data.enums.ModuleType
 import model.data.enums.PopUpType
 import model.state.WorkbenchModuleState
@@ -260,5 +261,16 @@ class WorkbenchControllerTest {
         assertTrue { sut.informationState.modules.contains(moduleState1) }
         assertTrue { sut.informationState.isShowPopUp() }
         assertFalse { sut.informationState.modules.contains(moduleState2) }
+    }
+
+    @Test
+    fun dispatchCommands(){
+        assertTrue { sut.informationState.commandsMenus.isNotEmpty() }
+        assertNotNull( sut.informationState.commandsMenus[MenuType.MenuBar] )
+        assertTrue { sut.informationState.commandsMenus[MenuType.MenuBar]!!.children.isEmpty() }
+
+        sut.executeAction(WorkbenchAction.DispatchCommands())
+
+        assertTrue { sut.informationState.commandsMenus[MenuType.MenuBar]!!.children.isNotEmpty() }
     }
 }

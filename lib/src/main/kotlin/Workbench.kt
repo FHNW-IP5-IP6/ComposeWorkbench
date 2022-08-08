@@ -221,7 +221,7 @@ class Workbench(private val appTitle: String = "", private val enableMQ: Boolean
             if(workbenchState == WorkbenchState.TERMINATING) return@invokeOnCompletion
             workbenchState = WorkbenchState.RUNNING
             controller.executeAction(WorkbenchAction.InitExplorers())
-            controller.dispatchCommands()
+            controller.executeAction(WorkbenchAction.DispatchCommands())
         }
         initUI(onExit)
     }

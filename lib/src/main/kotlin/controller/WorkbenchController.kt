@@ -24,30 +24,8 @@ internal class WorkbenchController {
     var uniqueKey: AtomicInteger = AtomicInteger(0)
     var informationState by mutableStateOf(getDefaultWorkbenchDisplayInformation())
         private set
-
     var dragState by mutableStateOf(getDefaultWorkbenchDragState())
         private set
-
-    //TODO: is this the right place for this?
-    fun dispatchCommands() {
-        var m: MenuEntry = informationState.commandsMenus[MenuType.MenuBar]!!
-        for (c in informationState.commands) {
-            for (path in c.paths) {
-                val pathSplit = path.split(".")
-                if (pathSplit.size > 4 || pathSplit.isEmpty()) return
-                for (i in pathSplit.indices) {
-                    if (i == 0 && informationState.commandsMenus[MenuType.valueOf(pathSplit[0])] == null) break
-                    m = if (i == 0) {
-                        informationState.commandsMenus[MenuType.valueOf(pathSplit[0])]!!
-                    } else {
-                        m.getMenu(pathSplit[i])
-                    }
-                }
-                m.children.add(c)
-                m.children.sortBy { it.index }
-            }
-        }
-    }
 
     fun getNextKey(): Int = uniqueKey.getAndIncrement()
 
@@ -60,6 +38,7 @@ internal class WorkbenchController {
 
     private fun executeAction(workbenchAction: WorkbenchAction) {
         val newState = when (workbenchAction) {
+            is WorkbenchAction.DispatchCommands -> informationState.dispatchCommands()
             is WorkbenchActionSync.AddCommand -> informationState.addCommand(workbenchAction.command)
             is WorkbenchActionSync.AddDefaultExplorer -> informationState.addDefaultExplorer(
                 workbenchAction.id,
@@ -143,6 +122,27 @@ internal class WorkbenchController {
             is DragAndDropAction.SetPosition -> setPosition(action.positionOnScreen)
         }
         dragState = newState
+    }
+
+    private fun WorkbenchInformationState.dispatchCommands(): WorkbenchInformationState {
+        var m: MenuEntry = commandsMenus[MenuType.MenuBar]!!
+        for (c in commands) {
+            for (path in c.paths) {
+                val pathSplit = path.split(".")
+                if (pathSplit.size > 4 || pathSplit.isEmpty()) return this
+                for (i in pathSplit.indices) {
+                    if (i == 0 && commandsMenus[MenuType.valueOf(pathSplit[0])] == null) break
+                    m = if (i == 0) {
+                        commandsMenus[MenuType.valueOf(pathSplit[0])]!!
+                    } else {
+                        m.getMenu(pathSplit[i])
+                    }
+                }
+                m.children.add(c)
+                m.children.sortBy { it.index }
+            }
+        }
+        return this
     }
 
     private fun WorkbenchInformationState.saveAndClose(moduleState: WorkbenchModuleState<*>, popUpState: PopUpState): WorkbenchInformationState {
