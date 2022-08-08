@@ -10,7 +10,7 @@ import androidx.compose.ui.graphics.Color
     val FlamingoPink = Color(0xffF76c6c)
     val SmokeWhite = Color(0xfff5f5f5)
     val DarkGrey = Color(0xff333333)
-    val LightGrey = Color(0xfff4f4f4)
+    val LightGrey = Color(0xffd3d3d3)
     val SlightlyGrey = Color(0xffc0c0c0)
 
     val DarkColors = darkColors(

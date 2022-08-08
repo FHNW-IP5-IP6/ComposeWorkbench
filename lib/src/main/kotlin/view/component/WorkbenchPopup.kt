@@ -82,7 +82,6 @@ internal fun WorkbenchPopupOnClose (
                 }
             }
         },
-        shape = RoundedCornerShape(20.dp),
     )
 }
 
@@ -114,7 +113,6 @@ internal fun WorkbenchPopupSaveFailed (
                 }
             }
         },
-        shape = RoundedCornerShape(20.dp),
     )
 }
 

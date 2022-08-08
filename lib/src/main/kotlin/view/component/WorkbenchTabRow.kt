@@ -3,10 +3,9 @@ package view.component
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
-import androidx.compose.material.Icon
-import androidx.compose.material.IconButton
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
+import androidx.compose.foundation.shape.CutCornerShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.runtime.Composable
@@ -15,6 +14,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import controller.Action
@@ -57,7 +57,7 @@ internal fun WorkbenchTabRow(
         }
     } else {
         Box {
-           HorizontalWorkbenchTabRow(informationState, onActionRequired, tabRowKey, onSelect)
+            HorizontalWorkbenchTabRow(informationState, onActionRequired, tabRowKey, onSelect)
         }
     }
 }
@@ -118,6 +118,7 @@ private fun HorizontalWorkbenchTabRow(
     val moduleStates = informationState.getModulesFiltered(tabRowKey)
     val preview = informationState.getPreviewTitle(tabRowKey)
     val selected = informationState.getSelectedModule(tabRowKey)
+
     ScrollToSelected(informationState, tabRowKey, scrollState)
     Column {
         LazyRow(state = scrollState) {
@@ -141,6 +142,7 @@ private fun VerticalWorkbenchTabRow(
     val moduleStates = informationState.getModulesFiltered(tabRowKey)
     val preview = informationState.getPreviewTitle(tabRowKey)
     val selected = informationState.getSelectedModule(tabRowKey)
+
     ScrollToSelected(informationState, tabRowKey, scrollState)
     Row {
         LazyColumn(state = scrollState) {
@@ -170,6 +172,7 @@ private fun LazyListScope.WorkbenchTabs(
     onSelect: (WorkbenchModuleState<*>) -> Unit
 ) {
     preview(preview, tabRowKey)
+    var previousSelected = true
     items(moduleStates){ item ->
         WorkbenchTab(
             informationState = informationState,
@@ -177,11 +180,13 @@ private fun LazyListScope.WorkbenchTabs(
             moduleState = item,
             tabRowKey = tabRowKey,
             selected = selected == item,
+            previousSelected = previousSelected,
             onClick = {
-                        onSelect.invoke(item)
-                        onActionRequired.invoke(WorkbenchAction.TabSelectorPressed(tabRowKey, item))
-                      },
+                onSelect.invoke(item)
+                onActionRequired.invoke(WorkbenchAction.TabSelectorPressed(tabRowKey, item))
+            },
         )
+        previousSelected = selected==item
     }
 }
 
@@ -189,8 +194,8 @@ private fun LazyListScope.WorkbenchTabs(
 private fun LazyListScope.preview(preview: String?, tabRowKey: TabRowKey) {
     stickyHeader {
         if(preview != null){
-            val writerModifier = getTabModifier(tabRowKey, true) {}
-            WorkbenchTab(writerModifier, preview) {}
+            val writerModifier = getTabModifier(tabRowKey, true, {}, true)
+            WorkbenchTab(writerModifier, true, preview) {}
         }
     }
 }
@@ -203,9 +208,10 @@ private fun WorkbenchTab(
     moduleState: WorkbenchModuleState<*>,
     tabRowKey: TabRowKey,
     selected: Boolean,
-    onClick: ()->Unit
+    onClick: () -> Unit,
+    previousSelected: Boolean
 ) {
-    val writerModifier = getTabModifier(tabRowKey, selected, onClick)
+    val writerModifier = getTabModifier(tabRowKey, selected, onClick, previousSelected)
 
     DragTarget(module = moduleState, onActionRequired = onActionRequired) {
         ContextMenuArea(items = {
@@ -214,7 +220,7 @@ private fun WorkbenchTab(
                     onActionRequired.invoke(WorkbenchAction.ModuleToWindow(moduleState)) },
             )
         }) {
-            WorkbenchTab(writerModifier, moduleState.getTitle()) {
+            WorkbenchTab(writerModifier, false, moduleState.getTitle()) {
                 onActionRequired(WorkbenchAction.CloseModuleState(moduleState))
             }
         }
@@ -224,6 +230,7 @@ private fun WorkbenchTab(
 @Composable
 private fun WorkbenchTab(
     writerModifier: Modifier,
+    selected: Boolean,
     title: String,
     onClose: () -> Unit
 ) {
@@ -232,41 +239,54 @@ private fun WorkbenchTab(
         verticalAlignment = Alignment.CenterVertically
     )
     {
+        val contentColor = if(selected) MaterialTheme.colors.primary else MaterialTheme.colors.onBackground
         Text(
             text = title,
             overflow = TextOverflow.Visible,
             maxLines = 1,
-            modifier = Modifier.padding(15.dp, 0.dp)
+            modifier = Modifier.padding(15.dp, 0.dp),
+            color = contentColor,
         )
         IconButton(onClick = onClose) {
-            Icon(Icons.Filled.Close, "close")
+            Icon(Icons.Filled.Close, "close", tint = contentColor)
         }
     }
 }
 
 @Composable
-private fun getTabModifier(tabRowKey: TabRowKey,selected: Boolean, onClick: () -> Unit): Modifier{
+private fun getTabModifier(tabRowKey: TabRowKey, selected: Boolean, onClick: () -> Unit, previousSelected: Boolean): Modifier{
     val backgroundColor = if (selected) MaterialTheme.colors.background else MaterialTheme.colors.surface
-    val contentColor = if (selected) MaterialTheme.colors.primary else MaterialTheme.colors.onSurface
+    val contentColor = if (selected) MaterialTheme.colors.primary else MaterialTheme.colors.onBackground
+    val dividerColor = MaterialTheme.colors.onSurface
 
     val result: Modifier = if (tabRowKey.displayType.orientation.toInt() != 0) {
         Modifier.vertical(tabRowKey.displayType.orientation).clickable {onClick()}
     } else{
         Modifier.clickable {onClick()}
     }
+
     return result
         .background(color = backgroundColor)
         .drawBehind {
             if (selected) {
                 val height = size.height
                 val width = size.width
-                val strokeWidth = 10f
-                val yPos = height - (strokeWidth/2)
+                val strokeWidth = 8f
+                val yPos = (strokeWidth/2)-1
                 drawLine(
                     start = Offset(x = 0f, y = yPos),
                     end = Offset(x = width, y = yPos),
                     color = contentColor,
                     strokeWidth = strokeWidth
+                )
+            }
+            // draw divider
+            if (!previousSelected && !selected) {
+                drawLine(
+                    start = Offset(x = 0f, y = size.height * .2f),
+                    end = Offset(x = 0f, y = size.height * .8f),
+                    color = dividerColor,
+                    strokeWidth = 1f
                 )
             }
         }
