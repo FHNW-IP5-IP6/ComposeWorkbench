@@ -143,12 +143,15 @@ To enable the Workbench's Save Button and all its features the Editor must infor
  mqtt.publishUnsaved(type = COLOR, id = i)
  ```
 
-*Subscribe for any Editor getting selected*
+*Subscribe for any Editor updates*
 
-To enable the Workbench's Save Button and all its features the Editor must inform the Workbench about unsaved changes.
+On the other side a custom module can subscribe for updates of Editors. For example to reload the City data from database in the Explorer if the Editor was Closed or Saved.
 ```kotlin
-mqtt.subscribeForSelectedEditor(editorType = COLOR) {id -> controller.selectColor(id)}
- ```
+mqtt.subscribeForUpdates("City") { _, updateType ->
+    if (updateType == UpdateType.SAVED || updateType == UpdateType.CLOSED) controller.reload()
+}
+```
+Following update types for Editor are available: CREATED, SAVED, UNSAVED, CLOSED, SELECTED, OTHER
 
 #### Custom Messages
 
