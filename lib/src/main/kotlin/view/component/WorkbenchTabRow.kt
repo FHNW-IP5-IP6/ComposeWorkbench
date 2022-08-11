@@ -255,7 +255,7 @@ private fun WorkbenchTab(
 
 @Composable
 private fun getTabModifier(tabRowKey: TabRowKey, selected: Boolean, onClick: () -> Unit, previousSelected: Boolean): Modifier{
-    val backgroundColor = if (selected) MaterialTheme.colors.background else MaterialTheme.colors.surface
+    val backgroundColor = if (selected) MaterialTheme.colors.background else MaterialTheme.colors.secondaryVariant
     val contentColor = if (selected) MaterialTheme.colors.primary else MaterialTheme.colors.onBackground
     val dividerColor = MaterialTheme.colors.onSurface
 
