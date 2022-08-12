@@ -1,8 +1,8 @@
-# <img alt="Workbench Examples" src="./lib/src/main/resources/logo/workbench-logo-text-90dpi.png" width="100%" />
+# <img alt="Workbench Logo" src="./Doku/images/compose-workbench-logo-bg-w.png" width="50%" />
 
 Compose desktop library to build large Applications by combining existing Modules.
 
-<img alt="Workbench Examples" src="./Doku/images/workbench_examples.png" width="100%" />
+<img alt="Workbench Examples" src="./Doku/images/compose-workbench-examples.png" width="100%" />
 
 # What is a ComposeWorkbench
 The ComposeWorkbench provides common application structures to custom modules. It supports two types of modules, explorers and editors. Once embedded in the ComposeWorkbench these modules can be dragged and dropped and the window management is taken care of. There is also support for custom commands and a messaging system that allows communication between the individual modules.
