@@ -1,4 +1,5 @@
-# ComposeWorkbench
+# <img alt="Workbench Examples" src="./lib/src/main/resources/logo/workbench-logo-text-90dpi.png" width="100%" />
+
 Compose desktop library to build large Applications by combining existing Modules.
 
 <img alt="Workbench Examples" src="./Doku/images/workbench_examples.png" width="100%" />
