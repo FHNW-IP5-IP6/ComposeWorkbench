@@ -1,0 +1,14 @@
+\section{Introduction}
+The Compose Workbench is a library which enables the consolidation of existing Modules into one cohesive application. The Compose Workbench provides standard elements like a top bar, tab handling, window management and internal information exchange.
+
+\section{Project Requirements}
+The Compose Workbench supports two types of Modules, Explorer and Editor. Explorers are used to display data whereas an Editor is used to edit a specific data record. Explorers should be able to request Editors for specific data records and there should be the possibility to have different Editors for the same type of data.
+
+The Compose Workbench has its own messaging system to send and receive messages from all Modules.
+
+The requirements and especially the usability is more detailed in the chapter \emph{Interaction Guide}.
+
+\section{Technical Requirements}
+The Compose Workbench has to be written in Kotlin in combination with JetBrains Compose Desktop.
+
+The embedded version of HiveMQ must be used for the messaging system.

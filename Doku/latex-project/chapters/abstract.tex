@@ -1,0 +1,15 @@
+In the context of this Bachelor Thesis, a Workbench had to be developed as a library which is designed to integrate user-defined Modules. The Workbench consists of a Workbench-specific Top and MenuBar, which enables global actions (e.g. Save All, Close All), as well as modules that are displayed within one or more tabs. 
+In the case of a Module, a conceptual distinction is made between Explorer and Editor. The Explorer is an open context in which mainly data is to be displayed for an overview. The Editor is a typified context that is used to edit data.
+The technology of the Workbench is limited to Jetpack Compose Desktop and so only supports Composable Desktop modules. 
+
+The work has an exploratory character. In an initial design and planning phase, an Interaction Guide with wireframes was created to set the approximate workload and features. This formed a solid basis for further development and collaboration. Afterwards, through regular exchange with Professor Dr. Holz, requirements and ideas were continuously added and adapted. 
+There was also a strong focus on concepts and architecture for the implementation of features.
+
+With the library developed, user-defined modules can be integrated into the Workbench in a lightweight way and with minimal programming effort. Care was taken to ensure that no exchange of code must or even can take place. All code sources must be able to be used unchanged.
+For this purpose, interfaces are implemented by callbacks or the internal MQ messaging system. The MQ messaging system works similar to a REST API and can also be used between independent user-defined modules.
+
+Another achievement is the clean implementation of the MVC architecture with unidirectional data flow. The Model forms an immutable state that contains all the data for the View. This has the advantage that only one object needs to be stateful and the recompose of Jetpack Compose is only managed at one point.
+The same applies to the events from the View. These are called as actions via a single method on the controller. This single point of entry into the controller also eased the implementation of concurrent execution of actions on the controller. This means that computationally intensive actions do not block the View.
+
+Compose Workbench provides a library that allows the user to integrate custom modules with little effort. 
+Furthermore, the architecture of the workbench is easy to expand, which eases its further development.

@@ -1,0 +1,92 @@
+Following are some workbench functionalities which have as of now no solution and do not work. They are however interesting and valuable for the user experience and therefore outlined here as ideas with very high level solutions.
+
+\section{Savable Workbench state}
+The Workbench model and with it the complete Workbench state is not accessible by the Workbench configurator. Information such as the currently opened Editors and visible Explorers are not public and cannot be saved.
+
+\subsubsection{Possible Solution}
+Introduce a Persistence Data Model (a subset of the Workbench Model) which contains all states worth saving. Add this to the Workbench parameters so existing state can be passed when starting the Workbench and add an on close callback in the Workbench to store the Persistence Data.
+\begin{kotlincode}
+    val workbench: Workbench = Workbench("App Title", existingData) {
+        updatedData ->
+            save(updatedData)
+    }
+\end{kotlincode}
+The advantage of this solution is, that access to the Persistence Data can be restricted to the callback function and the actual Workbench Model stays hidden.
+
+\section{Editor for multiple Items}
+The interface for requesting Editors restricts the Editor to receive one Item id at a time. For some Editors (e.g. comparison between items) this will not be enough. 
+An Editor with multiple Items is not much different to an Explorer. This could become confusing for the users and has to be considered when adding this feature.
+
+\subsubsection{Possible Solution}
+The Editor interface accepts a list of ids. This requires some extra checks to make sure the passed id list does at least contain one id at all times.
+
+\section{Aspects}
+A third Module Type which is not bound to a data type. This Module handles general Aspects of the Software and is accessible for each Editor. This could be functionality like accessing other resources for a given data record or tracking of external updates.
+
+\subsubsection{Possible Solution}
+A possible way to do this is to use the subscribe and update functionality. An Aspect could listen to Editor changes and therefore know once an Editor is opened or selected. Aspects could also define special messages which Editors have to send to provide additional information.
+
+\section{Material Design 3}
+Currently the Material Design 2 is used for the Workbench to provide Styling throughout the application. For Jetpack Compose on Android there is Material Design 3 available, which allows more granularity and dynamic Styling. Until now the necessary Libraries are not ported to androidx and is not available for Jetpack Compose cross platform.
+As soon JetBrains provides these libraries Material Design 3 will be an interesting option to style the Workbench.
+
+\section{Style Exchange}
+To achieve a uniform styling of the Workbench and user-defined modules, the same styling must be exchanged and applied.
+
+\subsubsection{Possible Solution}
+The Workbench and user-defined modules have to use the same Material Design. The Material Design has to be defined on Workbench Side and be passed to it's registered modules, so the styling can be applied.
+
+
+\section{Messaging in between Workbench Clients}
+The Messaging System of a Workbench could be used to exchange changes in between Workbench Clients. For example to exchange an unsaved change on the same data field.
+
+\subsubsection{Possible Solution}
+There has to be an additional MQTT Broker on a Server to exchange messages in between Workbench Clients. The specific configuration to access the external server and convenience functionality on Workbench side has to be implemented on top of the current messaging system.
+
+
+\section{Context switch to write State}
+The reassignment of State in controller.executeAction must be done in the Main Cortoutine Context, to guarantee thread safety.
+Currently the state is reassigned in the Default context, which is using thread pool with other threads then the main thread. 
+\begin{kotlincode}
+private fun startConsumingActions() {
+    CoroutineScope(Dispatchers.Default).launch {
+        actionChannel.consumeEach { action ->
+            controller.executeAction(action)
+            if (action is WorkbenchActionSync) {
+                action.response.complete(0)
+            }
+        }
+    }
+}
+\end{kotlincode}
+This carries the risk that the state can be reassigned during a recompose.
+Currently, this is prevented because only because the Recompose is finished until the next action is 0one coroutine overwrites the state, so no race conidition is created and the recompose is only triggered if the state is reassigned by this coroutine. 
+
+In order to be thread safe for extensions, this adjustment should be made.
+
+\subsubsection{Possible Solution}
+
+A possible solution would be that the state is no longer a member of the controller but is passed as an argument of an executing action. This execution in turn returns a state and overwrites the previous state in the main context.
+
+\begin{kotlincode}
+
+val state by mutableStateOf(WorbenchState())
+
+private fun startConsumingActions() {
+    CoroutineScope(Dispatchers.Default).launch {
+        actionChannel.consumeEach { action ->
+            val newState = controller.executeAction(state, action)
+
+            witchContext(Dispatchers.Main) {
+                state = newState
+            }
+            
+            if (action is WorkbenchActionSync) {
+                action.response.complete(0)
+            }
+        }
+    }
+}
+\end{kotlincode}
+
+We didn't changed the behavior of executeAction, due to the many changes of the controller and it's Unit Test.

@@ -1,0 +1,14 @@
+Starting the project by focusing on the Interaction Guide helped a lot in the development process that came later. It gave a very clear definition of the Modules (Explorers and Editors) and their interactions which was used throughout the project. It also helped in working out the main features and what exactly makes them valuable.
+
+The implementation started with a very limited version of the Compose Workbench which was then enhanced and used as a base for further changes. This approach turned out to be problematic later in the project because it focused on what should be done but not on how it should be done and it left out all the Jetpack Compose specific recompose considerations.
+
+The initial Workspace had a Mutable State for Modules, later came a Mutable State for Windows then one for Commands, PopUps and so on. This lead to problem with the recompose behaviour and was then solved with a global immutable state. This Refactoring took a time and was still compromised by the existing functionality some classes which are part of the state are still mutable as a result of this.
+
+This process led to a couple of findings, which should be considered on any Jetpack Compose project.
+
+\textbf{No mutable objects as part of the state:} This has two benefits, changes to the state cannot happen "by accident" and the recompose is guaranteed with each change.
+
+\textbf{Single point for state mutations:} Restricting access to the state helps in managing all the changes and also in understanding the recompose behaviour. 
+
+\textbf{Group state by recompose effects:} Create different state objects based on the desired recompose behaviour. 
+

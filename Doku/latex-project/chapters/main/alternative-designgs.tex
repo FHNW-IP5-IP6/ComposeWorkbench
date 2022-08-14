@@ -1,0 +1,43 @@
+\section{Workbench integration}
+There are other ways in which the workbench integration could be done. The java approach \ref{Use_Of_class_extention} and another Kotlin feature \ref{Use_of_scope_slots}. Both approaches would work and they both have their own advantages and disadvantages.
+
+\subsection{Use of Scope Slots Function} \label{Use_of_scope_slots}
+Kotlin supports scoped functions. These functions provide access to the Object and define scopes which can be accessed by the caller.
+
+Instead of having a Workbench object which the user has to create and then use, the Workbench could be a scoped function with scopes for adding Explorers and Editors.
+
+\begin{kotlincode}
+createComposeWorkbench() {
+    editors{
+        editor{
+            //define content of editor here
+        }
+    }
+    explorers{
+        explorer{
+            //define content of explorer here
+        }
+    }
+}
+\end{kotlincode}
+
+\subsection{Use of class extension} \label{Use_Of_class_extention}
+In contrast to the used trailing lambda approach or the above mentioned scoped functions the workbench integration could be done with a more classical approach of extending and overriding a given class. 
+
+\begin{kotlincode}
+class MyWorkbenchEditor(): ComposeWorkbenchEditor {
+    
+    @Composable
+    override fun content(){
+        //The actual editor content
+    }
+}
+\end{kotlincode}
+
+
+\section{Internal Messaging System}
+Instead of the embedded HiveMQ Broker and it's Clients, another internal concept could be used. Until now we didn't notice a lack of performance due to the messaging through the embedded Broker (Server). But it can be see as an over kill for a desktop application and may be become critical on larger applications with way more messages.
+
+A internal Messaging System with out a network would be ways faster on transmission and initialization of it's infrastructure.
+
+For example Kotlin's Channels could be an interesting approach to use as a messaging system. Channels offer by default concurrent access by Coroutines and filter for incoming messages. Implementations like BroadcastChannels indicate to use it as network like information exchange.

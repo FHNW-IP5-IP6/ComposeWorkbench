@@ -1,0 +1,119 @@
+\documentclass[12pt]{report}
+
+% Packages
+\usepackage[a4paper,width=160mm,top=23mm,bottom=25mm]{geometry} % page layouting
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel} % correction
+\usepackage{natbib} % 
+\usepackage{graphicx} % allows including pictures
+\usepackage{titlesec} % custom title page
+\usepackage{tabto} % allows using tab
+\usepackage{fancyhdr} % to include header
+\usepackage{lastpage} % get side number of last page
+\usepackage{pgfplots} % table lpot from data
+\usepackage{url}
+\usepackage{caption}  % multiple images as one
+\usepackage{subcaption}
+\usepackage[parfill]{parskip} % skip offset on pargraph beginning
+\usepackage{float}
+\usepackage{glossaries}
+\usepackage{outlines}
+
+% syntax highlighting with minted
+\usepackage{minted}
+\usemintedstyle{vs}
+\definecolor{bg}{rgb}{0.95,0.95,0.95}
+
+\newminted{kotlin}{%
+    breakbytoken,%
+    breaklines,%
+    autogobble,%
+    label=,%
+    xleftmargin={5pt},%
+    xrightmargin={10pt},%
+    framesep=2\fboxsep,%
+    bgcolor=bg,%
+}
+
+
+\graphicspath{ {images/} }
+
+% Bibliography formatting
+\bibliographystyle{abbrvnat}
+\setcitestyle{authoryear,open={(},close={)},aysep={,}}
+
+% Footer and Header
+\pagestyle{fancy}
+\fancypagestyle{plain}{}
+\fancyhf{}
+\rhead{IP6 - Compose Workbench}
+\lhead{\includegraphics[scale=0.9]{fhnw_e_10mm.jpeg}}
+\rfoot{\thepage/\pageref{LastPage}}
+\fancyheadoffset[L,R]{12mm}
+
+% Formatting
+\titleformat{\chapter}{\normalfont\huge}{\thechapter.}{20pt}{\huge\it}
+
+% title hierarchy
+% -1	\part{part}
+% 0	\chapter{chapter}
+% 1	\section{section}
+% 2	\subsection{subsection}
+% 3	\subsubsection{subsubsection}
+% 4	\paragraph{paragraph}
+% 5	\subparagraph{subparagraph}
+
+% Document attributes
+\newcommand\authorA{Sven Böhm}
+\newcommand\authorB{Dominik Frei}
+\newcommand\closinglocation{Windisch}
+\newcommand\closingdate{12. August 2022}
+
+
+\begin{document}
+
+\begin{titlepage}   
+\input{chapters/title-page}
+\end{titlepage}
+
+
+\chapter*{Abstract}
+\input{chapters/abstract}
+
+
+\chapter*{Ehrlichkeitserklärung}
+\input{chapters/erklaerung}
+
+\tableofcontents
+
+\newpage
+
+\chapter{Introduction}
+\input{chapters/main/introduction}
+
+\chapter{Interaction Guide}
+\input{chapters/main/interaction-guide}
+
+\chapter{Software Design}
+\input{chapters/main/software}
+
+\chapter{Possible Future Enhancements}
+\input{chapters/main/future-enhancements}
+
+\chapter{Alternative Designs}
+\input{chapters/main/alternative-designgs}
+
+\chapter{Testing}
+\input{chapters/main/testing}
+
+\chapter{Conclusion}
+\input{chapters/main/conclusion}
+
+\appendix
+\printglossaries
+
+\chapter{Source Code}
+\input{chapters/appendix_source-code}
+
+\bibliography{references}
+\end{document}
